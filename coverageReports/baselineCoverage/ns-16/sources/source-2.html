@@ -1,0 +1,330 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Statement</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.json</a>
+</div>
+
+<h1>Coverage Summary for Class: Statement (com.graphhopper.json)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Statement</td>
+<td class="coverageStat">
+  <span class="percent">
+    76.9%
+  </span>
+  <span class="absValue">
+    (10/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.8%
+  </span>
+  <span class="absValue">
+    (22/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    58.8%
+  </span>
+  <span class="absValue">
+    (20/34)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Statement$Keyword</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Statement$Op</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.6%
+  </span>
+  <span class="absValue">
+    (11/13)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    87%
+  </span>
+  <span class="absValue">
+    (20/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.2%
+  </span>
+  <span class="absValue">
+    (26/36)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    69.2%
+  </span>
+  <span class="absValue">
+    (36/52)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.json;
+&nbsp;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Objects;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+<b class="fc">&nbsp;public record Statement(Keyword keyword, String condition, Op operation, String value,</b>
+&nbsp;                        List&lt;Statement&gt; doBlock) {
+&nbsp;
+<b class="fc">&nbsp;    public Statement {</b>
+<b class="pc">&nbsp;        if (condition == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;&#39;condition&#39; cannot be null&quot;);</b>
+<b class="pc">&nbsp;        if (doBlock != null &amp;&amp; operation != Op.DO)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;For &#39;doBlock&#39; you have to use Op.DO&quot;);</b>
+<b class="pc">&nbsp;        if (doBlock != null &amp;&amp; value != null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;&#39;doBlock&#39; or &#39;value&#39; cannot be both non-null&quot;);</b>
+<b class="pc">&nbsp;        if (doBlock == null &amp;&amp; Helper.isEmpty(value))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;a leaf statement must have a non-empty &#39;value&#39;&quot;);</b>
+<b class="pc">&nbsp;        if (condition.isEmpty() &amp;&amp; keyword != Keyword.ELSE)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;All statements (except &#39;else&#39;) have to use a non-empty &#39;condition&#39;&quot;);</b>
+<b class="pc">&nbsp;        if (!condition.isEmpty() &amp;&amp; keyword == Keyword.ELSE)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;For the &#39;else&#39; statement you have to use an empty &#39;condition&#39;&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isBlock() {
+<b class="fc">&nbsp;        return doBlock != null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String value() {
+<b class="pc">&nbsp;        if (isBlock())</b>
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;&#39;value&#39; is not supported for block statement.&quot;);</b>
+<b class="fc">&nbsp;        return value;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;Statement&gt; doBlock() {
+<b class="pc">&nbsp;        if (!isBlock())</b>
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;&#39;doBlock&#39; is not supported for leaf statement.&quot;);</b>
+<b class="fc">&nbsp;        return doBlock;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toPrettyString() {
+<b class="nc">&nbsp;        if (isBlock())</b>
+<b class="nc">&nbsp;            return &quot;{\&quot;&quot; + keyword.getName() + &quot;\&quot;: \&quot;&quot; + condition + &quot;\&quot;,\n&quot;</b>
+&nbsp;                    + &quot;  \&quot;do\&quot;: [\n&quot;
+<b class="nc">&nbsp;                    + doBlock.stream().map(Objects::toString).collect(Collectors.joining(&quot;,\n  &quot;))</b>
+&nbsp;                    + &quot;  ]\n&quot; +
+&nbsp;                    &quot;}&quot;;
+<b class="nc">&nbsp;        else return toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        if (isBlock())</b>
+<b class="fc">&nbsp;            return &quot;{\&quot;&quot; + keyword.getName() + &quot;\&quot;: \&quot;&quot; + condition + &quot;\&quot;, \&quot;do\&quot;: &quot; + doBlock + &quot; }&quot;;</b>
+&nbsp;        else
+<b class="fc">&nbsp;            return &quot;{\&quot;&quot; + keyword.getName() + &quot;\&quot;: \&quot;&quot; + condition + &quot;\&quot;, \&quot;&quot; + operation.getName() + &quot;: \&quot;&quot; + value + &quot;\&quot;}&quot;;</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public enum Keyword {</b>
+<b class="fc">&nbsp;        IF(&quot;if&quot;), ELSEIF(&quot;else_if&quot;), ELSE(&quot;else&quot;);</b>
+&nbsp;
+&nbsp;        private final String name;
+&nbsp;
+<b class="fc">&nbsp;        Keyword(String name) {</b>
+<b class="fc">&nbsp;            this.name = name;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public String getName() {
+<b class="fc">&nbsp;            return name;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public enum Op {</b>
+<b class="fc">&nbsp;        MULTIPLY(&quot;multiply_by&quot;), LIMIT(&quot;limit_to&quot;), DO(&quot;do&quot;);</b>
+&nbsp;
+&nbsp;        private final String name;
+&nbsp;
+<b class="fc">&nbsp;        Op(String name) {</b>
+<b class="fc">&nbsp;            this.name = name;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public String getName() {
+<b class="fc">&nbsp;            return name;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public String build(String value) {
+<b class="pc">&nbsp;            switch (this) {</b>
+&nbsp;                case MULTIPLY:
+<b class="fc">&nbsp;                    return &quot;value *= &quot; + value;</b>
+&nbsp;                case LIMIT:
+<b class="fc">&nbsp;                    return &quot;value = Math.min(value,&quot; + value + &quot;)&quot;;</b>
+&nbsp;                default:
+<b class="nc">&nbsp;                    throw new IllegalArgumentException();</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        public MinMax apply(MinMax minMax1, MinMax minMax2) {
+<b class="pc">&nbsp;            switch (this) {</b>
+&nbsp;                case MULTIPLY:
+<b class="fc">&nbsp;                    return new MinMax(minMax1.min * minMax2.min, minMax1.max * minMax2.max);</b>
+&nbsp;                case LIMIT:
+<b class="fc">&nbsp;                    return new MinMax(Math.min(minMax1.min, minMax2.min), Math.min(minMax1.max, minMax2.max));</b>
+&nbsp;                default:
+<b class="nc">&nbsp;                    throw new IllegalArgumentException();</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Statement If(String expression, List&lt;Statement&gt; doBlock) {
+<b class="fc">&nbsp;        return new Statement(Keyword.IF, expression, Op.DO, null, doBlock);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Statement If(String expression, Op op, String value) {
+<b class="fc">&nbsp;        return new Statement(Keyword.IF, expression, op, value, null);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Statement ElseIf(String expression, List&lt;Statement&gt; doBlock) {
+<b class="nc">&nbsp;        return new Statement(Keyword.ELSEIF, expression, Op.DO, null, doBlock);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Statement ElseIf(String expression, Op op, String value) {
+<b class="fc">&nbsp;        return new Statement(Keyword.ELSEIF, expression, op, value, null);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Statement Else(List&lt;Statement&gt; doBlock) {
+<b class="nc">&nbsp;        return new Statement(Keyword.ELSE, &quot;&quot;, Op.DO, null, doBlock);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Statement Else(Op op, String value) {
+<b class="fc">&nbsp;        return new Statement(Keyword.ELSE, &quot;&quot;, op, value, null);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

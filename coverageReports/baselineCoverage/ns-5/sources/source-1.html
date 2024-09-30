@@ -1,0 +1,305 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > IntFloatBinaryHeap</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.apache.commons.collections</a>
+</div>
+
+<h1>Coverage Summary for Class: IntFloatBinaryHeap (com.graphhopper.apache.commons.collections)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">IntFloatBinaryHeap</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.2%
+  </span>
+  <span class="absValue">
+    (15/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (27/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.6%
+  </span>
+  <span class="absValue">
+    (63/68)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Copyright 2001-2004 The Apache Software Foundation
+&nbsp; *
+&nbsp; *  Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; *  you may not use this file except in compliance with the License.
+&nbsp; *  You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *      http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.apache.commons.collections;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.NoSuchElementException;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class is a partial copy of the class org.apache.commons.collections.BinaryHeap for
+&nbsp; * just the min heap and primitive, sorted float keys and associated int elements.
+&nbsp; * &lt;p&gt;
+&nbsp; * The library can be found here: https://commons.apache.org/proper/commons-collections/
+&nbsp; */
+&nbsp;public class IntFloatBinaryHeap {
+&nbsp;    private static final int GROW_FACTOR = 2;
+&nbsp;    private int size;
+&nbsp;    private int[] elements;
+&nbsp;    private float[] keys;
+&nbsp;
+&nbsp;    public IntFloatBinaryHeap() {
+<b class="nc">&nbsp;        this(1000);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public IntFloatBinaryHeap(int initialCapacity) {</b>
+&nbsp;        //+1 as element 0 is noop
+<b class="fc">&nbsp;        elements = new int[initialCapacity + 1];</b>
+<b class="fc">&nbsp;        keys = new float[initialCapacity + 1];</b>
+&nbsp;        // make minimum to avoid zero array check in while loop
+<b class="fc">&nbsp;        keys[0] = Float.NEGATIVE_INFINITY;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isFull() {
+&nbsp;        //+1 as element 0 is noop
+<b class="fc">&nbsp;        return elements.length == size + 1;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void update(double key, int element) {
+&nbsp;        int i;
+&nbsp;        // we have no clue about the element order, so we need to search the full array
+<b class="fc">&nbsp;        for (i = 1; i &lt;= size; i++) {</b>
+<b class="fc">&nbsp;            if (elements[i] == element)</b>
+&nbsp;                break;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (i &gt; size)</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        if (key &gt; keys[i]) {</b>
+<b class="fc">&nbsp;            keys[i] = (float) key;</b>
+<b class="fc">&nbsp;            percolateDownMinHeap(i);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            keys[i] = (float) key;</b>
+<b class="fc">&nbsp;            percolateUpMinHeap(i);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void insert(double key, int element) {
+<b class="fc">&nbsp;        if (isFull()) {</b>
+<b class="fc">&nbsp;            ensureCapacity(elements.length * GROW_FACTOR);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        size++;</b>
+<b class="fc">&nbsp;        elements[size] = element;</b>
+<b class="fc">&nbsp;        keys[size] = (float) key;</b>
+<b class="fc">&nbsp;        percolateUpMinHeap(size);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int peekElement() {
+<b class="pc">&nbsp;        if (isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new NoSuchElementException(&quot;Heap is empty. Cannot peek element.&quot;);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return elements[1];</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public float peekKey() {
+<b class="pc">&nbsp;        if (isEmpty())</b>
+<b class="nc">&nbsp;            throw new NoSuchElementException(&quot;Heap is empty. Cannot peek key.&quot;);</b>
+&nbsp;        else
+<b class="fc">&nbsp;            return keys[1];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int poll() {
+<b class="fc">&nbsp;        final int result = peekElement();</b>
+<b class="fc">&nbsp;        elements[1] = elements[size];</b>
+<b class="fc">&nbsp;        keys[1] = keys[size];</b>
+<b class="fc">&nbsp;        size--;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (size != 0)</b>
+<b class="fc">&nbsp;            percolateDownMinHeap(1);</b>
+&nbsp;
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Percolates element down heap from the array position given by the index.
+&nbsp;     */
+&nbsp;    final void percolateDownMinHeap(final int index) {
+<b class="fc">&nbsp;        final int element = elements[index];</b>
+<b class="fc">&nbsp;        final float key = keys[index];</b>
+<b class="fc">&nbsp;        int hole = index;</b>
+&nbsp;
+<b class="fc">&nbsp;        while (hole * 2 &lt;= size) {</b>
+<b class="fc">&nbsp;            int child = hole * 2;</b>
+&nbsp;
+&nbsp;            // if we have a right child and that child can not be percolated
+&nbsp;            // up then move onto other child
+<b class="fc">&nbsp;            if (child != size &amp;&amp; keys[child + 1] &lt; keys[child]) {</b>
+<b class="fc">&nbsp;                child++;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // if we found resting place of bubble then terminate search
+<b class="fc">&nbsp;            if (keys[child] &gt;= key) {</b>
+&nbsp;                break;
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            elements[hole] = elements[child];</b>
+<b class="fc">&nbsp;            keys[hole] = keys[child];</b>
+<b class="fc">&nbsp;            hole = child;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        elements[hole] = element;</b>
+<b class="fc">&nbsp;        keys[hole] = key;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    final void percolateUpMinHeap(final int index) {
+<b class="fc">&nbsp;        int hole = index;</b>
+<b class="fc">&nbsp;        int element = elements[hole];</b>
+<b class="fc">&nbsp;        float key = keys[hole];</b>
+&nbsp;        // parent == hole/2
+<b class="fc">&nbsp;        while (key &lt; keys[hole / 2]) {</b>
+<b class="fc">&nbsp;            final int next = hole / 2;</b>
+<b class="fc">&nbsp;            elements[hole] = elements[next];</b>
+<b class="fc">&nbsp;            keys[hole] = keys[next];</b>
+<b class="fc">&nbsp;            hole = next;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        elements[hole] = element;</b>
+<b class="fc">&nbsp;        keys[hole] = key;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isEmpty() {
+<b class="fc">&nbsp;        return size == 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getSize() {
+<b class="fc">&nbsp;        return size;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void clear() {
+<b class="fc">&nbsp;        trimTo(0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void trimTo(int toSize) {
+<b class="fc">&nbsp;        this.size = toSize;</b>
+<b class="fc">&nbsp;        toSize++;</b>
+&nbsp;        // necessary as we currently do not init arrays when inserting
+<b class="fc">&nbsp;        Arrays.fill(elements, toSize, size + 1, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void ensureCapacity(int capacity) {
+<b class="pc">&nbsp;        if (capacity &lt; size) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;IntFloatBinaryHeap contains too many elements to fit in new capacity.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        elements = Arrays.copyOf(elements, capacity + 1);</b>
+<b class="fc">&nbsp;        keys = Arrays.copyOf(keys, capacity + 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getCapacity() {
+<b class="nc">&nbsp;        return elements.length;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getMemoryUsage() {
+<b class="fc">&nbsp;        return elements.length * 4L + keys.length * 4L;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

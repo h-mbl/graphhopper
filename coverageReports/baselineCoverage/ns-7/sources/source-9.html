@@ -1,0 +1,463 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MatrixResponse</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.api</a>
+</div>
+
+<h1>Coverage Summary for Class: MatrixResponse (com.graphhopper.api)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MatrixResponse</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/72)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/113)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">MatrixResponse$PointPair</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/34)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/122)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.api;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class defines the response for a M-to-N requests.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class MatrixResponse {
+&nbsp;
+<b class="nc">&nbsp;    private Map&lt;String, List&lt;String&gt;&gt; headers = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    private String debugInfo = &quot;&quot;;</b>
+<b class="nc">&nbsp;    private final List&lt;Throwable&gt; errors = new ArrayList&lt;&gt;(4);</b>
+<b class="nc">&nbsp;    private final List&lt;PointPair&gt; disconnectedPoints = new ArrayList&lt;&gt;(0);</b>
+<b class="nc">&nbsp;    private final List&lt;Integer&gt; invalidFromPoints = new ArrayList&lt;&gt;(0);</b>
+<b class="nc">&nbsp;    private final List&lt;Integer&gt; invalidToPoints = new ArrayList&lt;&gt;(0);</b>
+<b class="nc">&nbsp;    private long[][] times = new long[0][];</b>
+<b class="nc">&nbsp;    private int[][] distances = new int[0][];</b>
+<b class="nc">&nbsp;    private double[][] weights = new double[0][];</b>
+&nbsp;    private final int fromCount;
+&nbsp;    private final int toCount;
+&nbsp;    private int statusCode;
+&nbsp;
+&nbsp;    public MatrixResponse() {
+<b class="nc">&nbsp;        this(10, 10, true, true, true);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public MatrixResponse(int fromCap, int toCap, boolean withTimes, boolean withDistances, boolean withWeights) {</b>
+<b class="nc">&nbsp;        if (fromCap &lt;= 0 || toCap &lt;= 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Requested matrix too small: &quot; + fromCap + &quot;x&quot; + toCap);</b>
+<b class="nc">&nbsp;        this.fromCount = fromCap;</b>
+<b class="nc">&nbsp;        this.toCount = toCap;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (withTimes) {</b>
+<b class="nc">&nbsp;            times = new long[fromCap][toCap];</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (withDistances) {</b>
+<b class="nc">&nbsp;            distances = new int[fromCap][toCap];</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (withWeights) {</b>
+<b class="nc">&nbsp;            weights = new double[fromCap][toCap];</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!withTimes &amp;&amp; !withDistances &amp;&amp; !withWeights)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Please specify times, distances or weights that should be calculated by the matrix&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setHeaders(Map&lt;String, List&lt;String&gt;&gt; headers) {
+<b class="nc">&nbsp;        this.headers = headers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Map&lt;String, List&lt;String&gt;&gt; getHeaders() {
+<b class="nc">&nbsp;        return headers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getHeader(String key, String defaultValue) {
+<b class="nc">&nbsp;        List&lt;String&gt; res = headers.get(key);</b>
+<b class="nc">&nbsp;        if (!res.isEmpty()) return res.get(0);</b>
+<b class="nc">&nbsp;        return defaultValue;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setFromRow(int row, long[] timeRow, int[] distanceRow, double[] weightRow) {
+<b class="nc">&nbsp;        if (times.length &gt; 0) {</b>
+<b class="nc">&nbsp;            check(timeRow.length, toCount, &quot;to times&quot;);</b>
+<b class="nc">&nbsp;            times[row] = timeRow;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (distances.length &gt; 0) {</b>
+<b class="nc">&nbsp;            check(distanceRow.length, toCount, &quot;to distances&quot;);</b>
+<b class="nc">&nbsp;            distances[row] = distanceRow;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (weights.length &gt; 0) {</b>
+<b class="nc">&nbsp;            check(weights.length, toCount, &quot;to weights&quot;);</b>
+<b class="nc">&nbsp;            weights[row] = weightRow;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void check(int currentLength, int expectedLength, String times) {
+<b class="nc">&nbsp;        if (currentLength != expectedLength)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Sizes do not match for &#39;&quot; + times + &quot;&#39;. &quot; +</b>
+&nbsp;                    &quot;Expected &quot; + expectedLength + &quot; was: &quot; + currentLength + &quot;. Matrix: &quot; + fromCount + &quot;x&quot; + toCount);
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setTimeRow(int row, long[] timeRow) {
+<b class="nc">&nbsp;        if (times.length &gt; 0) {</b>
+<b class="nc">&nbsp;            check(timeRow.length, toCount, &quot;to times&quot;);</b>
+<b class="nc">&nbsp;            times[row] = timeRow;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;Cannot call setTimeRow if times are disabled&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setDistanceRow(int row, int[] distanceRow) {
+<b class="nc">&nbsp;        if (distances.length &gt; 0) {</b>
+<b class="nc">&nbsp;            check(distanceRow.length, toCount, &quot;to distances&quot;);</b>
+<b class="nc">&nbsp;            distances[row] = distanceRow;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;Cannot call setDistanceRow if distances are disabled&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setWeightRow(int row, double[] weightRow) {
+<b class="nc">&nbsp;        if (weights.length &gt; 0) {</b>
+<b class="nc">&nbsp;            check(weightRow.length, toCount, &quot;to weights&quot;);</b>
+<b class="nc">&nbsp;            weights[row] = weightRow;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;Cannot call setWeightRow if weights are disabled&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isConnected(int from, int to) {
+<b class="nc">&nbsp;        if (hasErrors()) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return getWeight(from, to) &lt; Double.MAX_VALUE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the time for the specific entry (from -&amp;gt; to) in milliseconds or {@link Long#MAX_VALUE} in case
+&nbsp;     * no connection was found (and {@link GHMRequest#setFailFast(boolean)} was set to true).
+&nbsp;     */
+&nbsp;    public long getTime(int from, int to) {
+<b class="nc">&nbsp;        if (hasErrors()) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot return time (&quot; + from + &quot;,&quot; + to + &quot;) if errors occurred &quot; + getErrors());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (from &gt;= times.length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot get &#39;from&#39; &quot; + from + &quot; from times with size &quot; + times.length);</b>
+<b class="nc">&nbsp;        } else if (to &gt;= times[from].length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot get &#39;to&#39; &quot; + to + &quot; from times with size &quot; + times[from].length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return times[from][to];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the distance for the specific entry (from -&amp;gt; to) in meter or {@link Double#MAX_VALUE} in case
+&nbsp;     * no connection was found (and {@link GHMRequest#setFailFast(boolean)} was set to true).
+&nbsp;     */
+&nbsp;    public double getDistance(int from, int to) {
+<b class="nc">&nbsp;        if (hasErrors()) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot return distance (&quot; + from + &quot;,&quot; + to + &quot;) if errors occurred &quot; + getErrors());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (from &gt;= distances.length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot get &#39;from&#39; &quot; + from + &quot; from distances with size &quot; + distances.length);</b>
+<b class="nc">&nbsp;        } else if (to &gt;= distances[from].length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot get &#39;to&#39; &quot; + to + &quot; from distances with size &quot; + distances[from].length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return distances[from][to] == Integer.MAX_VALUE ? Double.MAX_VALUE : distances[from][to];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the weight for the specific entry (from -&amp;gt; to) in arbitrary units (&#39;costs&#39;), or
+&nbsp;     * {@link Double#MAX_VALUE} in case no connection was found (and {@link GHMRequest#setFailFast(boolean)} was set
+&nbsp;     * to true).
+&nbsp;     */
+&nbsp;    public double getWeight(int from, int to) {
+<b class="nc">&nbsp;        if (hasErrors()) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot return weight (&quot; + from + &quot;,&quot; + to + &quot;) if errors occurred &quot; + getErrors());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (from &gt;= weights.length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot get &#39;from&#39; &quot; + from + &quot; from weights with size &quot; + weights.length);</b>
+<b class="nc">&nbsp;        } else if (to &gt;= weights[from].length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot get &#39;to&#39; &quot; + to + &quot; from weights with size &quot; + weights[from].length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return weights[from][to];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getDebugInfo() {
+<b class="nc">&nbsp;        return debugInfo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MatrixResponse setDebugInfo(String debugInfo) {
+<b class="nc">&nbsp;        if (debugInfo != null) {</b>
+<b class="nc">&nbsp;            this.debugInfo = debugInfo;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if one or more error found
+&nbsp;     */
+&nbsp;    public boolean hasErrors() {
+<b class="nc">&nbsp;        return !errors.isEmpty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getStatusCode() {
+<b class="nc">&nbsp;        return statusCode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setStatusCode(int statusCode) {
+<b class="nc">&nbsp;        this.statusCode = statusCode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Throwable&gt; getErrors() {
+<b class="nc">&nbsp;        return errors;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MatrixResponse addError(Throwable error) {
+<b class="nc">&nbsp;        errors.add(error);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MatrixResponse addErrors(Collection&lt;Throwable&gt; errorList) {
+<b class="nc">&nbsp;        errors.addAll(errorList);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if there are invalid or disconnected points (which both do not yield an error in case we do not fail fast).
+&nbsp;     * @see GHMRequest#setFailFast(boolean)
+&nbsp;     */
+&nbsp;    public boolean hasProblems() {
+<b class="nc">&nbsp;        return !disconnectedPoints.isEmpty() || !invalidFromPoints.isEmpty() || !invalidToPoints.isEmpty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MatrixResponse setDisconnectedPoints(List&lt;PointPair&gt; disconnectedPoints) {
+<b class="nc">&nbsp;        this.disconnectedPoints.clear();</b>
+<b class="nc">&nbsp;        this.disconnectedPoints.addAll(disconnectedPoints);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;PointPair&gt; getDisconnectedPoints() {
+<b class="nc">&nbsp;        return disconnectedPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MatrixResponse setInvalidFromPoints(List&lt;Integer&gt; invalidFromPoints) {
+<b class="nc">&nbsp;        this.invalidFromPoints.clear();</b>
+<b class="nc">&nbsp;        this.invalidFromPoints.addAll(invalidFromPoints);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MatrixResponse setInvalidToPoints(List&lt;Integer&gt; invalidToPoints) {
+<b class="nc">&nbsp;        this.invalidToPoints.clear();</b>
+<b class="nc">&nbsp;        this.invalidToPoints.addAll(invalidToPoints);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Integer&gt; getInvalidFromPoints() {
+<b class="nc">&nbsp;        return invalidFromPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Integer&gt; getInvalidToPoints() {
+<b class="nc">&nbsp;        return invalidToPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        String addInfo = &quot;&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (times.length &gt; 0) {</b>
+<b class="nc">&nbsp;            addInfo += &quot;, times: &quot; + times.length + &quot;x&quot; + times[0].length;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (distances.length &gt; 0) {</b>
+<b class="nc">&nbsp;            addInfo += &quot;, distances: &quot; + distances.length + &quot;x&quot; + distances[0].length;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        String result = &quot;[&quot; + addInfo + &quot;] errors:&quot; + errors.toString();</b>
+<b class="nc">&nbsp;        if (!disconnectedPoints.isEmpty()) {</b>
+<b class="nc">&nbsp;            result += &quot;, disconnectedPoints: &quot; + disconnectedPoints.size();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (!invalidFromPoints.isEmpty()) {</b>
+<b class="nc">&nbsp;            result += &quot;, invalidFromPoints: &quot; + invalidFromPoints.size();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (!invalidToPoints.isEmpty()) {</b>
+<b class="nc">&nbsp;            result += &quot;, invalidToPoints: &quot; + invalidToPoints.size();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class PointPair {
+&nbsp;        public final int sourceIndex;
+&nbsp;        public final int targetIndex;
+&nbsp;
+<b class="nc">&nbsp;        public PointPair(int sourceIndex, int targetIndex) {</b>
+<b class="nc">&nbsp;            this.sourceIndex = sourceIndex;</b>
+<b class="nc">&nbsp;            this.targetIndex = targetIndex;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean equals(Object o) {
+<b class="nc">&nbsp;            if (this == o) return true;</b>
+<b class="nc">&nbsp;            if (o == null || getClass() != o.getClass()) return false;</b>
+<b class="nc">&nbsp;            PointPair pointPair = (PointPair) o;</b>
+<b class="nc">&nbsp;            return sourceIndex == pointPair.sourceIndex &amp;&amp;</b>
+&nbsp;                    targetIndex == pointPair.targetIndex;
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int hashCode() {
+<b class="nc">&nbsp;            return Objects.hash(sourceIndex, targetIndex);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            return &quot;[&quot; + sourceIndex + &quot;, &quot; + targetIndex + &quot;]&quot;;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

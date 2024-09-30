@@ -1,0 +1,499 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GHMatrixAbstractRequester</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.api</a>
+</div>
+
+<h1>Coverage Summary for Class: GHMatrixAbstractRequester (com.graphhopper.api)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GHMatrixAbstractRequester</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/116)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/174)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">GHMatrixAbstractRequester$JsonResult</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/116)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/175)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.api;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.fasterxml.jackson.databind.node.ArrayNode;
+&nbsp;import com.fasterxml.jackson.databind.node.ObjectNode;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import okhttp3.*;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.*;
+&nbsp;import java.util.concurrent.TimeUnit;
+&nbsp;
+&nbsp;import static com.graphhopper.api.GraphHopperMatrixWeb.*;
+&nbsp;import static com.graphhopper.api.GraphHopperWeb.X_GH_CLIENT_VERSION;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public abstract class GHMatrixAbstractRequester {
+&nbsp;
+&nbsp;    static final String MATRIX_URL = &quot;https://graphhopper.com/api/1/matrix&quot;;
+&nbsp;    protected final ObjectMapper objectMapper;
+&nbsp;    protected final String serviceUrl;
+<b class="nc">&nbsp;    private final Set&lt;String&gt; ignoreSet = new HashSet&lt;&gt;();</b>
+&nbsp;    private OkHttpClient downloader;
+<b class="nc">&nbsp;    int maxUnzippedLength = 1000;</b>
+&nbsp;
+&nbsp;    public GHMatrixAbstractRequester() {
+<b class="nc">&nbsp;        this(MATRIX_URL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMatrixAbstractRequester(String serviceUrl) {
+<b class="nc">&nbsp;        this(serviceUrl, new OkHttpClient.Builder().</b>
+<b class="nc">&nbsp;                connectTimeout(5, TimeUnit.SECONDS).</b>
+<b class="nc">&nbsp;                readTimeout(5, TimeUnit.SECONDS).build(), true);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public GHMatrixAbstractRequester(String serviceUrl, OkHttpClient client, boolean doRequestGzip) {</b>
+<b class="nc">&nbsp;        if (serviceUrl.endsWith(&quot;/&quot;)) {</b>
+<b class="nc">&nbsp;            serviceUrl = serviceUrl.substring(0, serviceUrl.length() - 1);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        this.downloader = doRequestGzip ? client.newBuilder().addInterceptor(new GzipRequestInterceptor()).build() : client;</b>
+<b class="nc">&nbsp;        this.serviceUrl = serviceUrl;</b>
+&nbsp;
+<b class="nc">&nbsp;        ignoreSet.add(&quot;key&quot;);</b>
+<b class="nc">&nbsp;        ignoreSet.add(&quot;service_url&quot;);</b>
+<b class="nc">&nbsp;        this.objectMapper = new ObjectMapper();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public abstract MatrixResponse route(GHMRequest request);
+&nbsp;
+&nbsp;    public GHMatrixAbstractRequester setDownloader(OkHttpClient downloader) {
+<b class="nc">&nbsp;        this.downloader = downloader;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OkHttpClient getDownloader() {
+<b class="nc">&nbsp;        return downloader;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected JsonNode createPostRequest(GHMRequest ghRequest) {
+<b class="nc">&nbsp;        if (ghRequest.getHints().getObject(&quot;profile&quot;, null) != null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;use setProfile instead of hint &#39;profile&#39;&quot;);</b>
+<b class="nc">&nbsp;        if (ghRequest.getProfile() == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;profile cannot be empty&quot;);</b>
+<b class="nc">&nbsp;        if (ghRequest.getHints().getObject(&quot;fail_fast&quot;, null) != null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;use setFailFast instead of hint &#39;fail_fast&#39;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        ObjectNode requestJson = objectMapper.createObjectNode();</b>
+<b class="nc">&nbsp;        if (ghRequest.getPoints() != null) {</b>
+<b class="nc">&nbsp;            if (ghRequest.getFromPoints() != null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;if points are set do not use setFromPoints&quot;);</b>
+<b class="nc">&nbsp;            if (ghRequest.getToPoints() != null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;if points are set do not use setToPoints&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            putPoints(requestJson, &quot;points&quot;, ghRequest.getPoints());</b>
+<b class="nc">&nbsp;            putStrings(requestJson, &quot;point_hints&quot;, ghRequest.getPointHints());</b>
+<b class="nc">&nbsp;            putStrings(requestJson, &quot;curbsides&quot;, ghRequest.getCurbsides());</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            if (ghRequest.getFromPoints() == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;if points are not set you have to use setFromPoints but was null&quot;);</b>
+<b class="nc">&nbsp;            if (ghRequest.getToPoints() == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;if points are not set you have to use setToPoints but was null&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            putPoints(requestJson, &quot;from_points&quot;, ghRequest.getFromPoints());</b>
+<b class="nc">&nbsp;            putStrings(requestJson, &quot;from_point_hints&quot;, ghRequest.getFromPointHints());</b>
+&nbsp;
+<b class="nc">&nbsp;            putPoints(requestJson, &quot;to_points&quot;, ghRequest.getToPoints());</b>
+<b class="nc">&nbsp;            putStrings(requestJson, &quot;to_point_hints&quot;, ghRequest.getToPointHints());</b>
+&nbsp;
+<b class="nc">&nbsp;            putStrings(requestJson, &quot;from_curbsides&quot;, ghRequest.getFromCurbsides());</b>
+<b class="nc">&nbsp;            putStrings(requestJson, &quot;to_curbsides&quot;, ghRequest.getToCurbsides());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        putStrings(requestJson, &quot;snap_preventions&quot;, ghRequest.getSnapPreventions());</b>
+<b class="nc">&nbsp;        putStrings(requestJson, &quot;out_arrays&quot;, ghRequest.getOutArrays());</b>
+<b class="nc">&nbsp;        requestJson.put(&quot;fail_fast&quot;, ghRequest.getFailFast());</b>
+<b class="nc">&nbsp;        requestJson.put(&quot;profile&quot;, ghRequest.getProfile());</b>
+&nbsp;
+<b class="nc">&nbsp;        Map&lt;String, Object&gt; hintsMap = ghRequest.getHints().toMap();</b>
+<b class="nc">&nbsp;        for (String hintKey : hintsMap.keySet()) {</b>
+<b class="nc">&nbsp;            if (ignoreSet.contains(hintKey))</b>
+&nbsp;                continue;
+&nbsp;
+<b class="nc">&nbsp;            Object hint = hintsMap.get(hintKey);</b>
+<b class="nc">&nbsp;            if (hint instanceof String)</b>
+<b class="nc">&nbsp;                requestJson.put(hintKey, (String) hint);</b>
+&nbsp;            else
+<b class="nc">&nbsp;                requestJson.putPOJO(hintKey, hint);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return requestJson;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected JsonNode fromStringToJSON(String url, String str) {
+&nbsp;        try {
+<b class="nc">&nbsp;            return objectMapper.readTree(str);</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Cannot parse json &quot; + str + &quot; from &quot; + url);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Throwable&gt; readUsableEntityError(Collection&lt;String&gt; outArraysList, JsonNode solution) {
+<b class="nc">&nbsp;        boolean readWeights = outArraysList.contains(&quot;weights&quot;) &amp;&amp; solution.has(&quot;weights&quot;);</b>
+<b class="nc">&nbsp;        boolean readDistances = outArraysList.contains(&quot;distances&quot;) &amp;&amp; solution.has(&quot;distances&quot;);</b>
+<b class="nc">&nbsp;        boolean readTimes = outArraysList.contains(&quot;times&quot;) &amp;&amp; solution.has(&quot;times&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!readWeights &amp;&amp; !readDistances &amp;&amp; !readTimes) {</b>
+<b class="nc">&nbsp;            return Collections.&lt;Throwable&gt;singletonList(new RuntimeException(&quot;Cannot find usable entity like weights, distances or times in JSON&quot;));</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param failFast If false weights/distances/times that are null are interpreted as disconnected points and are
+&nbsp;     *                 thus set to their respective maximum values. Furthermore, the indices of the disconnected points
+&nbsp;     *                 are added to {@link MatrixResponse#getDisconnectedPoints()} and the indices of the points that
+&nbsp;     *                 could not be found are added to {@link MatrixResponse#getInvalidFromPoints()} and/or
+&nbsp;     *                 {@link MatrixResponse#getInvalidToPoints()}.
+&nbsp;     */
+&nbsp;    protected void fillResponseFromJson(MatrixResponse matrixResponse, JsonNode solution, boolean failFast) {
+<b class="nc">&nbsp;        final boolean readWeights = solution.has(&quot;weights&quot;);</b>
+<b class="nc">&nbsp;        final boolean readDistances = solution.has(&quot;distances&quot;);</b>
+<b class="nc">&nbsp;        final boolean readTimes = solution.has(&quot;times&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        int fromCount = 0;</b>
+<b class="nc">&nbsp;        JsonNode weightsArray = null;</b>
+<b class="nc">&nbsp;        if (readWeights) {</b>
+<b class="nc">&nbsp;            weightsArray = solution.get(&quot;weights&quot;);</b>
+<b class="nc">&nbsp;            fromCount = checkArraySizes(&quot;weights&quot;, weightsArray.size());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        JsonNode timesArray = null;</b>
+<b class="nc">&nbsp;        if (readTimes) {</b>
+<b class="nc">&nbsp;            timesArray = solution.get(&quot;times&quot;);</b>
+<b class="nc">&nbsp;            fromCount = checkArraySizes(&quot;times&quot;, timesArray.size(), weightsArray);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        JsonNode distancesArray = null;</b>
+<b class="nc">&nbsp;        if (readDistances) {</b>
+<b class="nc">&nbsp;            distancesArray = solution.get(&quot;distances&quot;);</b>
+<b class="nc">&nbsp;            fromCount = checkArraySizes(&quot;distances&quot;, distancesArray.size(), weightsArray, timesArray);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        for (int fromIndex = 0; fromIndex &lt; fromCount; fromIndex++) {</b>
+<b class="nc">&nbsp;            int toCount = 0;</b>
+<b class="nc">&nbsp;            JsonNode weightsFromArray = null;</b>
+<b class="nc">&nbsp;            double[] weights = null;</b>
+<b class="nc">&nbsp;            if (readWeights) {</b>
+<b class="nc">&nbsp;                weightsFromArray = weightsArray.get(fromIndex);</b>
+<b class="nc">&nbsp;                weights = new double[weightsFromArray.size()];</b>
+<b class="nc">&nbsp;                toCount = checkArraySizes(&quot;weights&quot;, weightsFromArray.size());</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            JsonNode timesFromArray = null;</b>
+<b class="nc">&nbsp;            long[] times = null;</b>
+<b class="nc">&nbsp;            if (readTimes) {</b>
+<b class="nc">&nbsp;                timesFromArray = timesArray.get(fromIndex);</b>
+<b class="nc">&nbsp;                times = new long[timesFromArray.size()];</b>
+<b class="nc">&nbsp;                toCount = checkArraySizes(&quot;times&quot;, timesFromArray.size(), weightsFromArray);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            JsonNode distancesFromArray = null;</b>
+<b class="nc">&nbsp;            int[] distances = null;</b>
+<b class="nc">&nbsp;            if (readDistances) {</b>
+<b class="nc">&nbsp;                distancesFromArray = distancesArray.get(fromIndex);</b>
+<b class="nc">&nbsp;                distances = new int[distancesFromArray.size()];</b>
+<b class="nc">&nbsp;                toCount = checkArraySizes(&quot;distances&quot;, distancesFromArray.size(), weightsFromArray, timesFromArray);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            for (int toIndex = 0; toIndex &lt; toCount; toIndex++) {</b>
+<b class="nc">&nbsp;                if (readWeights) {</b>
+<b class="nc">&nbsp;                    if (weightsFromArray.get(toIndex).isNull() &amp;&amp; !failFast) {</b>
+<b class="nc">&nbsp;                        weights[toIndex] = Double.MAX_VALUE;</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        weights[toIndex] = weightsFromArray.get(toIndex).asDouble();</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                if (readTimes) {</b>
+<b class="nc">&nbsp;                    if (timesFromArray.get(toIndex).isNull() &amp;&amp; !failFast) {</b>
+<b class="nc">&nbsp;                        times[toIndex] = Long.MAX_VALUE;</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        times[toIndex] = timesFromArray.get(toIndex).asLong() * 1000;</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                if (readDistances) {</b>
+<b class="nc">&nbsp;                    if (distancesFromArray.get(toIndex).isNull() &amp;&amp; !failFast) {</b>
+<b class="nc">&nbsp;                        distances[toIndex] = Integer.MAX_VALUE;</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        distances[toIndex] = (int) Math.round(distancesFromArray.get(toIndex).asDouble());</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (readWeights) {</b>
+<b class="nc">&nbsp;                matrixResponse.setWeightRow(fromIndex, weights);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (readTimes) {</b>
+<b class="nc">&nbsp;                matrixResponse.setTimeRow(fromIndex, times);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (readDistances) {</b>
+<b class="nc">&nbsp;                matrixResponse.setDistanceRow(fromIndex, distances);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        if (!failFast &amp;&amp; solution.has(&quot;hints&quot;)) {</b>
+<b class="nc">&nbsp;            addProblems(matrixResponse, solution.get(&quot;hints&quot;));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void addProblems(MatrixResponse matrixResponse, JsonNode hints) {
+<b class="nc">&nbsp;        for (JsonNode hint : hints) {</b>
+<b class="nc">&nbsp;            if (hint.has(&quot;point_pairs&quot;)) {</b>
+<b class="nc">&nbsp;                matrixResponse.setDisconnectedPoints(readDisconnectedPoints(hint.get(&quot;point_pairs&quot;)));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (hint.has(&quot;invalid_from_points&quot;)) {</b>
+<b class="nc">&nbsp;                matrixResponse.setInvalidFromPoints(readInvalidPoints(hint.get(&quot;invalid_from_points&quot;)));</b>
+<b class="nc">&nbsp;                matrixResponse.setInvalidToPoints(readInvalidPoints(hint.get(&quot;invalid_to_points&quot;)));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;MatrixResponse.PointPair&gt; readDisconnectedPoints(JsonNode pointPairsArray) {
+<b class="nc">&nbsp;        List&lt;MatrixResponse.PointPair&gt; disconnectedPoints = new ArrayList&lt;&gt;(pointPairsArray.size());</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; pointPairsArray.size(); i++) {</b>
+<b class="nc">&nbsp;            if (pointPairsArray.get(i).size() != 2) {</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;all point_pairs are expected to contain two elements&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            disconnectedPoints.add(new MatrixResponse.PointPair(</b>
+<b class="nc">&nbsp;                    pointPairsArray.get(i).get(0).asInt(),</b>
+<b class="nc">&nbsp;                    pointPairsArray.get(i).get(1).asInt()</b>
+&nbsp;            ));
+&nbsp;        }
+<b class="nc">&nbsp;        return disconnectedPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;Integer&gt; readInvalidPoints(JsonNode pointsArray) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; result = new ArrayList&lt;&gt;(pointsArray.size());</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; pointsArray.size(); i++) {</b>
+<b class="nc">&nbsp;            result.add(pointsArray.get(i).asInt());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int checkArraySizes(String msg, int len, JsonNode... arrays) {
+<b class="nc">&nbsp;        for (JsonNode other : arrays) {</b>
+<b class="nc">&nbsp;            if (len &lt;= 0)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Size &quot; + len + &quot; of &#39;&quot; + msg + &quot;&#39; array is too small&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (other != null &amp;&amp; len != other.size())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Size &quot; + len + &quot; of &#39;&quot; + msg + &quot;&#39; array is has to be equal to other arrays but wasn&#39;t&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return len;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected String buildURLNoHints(String path, GHMRequest ghRequest) {
+&nbsp;        // allow per request service URLs
+<b class="nc">&nbsp;        String url = ghRequest.getHints().getString(SERVICE_URL, serviceUrl) + path + &quot;?&quot;;</b>
+<b class="nc">&nbsp;        String key = ghRequest.getHints().getString(KEY, &quot;&quot;);</b>
+<b class="nc">&nbsp;        if (!Helper.isEmpty(key)) {</b>
+<b class="nc">&nbsp;            url += &quot;key=&quot; + key;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return url;</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    protected record JsonResult(String body, int statusCode, Map&lt;String, List&lt;String&gt;&gt; headers) {</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected JsonResult postJson(String url, JsonNode data) throws IOException {
+<b class="nc">&nbsp;        String stringData = data.toString();</b>
+<b class="nc">&nbsp;        Request.Builder builder = new Request.Builder().url(url).post(RequestBody.create(MT_JSON, stringData));</b>
+<b class="nc">&nbsp;        builder.header(X_GH_CLIENT_VERSION, Version.GH_VERSION_FROM_MAVEN);</b>
+&nbsp;        // force avoiding our GzipRequestInterceptor for smaller requests ~30 locations
+<b class="nc">&nbsp;        if (stringData.length() &lt; maxUnzippedLength)</b>
+<b class="nc">&nbsp;            builder.header(&quot;Content-Encoding&quot;, &quot;identity&quot;);</b>
+<b class="nc">&nbsp;        Request okRequest = builder.build();</b>
+<b class="nc">&nbsp;        ResponseBody body = null;</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            Response rsp = getDownloader().newCall(okRequest).execute();</b>
+<b class="nc">&nbsp;            body = rsp.body();</b>
+<b class="nc">&nbsp;            return new JsonResult(body.string(), rsp.code(), rsp.headers().toMultimap());</b>
+&nbsp;        } finally {
+<b class="nc">&nbsp;            Helper.close(body);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void putStrings(ObjectNode requestJson, String name, Collection&lt;String&gt; stringList) {
+<b class="nc">&nbsp;        if (stringList == null || stringList.isEmpty())</b>
+&nbsp;            return;
+<b class="nc">&nbsp;        ArrayNode outList = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;        for (String str : stringList) {</b>
+<b class="nc">&nbsp;            outList.add(str);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        requestJson.putArray(name).addAll(outList);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void putPoints(ObjectNode requestJson, String name, List&lt;GHPoint&gt; pList) {
+<b class="nc">&nbsp;        if (pList.isEmpty())</b>
+&nbsp;            return;
+<b class="nc">&nbsp;        ArrayNode outList = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;        for (GHPoint p : pList) {</b>
+<b class="nc">&nbsp;            ArrayNode entry = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;            entry.add(p.lon);</b>
+<b class="nc">&nbsp;            entry.add(p.lat);</b>
+<b class="nc">&nbsp;            outList.add(entry);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        requestJson.putArray(name).addAll(outList);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

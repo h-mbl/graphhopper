@@ -1,0 +1,548 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PtRouterImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: PtRouterImpl (com.graphhopper.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PtRouterImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PtRouterImpl$Factory</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">PtRouterImpl$RequestHandler</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/110)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/147)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/112)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/173)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.gtfs;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import com.google.transit.realtime.GtfsRealtime;
+&nbsp;import com.graphhopper.GHResponse;
+&nbsp;import com.graphhopper.GraphHopperConfig;
+&nbsp;import com.graphhopper.ResponsePath;
+&nbsp;import com.graphhopper.config.Profile;
+&nbsp;import com.graphhopper.routing.DefaultWeightingFactory;
+&nbsp;import com.graphhopper.routing.WeightingFactory;
+&nbsp;import com.graphhopper.routing.ev.Subnetwork;
+&nbsp;import com.graphhopper.routing.querygraph.QueryGraph;
+&nbsp;import com.graphhopper.routing.util.DefaultSnapFilter;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;import com.graphhopper.routing.util.EncodingManager;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.BaseGraph;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.details.PathDetailsBuilderFactory;
+&nbsp;import com.graphhopper.util.exceptions.ConnectionNotFoundException;
+&nbsp;import com.graphhopper.util.exceptions.MaximumNodesExceededException;
+&nbsp;
+&nbsp;import javax.inject.Inject;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.Predicate;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import static java.util.Comparator.comparingLong;
+&nbsp;
+&nbsp;public final class PtRouterImpl implements PtRouter {
+&nbsp;
+&nbsp;    private final GraphHopperConfig config;
+&nbsp;    private final TranslationMap translationMap;
+&nbsp;    private final BaseGraph baseGraph;
+&nbsp;    private final EncodingManager encodingManager;
+&nbsp;    private final LocationIndex locationIndex;
+&nbsp;    private final GtfsStorage gtfsStorage;
+&nbsp;    private final PtGraph ptGraph;
+&nbsp;    private final RealtimeFeed realtimeFeed;
+&nbsp;    private final PathDetailsBuilderFactory pathDetailsBuilderFactory;
+&nbsp;    private final WeightingFactory weightingFactory;
+&nbsp;
+&nbsp;    @Inject
+<b class="nc">&nbsp;    public PtRouterImpl(GraphHopperConfig config, TranslationMap translationMap, BaseGraph baseGraph, EncodingManager encodingManager, LocationIndex locationIndex, GtfsStorage gtfsStorage, RealtimeFeed realtimeFeed, PathDetailsBuilderFactory pathDetailsBuilderFactory) {</b>
+<b class="nc">&nbsp;        this.config = config;</b>
+<b class="nc">&nbsp;        this.weightingFactory = new DefaultWeightingFactory(baseGraph, encodingManager);</b>
+<b class="nc">&nbsp;        this.translationMap = translationMap;</b>
+<b class="nc">&nbsp;        this.baseGraph = baseGraph;</b>
+<b class="nc">&nbsp;        this.encodingManager = encodingManager;</b>
+<b class="nc">&nbsp;        this.locationIndex = locationIndex;</b>
+<b class="nc">&nbsp;        this.gtfsStorage = gtfsStorage;</b>
+<b class="nc">&nbsp;        this.ptGraph = gtfsStorage.getPtGraph();</b>
+<b class="nc">&nbsp;        this.realtimeFeed = realtimeFeed;</b>
+<b class="nc">&nbsp;        this.pathDetailsBuilderFactory = pathDetailsBuilderFactory;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public GHResponse route(Request request) {
+<b class="nc">&nbsp;        return new RequestHandler(request).route();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Factory {
+&nbsp;        private final GraphHopperConfig config;
+&nbsp;        private final TranslationMap translationMap;
+&nbsp;        private final BaseGraph baseGraph;
+&nbsp;        private final EncodingManager encodingManager;
+&nbsp;        private final LocationIndex locationIndex;
+&nbsp;        private final GtfsStorage gtfsStorage;
+&nbsp;        private final Map&lt;String, Transfers&gt; transfers;
+&nbsp;
+<b class="nc">&nbsp;        public Factory(GraphHopperConfig config, TranslationMap translationMap, BaseGraph baseGraph, EncodingManager encodingManager, LocationIndex locationIndex, GtfsStorage gtfsStorage) {</b>
+<b class="nc">&nbsp;            this.config = config;</b>
+<b class="nc">&nbsp;            this.translationMap = translationMap;</b>
+<b class="nc">&nbsp;            this.baseGraph = baseGraph;</b>
+<b class="nc">&nbsp;            this.encodingManager = encodingManager;</b>
+<b class="nc">&nbsp;            this.locationIndex = locationIndex;</b>
+<b class="nc">&nbsp;            this.gtfsStorage = gtfsStorage;</b>
+<b class="nc">&nbsp;            this.transfers = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (Map.Entry&lt;String, GTFSFeed&gt; entry : this.gtfsStorage.getGtfsFeeds().entrySet()) {</b>
+<b class="nc">&nbsp;                this.transfers.put(entry.getKey(), new Transfers(entry.getValue()));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        public PtRouter createWith(GtfsRealtime.FeedMessage realtimeFeed) {
+<b class="nc">&nbsp;            Map&lt;String, GtfsRealtime.FeedMessage&gt; realtimeFeeds = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            realtimeFeeds.put(&quot;gtfs_0&quot;, realtimeFeed);</b>
+<b class="nc">&nbsp;            return new PtRouterImpl(config, translationMap, baseGraph, encodingManager, locationIndex, gtfsStorage, RealtimeFeed.fromProtobuf(gtfsStorage, this.transfers, realtimeFeeds), new PathDetailsBuilderFactory());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public PtRouter createWithoutRealtimeFeed() {
+<b class="nc">&nbsp;            return new PtRouterImpl(config, translationMap, baseGraph, encodingManager, locationIndex, gtfsStorage, RealtimeFeed.empty(), new PathDetailsBuilderFactory());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private class RequestHandler {
+&nbsp;        private final int maxVisitedNodesForRequest;
+&nbsp;        private final int limitSolutions;
+&nbsp;        private final long maxProfileDuration;
+&nbsp;        private final Instant initialTime;
+&nbsp;        private final boolean profileQuery;
+&nbsp;        private final boolean arriveBy;
+&nbsp;        private final boolean ignoreTransfers;
+&nbsp;        private final double betaTransfers;
+&nbsp;        private final double betaAccessTime;
+&nbsp;        private final double betaEgressTime;
+&nbsp;        private final double walkSpeedKmH;
+&nbsp;        private final int blockedRouteTypes;
+&nbsp;        private final Map&lt;Integer, Long&gt; transferPenaltiesByRouteType;
+&nbsp;        private final GHLocation enter;
+&nbsp;        private final GHLocation exit;
+&nbsp;        private final Translation translation;
+&nbsp;        private final List&lt;String&gt; requestedPathDetails;
+&nbsp;
+<b class="nc">&nbsp;        private final GHResponse response = new GHResponse();</b>
+&nbsp;        private final long limitTripTime;
+&nbsp;        private final long limitStreetTime;
+&nbsp;        private QueryGraph queryGraph;
+&nbsp;        private int visitedNodes;
+&nbsp;        private MultiCriteriaLabelSetting router;
+&nbsp;
+&nbsp;        private final Profile accessProfile;
+&nbsp;        private final EdgeFilter accessSnapFilter;
+&nbsp;        private final Weighting accessWeighting;
+&nbsp;        private final Profile transferProfile;
+&nbsp;        private final Weighting transferWeighting;
+&nbsp;        private final Profile egressProfile;
+&nbsp;        private final EdgeFilter egressSnapFilter;
+&nbsp;        private final Weighting egressWeighting;
+&nbsp;
+<b class="nc">&nbsp;        RequestHandler(Request request) {</b>
+<b class="nc">&nbsp;            maxVisitedNodesForRequest = request.getMaxVisitedNodes();</b>
+<b class="nc">&nbsp;            profileQuery = request.isProfileQuery();</b>
+<b class="nc">&nbsp;            ignoreTransfers = Optional.ofNullable(request.getIgnoreTransfers()).orElse(request.isProfileQuery());</b>
+<b class="nc">&nbsp;            betaTransfers = request.getBetaTransfers();</b>
+<b class="nc">&nbsp;            betaAccessTime = request.getBetaAccessTime();</b>
+<b class="nc">&nbsp;            betaEgressTime = request.getBetaEgressTime();</b>
+<b class="nc">&nbsp;            limitSolutions = Optional.ofNullable(request.getLimitSolutions()).orElse(profileQuery ? 50 : ignoreTransfers ? 1 : Integer.MAX_VALUE);</b>
+<b class="nc">&nbsp;            initialTime = request.getEarliestDepartureTime();</b>
+<b class="nc">&nbsp;            maxProfileDuration = request.getMaxProfileDuration().toMillis();</b>
+<b class="nc">&nbsp;            arriveBy = request.isArriveBy();</b>
+<b class="nc">&nbsp;            walkSpeedKmH = request.getWalkSpeedKmH();</b>
+<b class="nc">&nbsp;            blockedRouteTypes = request.getBlockedRouteTypes();</b>
+<b class="nc">&nbsp;            transferPenaltiesByRouteType = request.getBoardingPenaltiesByRouteType();</b>
+<b class="nc">&nbsp;            translation = translationMap.getWithFallBack(request.getLocale());</b>
+<b class="nc">&nbsp;            enter = request.getPoints().get(0);</b>
+<b class="nc">&nbsp;            exit = request.getPoints().get(1);</b>
+<b class="nc">&nbsp;            limitTripTime = request.getLimitTripTime() != null ? request.getLimitTripTime().toMillis() : Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;            limitStreetTime = request.getLimitStreetTime() != null ? request.getLimitStreetTime().toMillis() : Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;            requestedPathDetails = request.getPathDetails();</b>
+<b class="nc">&nbsp;            accessProfile = config.getProfiles().stream().filter(p -&gt; p.getName().equals(request.getAccessProfile())).findFirst().get();</b>
+<b class="nc">&nbsp;            accessWeighting = weightingFactory.createWeighting(accessProfile, new PMap(), false);</b>
+<b class="nc">&nbsp;            accessSnapFilter = new DefaultSnapFilter(accessWeighting, encodingManager.getBooleanEncodedValue(Subnetwork.key(accessProfile.getName())));</b>
+<b class="nc">&nbsp;            transferProfile = config.getProfiles().stream().filter(p -&gt; p.getName().equals(&quot;foot&quot;)).findFirst().get();</b>
+<b class="nc">&nbsp;            transferWeighting = weightingFactory.createWeighting(transferProfile, new PMap(), false);</b>
+<b class="nc">&nbsp;            egressProfile = config.getProfiles().stream().filter(p -&gt; p.getName().equals(request.getEgressProfile())).findFirst().get();</b>
+<b class="nc">&nbsp;            egressWeighting = weightingFactory.createWeighting(egressProfile, new PMap(), false);</b>
+<b class="nc">&nbsp;            egressSnapFilter = new DefaultSnapFilter(egressWeighting, encodingManager.getBooleanEncodedValue(Subnetwork.key(egressProfile.getName())));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        GHResponse route() {
+<b class="nc">&nbsp;            StopWatch stopWatch = new StopWatch().start();</b>
+<b class="nc">&nbsp;            PtLocationSnapper.Result result = new PtLocationSnapper(baseGraph, locationIndex, gtfsStorage).snapAll(Arrays.asList(enter, exit), Arrays.asList(accessSnapFilter, egressSnapFilter));</b>
+<b class="nc">&nbsp;            queryGraph = result.queryGraph;</b>
+<b class="nc">&nbsp;            response.addDebugInfo(&quot;idLookup:&quot; + stopWatch.stop().getSeconds() + &quot;s&quot;);</b>
+&nbsp;
+&nbsp;            Label.NodeId startNode;
+&nbsp;            Label.NodeId destNode;
+<b class="nc">&nbsp;            if (arriveBy) {</b>
+<b class="nc">&nbsp;                startNode = result.nodes.get(1);</b>
+<b class="nc">&nbsp;                destNode = result.nodes.get(0);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                startNode = result.nodes.get(0);</b>
+<b class="nc">&nbsp;                destNode = result.nodes.get(1);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            List&lt;List&lt;Label.Transition&gt;&gt; solutions = findPaths(startNode, destNode);</b>
+<b class="nc">&nbsp;            parseSolutionsAndAddToResponse(solutions, result.points);</b>
+<b class="nc">&nbsp;            return response;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private void parseSolutionsAndAddToResponse(List&lt;List&lt;Label.Transition&gt;&gt; solutions, PointList waypoints) {
+<b class="nc">&nbsp;            TripFromLabel tripFromLabel = new TripFromLabel(queryGraph, encodingManager, gtfsStorage, realtimeFeed, pathDetailsBuilderFactory, walkSpeedKmH);</b>
+<b class="nc">&nbsp;            for (List&lt;Label.Transition&gt; solution : solutions) {</b>
+<b class="nc">&nbsp;                final ResponsePath responsePath = tripFromLabel.createResponsePath(translation, waypoints, queryGraph, accessWeighting, egressWeighting, transferWeighting, solution, requestedPathDetails);</b>
+<b class="nc">&nbsp;                responsePath.setImpossible(solution.stream().anyMatch(t -&gt; t.label.impossible));</b>
+<b class="nc">&nbsp;                responsePath.setTime((solution.get(solution.size() - 1).label.currentTime - solution.get(0).label.currentTime));</b>
+<b class="nc">&nbsp;                responsePath.setRouteWeight(router.weight(solution.get(solution.size() - 1).label));</b>
+<b class="nc">&nbsp;                response.add(responsePath);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            Comparator&lt;ResponsePath&gt; c = Comparator.comparingInt(p -&gt; (p.isImpossible() ? 1 : 0));</b>
+<b class="nc">&nbsp;            Comparator&lt;ResponsePath&gt; d = Comparator.comparingDouble(ResponsePath::getTime);</b>
+<b class="nc">&nbsp;            response.getAll().sort(c.thenComparing(d));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private List&lt;List&lt;Label.Transition&gt;&gt; findPaths(Label.NodeId startNode, Label.NodeId destNode) {
+<b class="nc">&nbsp;            StopWatch stopWatch = new StopWatch().start();</b>
+<b class="nc">&nbsp;            boolean isEgress = !arriveBy;</b>
+<b class="nc">&nbsp;            final GraphExplorer accessEgressGraphExplorer = new GraphExplorer(queryGraph, ptGraph, isEgress ? egressWeighting : accessWeighting, gtfsStorage, realtimeFeed, isEgress, true, false, walkSpeedKmH, false, blockedRouteTypes);</b>
+<b class="nc">&nbsp;            GtfsStorage.EdgeType edgeType = isEgress ? GtfsStorage.EdgeType.EXIT_PT : GtfsStorage.EdgeType.ENTER_PT;</b>
+<b class="nc">&nbsp;            MultiCriteriaLabelSetting stationRouter = new MultiCriteriaLabelSetting(accessEgressGraphExplorer, isEgress, false, false, maxProfileDuration, new ArrayList&lt;&gt;());</b>
+<b class="nc">&nbsp;            stationRouter.setBetaStreetTime(isEgress ? betaEgressTime : betaAccessTime);</b>
+<b class="nc">&nbsp;            stationRouter.setLimitStreetTime(limitStreetTime);</b>
+<b class="nc">&nbsp;            List&lt;Label&gt; stationLabels = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (Label label : stationRouter.calcLabels(destNode, initialTime)) {</b>
+<b class="nc">&nbsp;                visitedNodes++;</b>
+<b class="nc">&nbsp;                if (label.node.equals(startNode)) {</b>
+<b class="nc">&nbsp;                    stationLabels.add(label);</b>
+&nbsp;                    break;
+<b class="nc">&nbsp;                } else if (label.edge != null &amp;&amp; label.edge.getType() == edgeType) {</b>
+<b class="nc">&nbsp;                    stationLabels.add(label);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Map&lt;Label.NodeId, Label&gt; reverseSettledSet = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (Label stationLabel : stationLabels) {</b>
+<b class="nc">&nbsp;                reverseSettledSet.put(stationLabel.node, stationLabel);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            GraphExplorer graphExplorer = new GraphExplorer(queryGraph, ptGraph, arriveBy ? egressWeighting : accessWeighting, gtfsStorage, realtimeFeed, arriveBy, false, true, walkSpeedKmH, false, blockedRouteTypes);</b>
+<b class="nc">&nbsp;            List&lt;Label&gt; discoveredSolutions = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            router = new MultiCriteriaLabelSetting(graphExplorer, arriveBy, !ignoreTransfers, profileQuery, maxProfileDuration, discoveredSolutions);</b>
+<b class="nc">&nbsp;            router.setBetaTransfers(betaTransfers);</b>
+<b class="nc">&nbsp;            router.setBetaStreetTime(arriveBy ? betaEgressTime : betaAccessTime);</b>
+<b class="nc">&nbsp;            router.setBoardingPenaltyByRouteType(routeType -&gt; transferPenaltiesByRouteType.getOrDefault(routeType, 0L));</b>
+<b class="nc">&nbsp;            final long smallestStationLabelWalkTime = stationLabels.stream()</b>
+<b class="nc">&nbsp;                    .mapToLong(l -&gt; l.streetTime).min()</b>
+<b class="nc">&nbsp;                    .orElse(Long.MAX_VALUE);</b>
+<b class="nc">&nbsp;            router.setLimitTripTime(Math.max(0, limitTripTime - smallestStationLabelWalkTime));</b>
+<b class="nc">&nbsp;            router.setLimitStreetTime(Math.max(0, limitStreetTime - smallestStationLabelWalkTime));</b>
+&nbsp;            final long smallestStationLabelWeight;
+<b class="nc">&nbsp;            if (!stationLabels.isEmpty()) {</b>
+<b class="nc">&nbsp;                smallestStationLabelWeight = stationRouter.weight(stationLabels.get(0));</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                smallestStationLabelWeight = Long.MAX_VALUE;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            Map&lt;Label, Label&gt; originalSolutions = new HashMap&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;            Label accessEgressModeOnlySolution = null;</b>
+<b class="nc">&nbsp;            long highestWeightForDominationTest = Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;            for (Label label : router.calcLabels(startNode, initialTime)) {</b>
+<b class="nc">&nbsp;                visitedNodes++;</b>
+<b class="nc">&nbsp;                if (visitedNodes &gt;= maxVisitedNodesForRequest) {</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;                // For single-criterion or pareto queries, we run to the end.
+&nbsp;                //
+&nbsp;                // For profile queries, we need a limited time window. Limiting the number of solutions is not
+&nbsp;                // enough, as there may not be that many solutions - perhaps only walking - and we would run until the end of the calendar
+&nbsp;                // because the router can&#39;t know that a super-fast PT departure isn&#39;t going to happen some day.
+&nbsp;                //
+&nbsp;                // Arguably, the number of solutions doesn&#39;t even make sense as a parameter, since they are not really
+&nbsp;                // alternatives to choose from, but points in time where the optimal solution changes, which isn&#39;t really
+&nbsp;                // a criterion for a PT user to limit their search. Some O/D relations just have more complicated profiles than others.
+&nbsp;                // On the other hand, we may simply want to limit the amount of output that an arbitrarily complex profile
+&nbsp;                // can produce, so maybe we should keep both.
+&nbsp;                //
+&nbsp;                // But no matter what, we always have to run past the highest weight in the open set. If we don&#39;t,
+&nbsp;                // the last couple of routes in a profile will be suboptimal while the rest is good.
+<b class="nc">&nbsp;                if ((!profileQuery || profileFinished(router, discoveredSolutions, accessEgressModeOnlySolution)) &amp;&amp; router.weight(label) + smallestStationLabelWeight &gt; highestWeightForDominationTest) {</b>
+&nbsp;                    break;
+&nbsp;                }
+<b class="nc">&nbsp;                Label reverseLabel = reverseSettledSet.get(label.node);</b>
+<b class="nc">&nbsp;                if (reverseLabel != null) {</b>
+<b class="nc">&nbsp;                    long accessTime = label.streetTime;</b>
+<b class="nc">&nbsp;                    long egressTime = reverseLabel.streetTime;</b>
+<b class="nc">&nbsp;                    long disutilityOfAccessTime = (long) (accessTime * (betaAccessTime - 1.0));</b>
+<b class="nc">&nbsp;                    long disutilityOfEgressTime = (long) (egressTime * (betaEgressTime - 1.0));</b>
+<b class="nc">&nbsp;                    long disutilityOfStreetTime = disutilityOfAccessTime + disutilityOfEgressTime;</b>
+<b class="nc">&nbsp;                    Label combinedSolution = new Label(label.currentTime - reverseLabel.currentTime + initialTime.toEpochMilli(), null, label.node, label.nTransfers + reverseLabel.nTransfers, label.departureTime, 0, label.extraWeight + reverseLabel.extraWeight + disutilityOfStreetTime, 0, label.impossible, null);</b>
+&nbsp;                    Predicate&lt;Label&gt; filter;
+<b class="nc">&nbsp;                    if (profileQuery &amp;&amp; combinedSolution.departureTime != null)</b>
+<b class="nc">&nbsp;                        filter = targetLabel -&gt; (!arriveBy ? router.prc(combinedSolution, targetLabel) : router.rprc(combinedSolution, targetLabel));</b>
+&nbsp;                    else
+<b class="nc">&nbsp;                        filter = tagetLabel -&gt; true;</b>
+<b class="nc">&nbsp;                    if (router.isNotDominatedByAnyOf(combinedSolution, discoveredSolutions, filter)) {</b>
+<b class="nc">&nbsp;                        router.removeDominated(combinedSolution, discoveredSolutions, filter);</b>
+<b class="nc">&nbsp;                        List&lt;Label&gt; closedSolutions = discoveredSolutions.stream().filter(s -&gt; router.weight(s) &lt; router.weight(label) + smallestStationLabelWeight).collect(Collectors.toList());</b>
+<b class="nc">&nbsp;                        if (closedSolutions.size() &gt;= limitSolutions) continue;</b>
+<b class="nc">&nbsp;                        if (profileQuery &amp;&amp; combinedSolution.departureTime != null &amp;&amp; (combinedSolution.departureTime - initialTime.toEpochMilli()) * (arriveBy ? -1L : 1L) &gt; maxProfileDuration &amp;&amp; closedSolutions.size() &gt; 0 &amp;&amp; closedSolutions.get(closedSolutions.size() - 1).departureTime != null &amp;&amp; (closedSolutions.get(closedSolutions.size() - 1).departureTime - initialTime.toEpochMilli()) * (arriveBy ? -1L : 1L) &gt; maxProfileDuration) {</b>
+&nbsp;                            continue;
+&nbsp;                        }
+<b class="nc">&nbsp;                        discoveredSolutions.add(combinedSolution);</b>
+<b class="nc">&nbsp;                        discoveredSolutions.sort(comparingLong(s -&gt; Optional.ofNullable(s.departureTime).orElse(0L)));</b>
+<b class="nc">&nbsp;                        originalSolutions.put(combinedSolution, label);</b>
+<b class="nc">&nbsp;                        if (label.nTransfers == 0 &amp;&amp; reverseLabel.nTransfers == 0) {</b>
+<b class="nc">&nbsp;                            accessEgressModeOnlySolution = combinedSolution;</b>
+&nbsp;                        }
+<b class="nc">&nbsp;                        if (profileQuery) {</b>
+<b class="nc">&nbsp;                            highestWeightForDominationTest = discoveredSolutions.stream().mapToLong(router::weight).max().orElse(Long.MAX_VALUE);</b>
+<b class="nc">&nbsp;                            if (accessEgressModeOnlySolution != null &amp;&amp; discoveredSolutions.size() &lt; limitSolutions) {</b>
+&nbsp;                                // If we have a walk solution, we have it at every point in time in the profile.
+&nbsp;                                // (I can start walking any time I want, unlike with bus departures.)
+&nbsp;                                // Here we virtually add it to the end of the profile, so it acts as a sentinel
+&nbsp;                                // to remind us that we still have to search that far to close the set.
+<b class="nc">&nbsp;                                highestWeightForDominationTest = Math.max(highestWeightForDominationTest, router.weight(accessEgressModeOnlySolution) + maxProfileDuration);</b>
+&nbsp;                            }
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            highestWeightForDominationTest = discoveredSolutions.stream().filter(s -&gt; !s.impossible &amp;&amp; (ignoreTransfers || s.nTransfers &lt;= 1)).mapToLong(router::weight).min().orElse(Long.MAX_VALUE);</b>
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            List&lt;List&lt;Label.Transition&gt;&gt; paths = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (Label discoveredSolution : discoveredSolutions) {</b>
+<b class="nc">&nbsp;                Label originalSolution = originalSolutions.get(discoveredSolution);</b>
+<b class="nc">&nbsp;                List&lt;Label.Transition&gt; pathToDestinationStop = Label.getTransitions(originalSolution, arriveBy);</b>
+<b class="nc">&nbsp;                if (arriveBy) {</b>
+<b class="nc">&nbsp;                    List&lt;Label.Transition&gt; pathFromStation = Label.getTransitions(reverseSettledSet.get(pathToDestinationStop.get(0).label.node), false);</b>
+<b class="nc">&nbsp;                    long diff = pathToDestinationStop.get(0).label.currentTime - pathFromStation.get(pathFromStation.size() - 1).label.currentTime;</b>
+<b class="nc">&nbsp;                    List&lt;Label.Transition&gt; patchedPathFromStation = pathFromStation.stream().map(t -&gt; {</b>
+<b class="nc">&nbsp;                        return new Label.Transition(new Label(t.label.currentTime + diff, t.label.edge, t.label.node, t.label.nTransfers, t.label.departureTime, t.label.streetTime, t.label.extraWeight, t.label.residualDelay, t.label.impossible, null), t.edge);</b>
+<b class="nc">&nbsp;                    }).collect(Collectors.toList());</b>
+<b class="nc">&nbsp;                    List&lt;Label.Transition&gt; pp = new ArrayList&lt;&gt;(pathToDestinationStop.subList(1, pathToDestinationStop.size()));</b>
+<b class="nc">&nbsp;                    pp.addAll(0, patchedPathFromStation);</b>
+<b class="nc">&nbsp;                    paths.add(pp);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    Label destinationStopLabel = pathToDestinationStop.get(pathToDestinationStop.size() - 1).label;</b>
+<b class="nc">&nbsp;                    List&lt;Label.Transition&gt; pathFromStation = Label.getTransitions(reverseSettledSet.get(destinationStopLabel.node), true);</b>
+<b class="nc">&nbsp;                    long diff = destinationStopLabel.currentTime - pathFromStation.get(0).label.currentTime;</b>
+<b class="nc">&nbsp;                    List&lt;Label.Transition&gt; patchedPathFromStation = pathFromStation.stream().map(t -&gt; {</b>
+<b class="nc">&nbsp;                        return new Label.Transition(new Label(t.label.currentTime + diff, t.label.edge, t.label.node, destinationStopLabel.nTransfers + t.label.nTransfers, t.label.departureTime, destinationStopLabel.streetTime + pathFromStation.get(0).label.streetTime, destinationStopLabel.extraWeight + t.label.extraWeight, t.label.residualDelay, t.label.impossible, null), t.edge);</b>
+<b class="nc">&nbsp;                    }).collect(Collectors.toList());</b>
+<b class="nc">&nbsp;                    List&lt;Label.Transition&gt; pp = new ArrayList&lt;&gt;(pathToDestinationStop);</b>
+<b class="nc">&nbsp;                    pp.addAll(patchedPathFromStation.subList(1, pathFromStation.size()));</b>
+<b class="nc">&nbsp;                    paths.add(pp);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            response.addDebugInfo(&quot;routing:&quot; + stopWatch.stop().getSeconds() + &quot;s&quot;);</b>
+<b class="nc">&nbsp;            if (discoveredSolutions.isEmpty() &amp;&amp; visitedNodes &gt;= maxVisitedNodesForRequest) {</b>
+<b class="nc">&nbsp;                response.addError(new MaximumNodesExceededException(&quot;No path found - maximum number of nodes exceeded: &quot; + maxVisitedNodesForRequest, maxVisitedNodesForRequest));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            response.getHints().putObject(&quot;visited_nodes.sum&quot;, visitedNodes);</b>
+<b class="nc">&nbsp;            response.getHints().putObject(&quot;visited_nodes.average&quot;, visitedNodes);</b>
+<b class="nc">&nbsp;            if (discoveredSolutions.isEmpty()) {</b>
+<b class="nc">&nbsp;                response.addError(new ConnectionNotFoundException(&quot;No route found&quot;, Collections.emptyMap()));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return paths;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private boolean profileFinished(MultiCriteriaLabelSetting router, List&lt;Label&gt; discoveredSolutions, Label walkSolution) {
+<b class="nc">&nbsp;            return discoveredSolutions.size() &gt;= limitSolutions ||</b>
+<b class="nc">&nbsp;                    (!discoveredSolutions.isEmpty() &amp;&amp; router.departureTimeSinceStartTime(discoveredSolutions.get(discoveredSolutions.size() - 1)) != null &amp;&amp; router.departureTimeSinceStartTime(discoveredSolutions.get(discoveredSolutions.size() - 1)) &gt; maxProfileDuration) ||</b>
+&nbsp;                    walkSolution != null;
+&nbsp;            // Imagine we can always add the walk solution again to the end of the list (it can start any time).
+&nbsp;            // In turn, we must also think of this virtual walk solution in the other test (where we check if all labels are closed).
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

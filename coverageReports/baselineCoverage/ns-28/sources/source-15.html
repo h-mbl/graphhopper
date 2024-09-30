@@ -1,0 +1,172 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MountainBikePriorityParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: MountainBikePriorityParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MountainBikePriorityParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (9/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (27/27)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.util.PriorityCode;
+&nbsp;
+&nbsp;import java.util.TreeMap;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.ev.RouteNetwork.*;
+&nbsp;import static com.graphhopper.routing.util.PriorityCode.*;
+&nbsp;
+&nbsp;public class MountainBikePriorityParser extends BikeCommonPriorityParser {
+&nbsp;
+&nbsp;    public MountainBikePriorityParser(EncodedValueLookup lookup) {
+<b class="fc">&nbsp;        this(lookup.getDecimalEncodedValue(VehicleSpeed.key(&quot;mtb&quot;)),</b>
+<b class="fc">&nbsp;                lookup.getDecimalEncodedValue(VehiclePriority.key(&quot;mtb&quot;)),</b>
+<b class="fc">&nbsp;                lookup.getEnumEncodedValue(BikeNetwork.KEY, RouteNetwork.class));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected MountainBikePriorityParser(DecimalEncodedValue speedEnc, DecimalEncodedValue priorityEnc,
+&nbsp;                                         EnumEncodedValue&lt;RouteNetwork&gt; bikeRouteEnc) {
+<b class="fc">&nbsp;        super(priorityEnc, speedEnc, bikeRouteEnc);</b>
+&nbsp;
+<b class="fc">&nbsp;        routeMap.put(INTERNATIONAL, PREFER.getValue());</b>
+<b class="fc">&nbsp;        routeMap.put(NATIONAL, PREFER.getValue());</b>
+<b class="fc">&nbsp;        routeMap.put(REGIONAL, PREFER.getValue());</b>
+<b class="fc">&nbsp;        routeMap.put(LOCAL, BEST.getValue());</b>
+&nbsp;
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;road&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;track&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;path&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;service&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;tertiary&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;tertiary_link&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;residential&quot;);</b>
+<b class="fc">&nbsp;        preferHighwayTags.add(&quot;unclassified&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        setSpecificClassBicycle(&quot;mtb&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    void collect(ReaderWay way, double wayTypeSpeed, TreeMap&lt;Double, PriorityCode&gt; weightToPrioMap) {
+<b class="fc">&nbsp;        super.collect(way, wayTypeSpeed, weightToPrioMap);</b>
+&nbsp;
+<b class="fc">&nbsp;        String highway = way.getTag(&quot;highway&quot;);</b>
+<b class="fc">&nbsp;        if (&quot;track&quot;.equals(highway)) {</b>
+<b class="fc">&nbsp;            String trackType = way.getTag(&quot;tracktype&quot;);</b>
+<b class="fc">&nbsp;            if (&quot;grade1&quot;.equals(trackType) || goodSurface.contains(way.getTag(&quot;surface&quot;,&quot;&quot;)))</b>
+<b class="fc">&nbsp;                weightToPrioMap.put(50d, SLIGHT_PREFER);</b>
+<b class="fc">&nbsp;            else if (trackType == null)</b>
+<b class="fc">&nbsp;                weightToPrioMap.put(90d, PREFER);</b>
+<b class="pc">&nbsp;            else if (trackType.startsWith(&quot;grade&quot;))</b>
+<b class="fc">&nbsp;                weightToPrioMap.put(100d, VERY_NICE);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

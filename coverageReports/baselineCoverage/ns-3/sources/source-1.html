@@ -1,0 +1,231 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Agency</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Agency (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Agency</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Agency$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/17)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URL;
+&nbsp;
+<b class="nc">&nbsp;public class Agency extends Entity {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = -2825890165823575940L;
+&nbsp;    public String agency_id;
+&nbsp;    public String agency_name;
+&nbsp;    public URL    agency_url;
+&nbsp;    public String agency_timezone;
+&nbsp;    public String agency_lang;
+&nbsp;    public String agency_phone;
+&nbsp;    public URL    agency_fare_url;
+&nbsp;    public URL    agency_branding_url;
+&nbsp;    public String feed_id;
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;Agency&gt; {
+&nbsp;
+&nbsp;        public Loader(GTFSFeed feed) {
+<b class="nc">&nbsp;            super(feed, &quot;agency&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+<b class="nc">&nbsp;            Agency a = new Agency();</b>
+<b class="nc">&nbsp;            a.sourceFileLine = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;            a.agency_id    = getStringField(&quot;agency_id&quot;, false); // can only be absent if there is a single agency -- requires a special validator.</b>
+<b class="nc">&nbsp;            a.agency_name  = getStringField(&quot;agency_name&quot;, true);</b>
+<b class="nc">&nbsp;            a.agency_url   = getUrlField(&quot;agency_url&quot;, true);</b>
+<b class="nc">&nbsp;            a.agency_lang  = getStringField(&quot;agency_lang&quot;, false);</b>
+<b class="nc">&nbsp;            a.agency_phone = getStringField(&quot;agency_phone&quot;, false);</b>
+<b class="nc">&nbsp;            a.agency_timezone = getStringField(&quot;agency_timezone&quot;, true);</b>
+<b class="nc">&nbsp;            a.agency_fare_url = getUrlField(&quot;agency_fare_url&quot;, false);</b>
+<b class="nc">&nbsp;            a.agency_branding_url = getUrlField(&quot;agency_branding_url&quot;, false);</b>
+<b class="nc">&nbsp;            a.feed = feed;</b>
+<b class="nc">&nbsp;            a.feed_id = feed.feedId;</b>
+&nbsp;
+&nbsp;            // TODO clooge due to not being able to have null keys in mapdb
+<b class="nc">&nbsp;            if (a.agency_id == null) a.agency_id = &quot;NONE&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;            feed.agency.put(a.agency_id, a);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

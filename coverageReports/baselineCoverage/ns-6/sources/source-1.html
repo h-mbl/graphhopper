@@ -1,0 +1,230 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > StringUtils</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.apache.commons.lang3</a>
+</div>
+
+<h1>Coverage Summary for Class: StringUtils (com.graphhopper.apache.commons.lang3)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">StringUtils</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (1/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.4%
+  </span>
+  <span class="absValue">
+    (27/28)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Licensed to the Apache Software Foundation (ASF) under one or more
+&nbsp; * contributor license agreements.  See the NOTICE file distributed with
+&nbsp; * this work for additional information regarding copyright ownership.
+&nbsp; * The ASF licenses this file to You under the Apache License, Version 2.0
+&nbsp; * (the &quot;License&quot;); you may not use this file except in compliance with
+&nbsp; * the License.  You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *      http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.apache.commons.lang3;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class is a partial copy of the org.apache.commons.lang3.StringUtils
+&nbsp; * that can be found here: https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/StringUtils.java
+&nbsp; * &lt;p&gt;
+&nbsp; * The library can be found here: https://commons.apache.org/proper/commons-lang/
+&nbsp; */
+<b class="nc">&nbsp;public class StringUtils {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * &lt;p&gt;Find the Levenshtein distance between two Strings.&lt;/p&gt;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * &lt;p&gt;This is the number of changes needed to change one String into
+&nbsp;     * another, where each change is a single character modification (deletion,
+&nbsp;     * insertion or substitution).&lt;/p&gt;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * &lt;p&gt;The implementation uses a single-dimensional array of length s.length() + 1. See
+&nbsp;     * &lt;a href=&quot;http://blog.softwx.net/2014/12/optimizing-levenshtein-algorithm-in-c.html&quot;&gt;
+&nbsp;     * http://blog.softwx.net/2014/12/optimizing-levenshtein-algorithm-in-c.html&lt;/a&gt; for details.&lt;/p&gt;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * &lt;pre&gt;
+&nbsp;     * StringUtils.getLevenshteinDistance(null, *)             = IllegalArgumentException
+&nbsp;     * StringUtils.getLevenshteinDistance(*, null)             = IllegalArgumentException
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;&quot;,&quot;&quot;)               = 0
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;&quot;,&quot;a&quot;)              = 1
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;aaapppp&quot;, &quot;&quot;)       = 7
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;frog&quot;, &quot;fog&quot;)       = 1
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;fly&quot;, &quot;ant&quot;)        = 3
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;elephant&quot;, &quot;hippo&quot;) = 7
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;hippo&quot;, &quot;elephant&quot;) = 7
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;hippo&quot;, &quot;zzzzzzzz&quot;) = 8
+&nbsp;     * StringUtils.getLevenshteinDistance(&quot;hello&quot;, &quot;hallo&quot;)    = 1
+&nbsp;     * &lt;/pre&gt;
+&nbsp;     *
+&nbsp;     * @param s the first String, must not be null
+&nbsp;     * @param t the second String, must not be null
+&nbsp;     * @return result distance
+&nbsp;     * @throws IllegalArgumentException if either String input {@code null}
+&nbsp;     * @since 3.0 Changed signature from getLevenshteinDistance(String, String) to
+&nbsp;     * getLevenshteinDistance(CharSequence, CharSequence)
+&nbsp;     */
+&nbsp;    public static int getLevenshteinDistance(CharSequence s, CharSequence t) {
+<b class="fc">&nbsp;        if (s == null || t == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Strings must not be null&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int n = s.length();</b>
+<b class="fc">&nbsp;        int m = t.length();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (n == 0) {</b>
+<b class="fc">&nbsp;            return m;</b>
+<b class="fc">&nbsp;        } else if (m == 0) {</b>
+<b class="fc">&nbsp;            return n;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (n &gt; m) {</b>
+&nbsp;            // swap the input strings to consume less memory
+<b class="fc">&nbsp;            final CharSequence tmp = s;</b>
+<b class="fc">&nbsp;            s = t;</b>
+<b class="fc">&nbsp;            t = tmp;</b>
+<b class="fc">&nbsp;            n = m;</b>
+<b class="fc">&nbsp;            m = t.length();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        final int p[] = new int[n + 1];</b>
+&nbsp;        // indexes into strings s and t
+&nbsp;        int i; // iterates through s
+&nbsp;        int j; // iterates through t
+&nbsp;        int upper_left;
+&nbsp;        int upper;
+&nbsp;
+&nbsp;        char t_j; // jth character of t
+&nbsp;        int cost;
+&nbsp;
+<b class="fc">&nbsp;        for (i = 0; i &lt;= n; i++) {</b>
+<b class="fc">&nbsp;            p[i] = i;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (j = 1; j &lt;= m; j++) {</b>
+<b class="fc">&nbsp;            upper_left = p[0];</b>
+<b class="fc">&nbsp;            t_j = t.charAt(j - 1);</b>
+<b class="fc">&nbsp;            p[0] = j;</b>
+&nbsp;
+<b class="fc">&nbsp;            for (i = 1; i &lt;= n; i++) {</b>
+<b class="fc">&nbsp;                upper = p[i];</b>
+<b class="fc">&nbsp;                cost = s.charAt(i - 1) == t_j ? 0 : 1;</b>
+&nbsp;                // minimum of cell to the left+1, to the top+1, diagonally left and up +cost
+<b class="fc">&nbsp;                p[i] = Math.min(Math.min(p[i - 1] + 1, p[i] + 1), upper_left + cost);</b>
+<b class="fc">&nbsp;                upper_left = upper;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return p[n];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

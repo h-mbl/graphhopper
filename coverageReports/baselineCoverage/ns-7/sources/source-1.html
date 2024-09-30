@@ -1,0 +1,271 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GHMRequest</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.api</a>
+</div>
+
+<h1>Coverage Summary for Class: GHMRequest (com.graphhopper.api)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GHMRequest</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/29)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/45)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.api;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonAnySetter;
+&nbsp;import com.fasterxml.jackson.annotation.JsonProperty;
+&nbsp;import com.graphhopper.util.PMap;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="nc">&nbsp;public class GHMRequest {</b>
+&nbsp;    private String profile;
+&nbsp;    private List&lt;GHPoint&gt; points;
+&nbsp;    private List&lt;GHPoint&gt; fromPoints;
+&nbsp;    private List&lt;GHPoint&gt; toPoints;
+&nbsp;
+&nbsp;    private List&lt;String&gt; pointHints;
+&nbsp;    private List&lt;String&gt; fromPointHints;
+&nbsp;    private List&lt;String&gt; toPointHints;
+&nbsp;
+&nbsp;    private List&lt;String&gt; curbsides;
+&nbsp;    private List&lt;String&gt; fromCurbsides;
+&nbsp;    private List&lt;String&gt; toCurbsides;
+&nbsp;
+&nbsp;    private List&lt;String&gt; snapPreventions;
+<b class="nc">&nbsp;    private final PMap hints = new PMap();</b>
+<b class="nc">&nbsp;    private List&lt;String&gt; outArrays = Collections.EMPTY_LIST;</b>
+<b class="nc">&nbsp;    private boolean failFast = true;</b>
+&nbsp;
+&nbsp;    public GHMRequest setProfile(String profile) {
+<b class="nc">&nbsp;        this.profile = profile;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getProfile() {
+<b class="nc">&nbsp;        return profile;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setPoints(List&lt;GHPoint&gt; points) {
+<b class="nc">&nbsp;        this.points = points;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;GHPoint&gt; getPoints() {
+<b class="nc">&nbsp;        return points;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setFromPoints(List&lt;GHPoint&gt; fromPoints) {
+<b class="nc">&nbsp;        this.fromPoints = fromPoints;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;GHPoint&gt; getFromPoints() {
+<b class="nc">&nbsp;        return fromPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setToPoints(List&lt;GHPoint&gt; toPoints) {
+<b class="nc">&nbsp;        this.toPoints = toPoints;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;GHPoint&gt; getToPoints() {
+<b class="nc">&nbsp;        return toPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setPointHints(List&lt;String&gt; pointHints) {
+<b class="nc">&nbsp;        this.pointHints = pointHints;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getPointHints() {
+<b class="nc">&nbsp;        return pointHints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setFromPointHints(List&lt;String&gt; fromPointHints) {
+<b class="nc">&nbsp;        this.fromPointHints = fromPointHints;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getFromPointHints() {
+<b class="nc">&nbsp;        return fromPointHints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setToPointHints(List&lt;String&gt; toPointHints) {
+<b class="nc">&nbsp;        this.toPointHints = toPointHints;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getToPointHints() {
+<b class="nc">&nbsp;        return toPointHints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setCurbsides(List&lt;String&gt; curbsides) {
+<b class="nc">&nbsp;        this.curbsides = curbsides;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getCurbsides() {
+<b class="nc">&nbsp;        return curbsides;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setFromCurbsides(List&lt;String&gt; fromCurbsides) {
+<b class="nc">&nbsp;        this.fromCurbsides = fromCurbsides;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getFromCurbsides() {
+<b class="nc">&nbsp;        return fromCurbsides;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setToCurbsides(List&lt;String&gt; toCurbsides) {
+<b class="nc">&nbsp;        this.toCurbsides = toCurbsides;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getToCurbsides() {
+<b class="nc">&nbsp;        return toCurbsides;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHMRequest setSnapPreventions(List&lt;String&gt; snapPreventions) {
+<b class="nc">&nbsp;        this.snapPreventions = snapPreventions;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getSnapPreventions() {
+<b class="nc">&nbsp;        return snapPreventions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // a good trick to serialize unknown properties into the HintsMap
+&nbsp;    @JsonAnySetter
+&nbsp;    public GHMRequest putHint(String fieldName, Object value) {
+<b class="nc">&nbsp;        hints.putObject(fieldName, value);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public PMap getHints() {
+<b class="nc">&nbsp;        return hints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Possible values are &#39;weights&#39;, &#39;times&#39;, &#39;distances&#39;
+&nbsp;     */
+&nbsp;    public GHMRequest setOutArrays(List&lt;String&gt; outArrays) {
+<b class="nc">&nbsp;        this.outArrays = outArrays;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getOutArrays() {
+<b class="nc">&nbsp;        return outArrays;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param failFast if false the matrix calculation will be continued even when some points are not connected
+&nbsp;     */
+&nbsp;    @JsonProperty(&quot;fail_fast&quot;)
+&nbsp;    public void setFailFast(boolean failFast) {
+<b class="nc">&nbsp;        this.failFast = failFast;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean getFailFast() {
+<b class="nc">&nbsp;        return failFast;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

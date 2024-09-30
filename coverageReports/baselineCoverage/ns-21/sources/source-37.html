@@ -1,0 +1,240 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > StringEncodedValue</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ev</a>
+</div>
+
+<h1>Coverage Summary for Class: StringEncodedValue (com.graphhopper.routing.ev)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">StringEncodedValue</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.9%
+  </span>
+  <span class="absValue">
+    (8/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.9%
+  </span>
+  <span class="absValue">
+    (13/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (36/39)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.ev;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonCreator;
+&nbsp;import com.fasterxml.jackson.annotation.JsonProperty;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class holds a List of up to {@link #maxValues} encountered Strings and stores
+&nbsp; * &lt;i&gt;index+1&lt;/i&gt; to indicate a string is set or &lt;i&gt;0&lt;/i&gt; if no value is assigned
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @author Thomas Butz
+&nbsp; */
+&nbsp;public final class StringEncodedValue extends IntEncodedValueImpl {
+&nbsp;    private final int maxValues;
+&nbsp;    private final List&lt;String&gt; values;
+&nbsp;    private final Map&lt;String, Integer&gt; indexMap;
+&nbsp;
+&nbsp;    public StringEncodedValue(String name, int expectedValueCount) {
+<b class="fc">&nbsp;        this(name, expectedValueCount, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public StringEncodedValue(String name, int expectedValueCount, boolean storeTwoDirections) {
+<b class="fc">&nbsp;        super(name, 32 - Integer.numberOfLeadingZeros(expectedValueCount), storeTwoDirections);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.maxValues = roundUp(expectedValueCount);</b>
+<b class="fc">&nbsp;        this.values = new ArrayList&lt;&gt;(maxValues);</b>
+<b class="fc">&nbsp;        this.indexMap = new HashMap&lt;&gt;(maxValues);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public StringEncodedValue(String name, int bits, List&lt;String&gt; values, boolean storeTwoDirections) {
+<b class="fc">&nbsp;        super(name, bits, storeTwoDirections);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.maxValues = (1 &lt;&lt; bits) - 1;</b>
+<b class="fc">&nbsp;        if (values.size() &gt; maxValues)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Number of values is higher than the maximum value count: &quot;</b>
+<b class="fc">&nbsp;                    + values.size() + &quot; &gt; &quot; + maxValues);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.values = new ArrayList&lt;&gt;(values);</b>
+<b class="fc">&nbsp;        this.indexMap = new HashMap&lt;&gt;(values.size());</b>
+<b class="fc">&nbsp;        int index = 1;</b>
+<b class="fc">&nbsp;        for (String value : values) {</b>
+<b class="fc">&nbsp;            indexMap.put(value, index++);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+&nbsp;    StringEncodedValue(
+&nbsp;            @JsonProperty(&quot;name&quot;) String name,
+&nbsp;            @JsonProperty(&quot;bits&quot;) int bits,
+&nbsp;            @JsonProperty(&quot;min_storable_value&quot;) int minStorableValue,
+&nbsp;            @JsonProperty(&quot;max_storable_value&quot;) int maxStorableValue,
+&nbsp;            @JsonProperty(&quot;max_value&quot;) int maxValue,
+&nbsp;            @JsonProperty(&quot;negate_reverse_direction&quot;) boolean negateReverseDirection,
+&nbsp;            @JsonProperty(&quot;store_two_directions&quot;) boolean storeTwoDirections,
+&nbsp;            @JsonProperty(&quot;fwd_data_index&quot;) int fwdDataIndex,
+&nbsp;            @JsonProperty(&quot;bwd_data_index&quot;) int bwdDataIndex,
+&nbsp;            @JsonProperty(&quot;fwd_shift&quot;) int fwdShift,
+&nbsp;            @JsonProperty(&quot;bwd_shift&quot;) int bwdShift,
+&nbsp;            @JsonProperty(&quot;fwd_mask&quot;) int fwdMask,
+&nbsp;            @JsonProperty(&quot;bwd_mask&quot;) int bwdMask,
+&nbsp;            @JsonProperty(&quot;max_values&quot;) int maxValues,
+&nbsp;            @JsonProperty(&quot;values&quot;) List&lt;String&gt; values,
+&nbsp;            @JsonProperty(&quot;index_map&quot;) HashMap&lt;String, Integer&gt; indexMap) {
+&nbsp;        // we need this constructor for Jackson
+<b class="fc">&nbsp;        super(name, bits, minStorableValue, maxStorableValue, maxValue, negateReverseDirection, storeTwoDirections, fwdDataIndex, bwdDataIndex, fwdShift, bwdShift, fwdMask, bwdMask);</b>
+<b class="pc">&nbsp;        if (values.size() &gt; maxValues)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Number of values is higher than the maximum value count: &quot;</b>
+<b class="nc">&nbsp;                    + values.size() + &quot; &gt; &quot; + maxValues);</b>
+<b class="fc">&nbsp;        this.maxValues = maxValues;</b>
+<b class="fc">&nbsp;        this.values = values;</b>
+<b class="fc">&nbsp;        this.indexMap = indexMap;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void setString(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess, String value) {
+<b class="fc">&nbsp;        if (value == null) {</b>
+<b class="fc">&nbsp;            super.setInt(reverse, edgeId, edgeIntAccess, 0);</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="fc">&nbsp;        int index = indexMap.getOrDefault(value, 0);</b>
+<b class="fc">&nbsp;        if (index == 0) {</b>
+<b class="fc">&nbsp;            if (values.size() == maxValues)</b>
+<b class="fc">&nbsp;                throw new IllegalStateException(&quot;Maximum number of values reached for &quot; + getName() + &quot;: &quot; + maxValues);</b>
+&nbsp;
+<b class="fc">&nbsp;            values.add(value);</b>
+<b class="fc">&nbsp;            index = values.size();</b>
+<b class="fc">&nbsp;            indexMap.put(value, index);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        super.setInt(reverse, edgeId, edgeIntAccess, index);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final String getString(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess) {
+<b class="fc">&nbsp;        int value = super.getInt(reverse, edgeId, edgeIntAccess);</b>
+<b class="fc">&nbsp;        if (value == 0) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return values.get(value - 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param value the value to be rounded
+&nbsp;     * @return the value rounded to the highest integer with the same number of leading zeros
+&nbsp;     */
+&nbsp;    private static int roundUp(int value) {
+<b class="fc">&nbsp;        return -1 &gt;&gt;&gt; Integer.numberOfLeadingZeros(value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param value the String to retrieve the index
+&nbsp;     * @return the non-zero index of the String or &lt;i&gt;0&lt;/i&gt; if it couldn&#39;t be found
+&nbsp;     */
+&nbsp;    public int indexOf(String value) {
+<b class="nc">&nbsp;        return indexMap.getOrDefault(value, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return an unmodifiable List of the current values
+&nbsp;     */
+&nbsp;    public List&lt;String&gt; getValues() {
+<b class="fc">&nbsp;        return Collections.unmodifiableList(values);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

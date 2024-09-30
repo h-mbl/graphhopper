@@ -1,0 +1,470 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MultiCriteriaLabelSetting</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: MultiCriteriaLabelSetting (com.graphhopper.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MultiCriteriaLabelSetting</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/58)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/56)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">MultiCriteriaLabelSetting$LabelComparator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">MultiCriteriaLabelSetting$MultiCriteriaLabelSettingSpliterator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/92)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/62)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/166)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/133)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.gtfs;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.Consumer;
+&nbsp;import java.util.function.IntToLongFunction;
+&nbsp;import java.util.function.Predicate;
+&nbsp;
+&nbsp;/**
+&nbsp; * Implements a Multi-Criteria Label Setting (MLS) path finding algorithm
+&nbsp; * with the criteria earliest arrival time and number of transfers.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Michael Zilske
+&nbsp; * @author Peter Karich
+&nbsp; * @author Wesam Herbawi
+&nbsp; */
+&nbsp;public class MultiCriteriaLabelSetting {
+&nbsp;
+&nbsp;    private final Comparator&lt;Label&gt; queueComparator;
+&nbsp;    private final List&lt;Label&gt; targetLabels;
+&nbsp;    private long startTime;
+&nbsp;    private final Map&lt;Label.NodeId, List&lt;Label&gt;&gt; fromMap;
+&nbsp;    private final PriorityQueue&lt;Label&gt; fromHeap;
+&nbsp;    private final long maxProfileDuration;
+&nbsp;    private final boolean reverse;
+&nbsp;    private final boolean mindTransfers;
+&nbsp;    private final boolean profileQuery;
+&nbsp;    private final GraphExplorer explorer;
+<b class="nc">&nbsp;    private double betaTransfers = 0.0;</b>
+<b class="nc">&nbsp;    private IntToLongFunction transferPenaltiesByRouteType = (routeType -&gt; 0L);</b>
+<b class="nc">&nbsp;    private double betaStreetTime = 1.0;</b>
+<b class="nc">&nbsp;    private long limitTripTime = Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;    private long limitStreetTime = Long.MAX_VALUE;</b>
+&nbsp;
+<b class="nc">&nbsp;    public MultiCriteriaLabelSetting(GraphExplorer explorer, boolean reverse, boolean mindTransfers, boolean profileQuery, long maxProfileDuration, List&lt;Label&gt; solutions) {</b>
+<b class="nc">&nbsp;        this.explorer = explorer;</b>
+<b class="nc">&nbsp;        this.reverse = reverse;</b>
+<b class="nc">&nbsp;        this.mindTransfers = mindTransfers;</b>
+<b class="nc">&nbsp;        this.profileQuery = profileQuery;</b>
+<b class="nc">&nbsp;        this.maxProfileDuration = maxProfileDuration;</b>
+<b class="nc">&nbsp;        this.targetLabels = solutions;</b>
+&nbsp;
+<b class="nc">&nbsp;        queueComparator = new LabelComparator();</b>
+<b class="nc">&nbsp;        fromHeap = new PriorityQueue&lt;&gt;(queueComparator);</b>
+<b class="nc">&nbsp;        fromMap = new HashMap&lt;&gt;();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Iterable&lt;Label&gt; calcLabels(Label.NodeId from, Instant startTime) {
+<b class="nc">&nbsp;        this.startTime = startTime.toEpochMilli();</b>
+<b class="nc">&nbsp;        return () -&gt; Spliterators.iterator(new MultiCriteriaLabelSettingSpliterator(from));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setBetaTransfers(double betaTransfers) {
+<b class="nc">&nbsp;        this.betaTransfers = betaTransfers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setBetaStreetTime(double betaWalkTime) {
+<b class="nc">&nbsp;        this.betaStreetTime = betaWalkTime;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setBoardingPenaltyByRouteType(IntToLongFunction transferPenaltiesByRouteType) {
+<b class="nc">&nbsp;        this.transferPenaltiesByRouteType = transferPenaltiesByRouteType;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private class MultiCriteriaLabelSettingSpliterator extends Spliterators.AbstractSpliterator&lt;Label&gt; {
+&nbsp;
+<b class="nc">&nbsp;        MultiCriteriaLabelSettingSpliterator(Label.NodeId from) {</b>
+<b class="nc">&nbsp;            super(0, 0);</b>
+<b class="nc">&nbsp;            Label label = new Label(startTime, null, from, 0, null, 0, 0L, 0, false, null);</b>
+<b class="nc">&nbsp;            ArrayList&lt;Label&gt; labels = new ArrayList&lt;&gt;(1);</b>
+<b class="nc">&nbsp;            labels.add(label);</b>
+<b class="nc">&nbsp;            fromMap.put(from, labels);</b>
+<b class="nc">&nbsp;            fromHeap.add(label);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean tryAdvance(Consumer&lt;? super Label&gt; action) {
+<b class="nc">&nbsp;            while (!fromHeap.isEmpty() &amp;&amp; fromHeap.peek().deleted)</b>
+<b class="nc">&nbsp;                fromHeap.poll();</b>
+<b class="nc">&nbsp;            if (fromHeap.isEmpty()) {</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                Label label = fromHeap.poll();</b>
+<b class="nc">&nbsp;                action.accept(label);</b>
+<b class="nc">&nbsp;                for (GraphExplorer.MultiModalEdge edge : explorer.exploreEdgesAround(label)) {</b>
+&nbsp;                    long nextTime;
+<b class="nc">&nbsp;                    if (reverse) {</b>
+<b class="nc">&nbsp;                        nextTime = label.currentTime - explorer.calcTravelTimeMillis(edge, label.currentTime);</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        nextTime = label.currentTime + explorer.calcTravelTimeMillis(edge, label.currentTime);</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    int nTransfers = label.nTransfers + edge.getTransfers();</b>
+<b class="nc">&nbsp;                    long extraWeight = label.extraWeight;</b>
+<b class="nc">&nbsp;                    Long firstPtDepartureTime = label.departureTime;</b>
+<b class="nc">&nbsp;                    GtfsStorage.EdgeType edgeType = edge.getType();</b>
+<b class="nc">&nbsp;                    if (!reverse &amp;&amp; (edgeType == GtfsStorage.EdgeType.ENTER_PT) || reverse &amp;&amp; (edgeType == GtfsStorage.EdgeType.EXIT_PT)) {</b>
+<b class="nc">&nbsp;                        extraWeight += transferPenaltiesByRouteType.applyAsLong(edge.getRouteType());</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (edgeType == GtfsStorage.EdgeType.TRANSFER) {</b>
+<b class="nc">&nbsp;                        extraWeight += transferPenaltiesByRouteType.applyAsLong(edge.getRouteType());</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (!reverse &amp;&amp; (edgeType == GtfsStorage.EdgeType.ENTER_TIME_EXPANDED_NETWORK || edgeType == GtfsStorage.EdgeType.WAIT)) {</b>
+<b class="nc">&nbsp;                        if (label.nTransfers == 0) {</b>
+<b class="nc">&nbsp;                            firstPtDepartureTime = nextTime - label.streetTime;</b>
+&nbsp;                        }
+<b class="nc">&nbsp;                    } else if (reverse &amp;&amp; (edgeType == GtfsStorage.EdgeType.LEAVE_TIME_EXPANDED_NETWORK || edgeType == GtfsStorage.EdgeType.WAIT_ARRIVAL)) {</b>
+<b class="nc">&nbsp;                        if (label.nTransfers == 0) {</b>
+<b class="nc">&nbsp;                            firstPtDepartureTime = nextTime + label.streetTime;</b>
+&nbsp;                        }
+&nbsp;                    }
+<b class="nc">&nbsp;                    long walkTime = label.streetTime + (edgeType == GtfsStorage.EdgeType.HIGHWAY || edgeType == GtfsStorage.EdgeType.ENTER_PT || edgeType == GtfsStorage.EdgeType.EXIT_PT ? ((reverse ? -1 : 1) * (nextTime - label.currentTime)) : 0);</b>
+<b class="nc">&nbsp;                    if (walkTime &gt; limitStreetTime)</b>
+&nbsp;                        continue;
+<b class="nc">&nbsp;                    if (Math.abs(nextTime - startTime) &gt; limitTripTime)</b>
+&nbsp;                        continue;
+<b class="nc">&nbsp;                    boolean result = false;</b>
+<b class="nc">&nbsp;                    if (label.edge != null) {</b>
+<b class="nc">&nbsp;                        result = label.edge.getType() == GtfsStorage.EdgeType.EXIT_PT;</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (edgeType == GtfsStorage.EdgeType.ENTER_PT &amp;&amp; result) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    boolean impossible = label.impossible</b>
+<b class="nc">&nbsp;                            || explorer.isBlocked(edge)</b>
+&nbsp;                            || (!reverse) &amp;&amp; edgeType == GtfsStorage.EdgeType.BOARD &amp;&amp; label.residualDelay &gt; 0
+<b class="nc">&nbsp;                            || reverse &amp;&amp; edgeType == GtfsStorage.EdgeType.ALIGHT &amp;&amp; label.residualDelay &lt; explorer.getDelayFromAlightEdge(edge, label.currentTime);</b>
+&nbsp;                    long residualDelay;
+<b class="nc">&nbsp;                    if (!reverse) {</b>
+<b class="nc">&nbsp;                        if (edgeType == GtfsStorage.EdgeType.WAIT || edgeType == GtfsStorage.EdgeType.TRANSFER) {</b>
+<b class="nc">&nbsp;                            residualDelay = Math.max(0, label.residualDelay - explorer.calcTravelTimeMillis(edge, label.currentTime));</b>
+<b class="nc">&nbsp;                        } else if (edgeType == GtfsStorage.EdgeType.ALIGHT) {</b>
+<b class="nc">&nbsp;                            residualDelay = label.residualDelay + explorer.getDelayFromAlightEdge(edge, label.currentTime);</b>
+<b class="nc">&nbsp;                        } else if (edgeType == GtfsStorage.EdgeType.BOARD) {</b>
+<b class="nc">&nbsp;                            residualDelay = -explorer.getDelayFromBoardEdge(edge, label.currentTime);</b>
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            residualDelay = label.residualDelay;</b>
+&nbsp;                        }
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        if (edgeType == GtfsStorage.EdgeType.WAIT || edgeType == GtfsStorage.EdgeType.TRANSFER) {</b>
+<b class="nc">&nbsp;                            residualDelay = label.residualDelay + explorer.calcTravelTimeMillis(edge, label.currentTime);</b>
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            residualDelay = 0;</b>
+&nbsp;                        }
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (!reverse &amp;&amp; edgeType == GtfsStorage.EdgeType.LEAVE_TIME_EXPANDED_NETWORK &amp;&amp; residualDelay &gt; 0) {</b>
+<b class="nc">&nbsp;                        Label newImpossibleLabelForDelayedTrip = new Label(nextTime, edge, edge.getAdjNode(), nTransfers, firstPtDepartureTime, walkTime, extraWeight, residualDelay, true, label);</b>
+<b class="nc">&nbsp;                        insertIfNotDominated(newImpossibleLabelForDelayedTrip);</b>
+<b class="nc">&nbsp;                        nextTime += residualDelay;</b>
+<b class="nc">&nbsp;                        residualDelay = 0;</b>
+<b class="nc">&nbsp;                        Label newLabel = new Label(nextTime, edge, edge.getAdjNode(), nTransfers, firstPtDepartureTime, walkTime, extraWeight, residualDelay, impossible, label);</b>
+<b class="nc">&nbsp;                        insertIfNotDominated(newLabel);</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        Label newLabel = new Label(nextTime, edge, edge.getAdjNode(), nTransfers, firstPtDepartureTime, walkTime, extraWeight, residualDelay, impossible, label);</b>
+<b class="nc">&nbsp;                        insertIfNotDominated(newLabel);</b>
+&nbsp;                    }
+&nbsp;                }
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    void insertIfNotDominated(Label me) {
+&nbsp;        Predicate&lt;Label&gt; filter;
+<b class="nc">&nbsp;        if (profileQuery &amp;&amp; me.departureTime != null) {</b>
+<b class="nc">&nbsp;            filter = (targetLabel) -&gt; (!reverse ? prc(me, targetLabel) : rprc(me, targetLabel));</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            filter = label -&gt; true;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (isNotDominatedByAnyOf(me, targetLabels, filter)) {</b>
+<b class="nc">&nbsp;            List&lt;Label&gt; sptEntries = fromMap.computeIfAbsent(me.node, k -&gt; new ArrayList&lt;&gt;(1));</b>
+<b class="nc">&nbsp;            if (isNotDominatedByAnyOf(me, sptEntries, filter)) {</b>
+<b class="nc">&nbsp;                removeDominated(me, sptEntries, filter);</b>
+<b class="nc">&nbsp;                sptEntries.add(me);</b>
+<b class="nc">&nbsp;                fromHeap.add(me);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean rprc(Label me, Label they) {
+<b class="nc">&nbsp;        return they.departureTime != null &amp;&amp; (they.departureTime &lt;= me.departureTime || they.departureTime &lt;= startTime - maxProfileDuration);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean prc(Label me, Label they) {
+<b class="nc">&nbsp;        return they.departureTime != null &amp;&amp; (they.departureTime &gt;= me.departureTime || they.departureTime &gt;= startTime + maxProfileDuration);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean isNotDominatedByAnyOf(Label me, Collection&lt;Label&gt; sptEntries, Predicate&lt;Label&gt; filter) {
+<b class="nc">&nbsp;        for (Label they : sptEntries) {</b>
+<b class="nc">&nbsp;            if (filter.test(they) &amp;&amp; dominates(they, me)) {</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void removeDominated(Label me, Collection&lt;Label&gt; sptEntries, Predicate&lt;Label&gt; filter) {
+<b class="nc">&nbsp;        for (Iterator&lt;Label&gt; iterator = sptEntries.iterator(); iterator.hasNext(); ) {</b>
+<b class="nc">&nbsp;            Label sptEntry = iterator.next();</b>
+<b class="nc">&nbsp;            if (filter.test(sptEntry) &amp;&amp; dominates(me, sptEntry)) {</b>
+<b class="nc">&nbsp;                sptEntry.deleted = true;</b>
+<b class="nc">&nbsp;                iterator.remove();</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean dominates(Label me, Label they) {
+<b class="nc">&nbsp;        if (weight(me) &gt; weight(they))</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (mindTransfers &amp;&amp; me.nTransfers &gt; they.nTransfers)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        if (me.impossible &amp;&amp; !they.impossible)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (weight(me) &lt; weight(they))</b>
+<b class="nc">&nbsp;            return true;</b>
+<b class="nc">&nbsp;        if (mindTransfers &amp;&amp; me.nTransfers &lt; they.nTransfers)</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;
+<b class="nc">&nbsp;        return queueComparator.compare(me, they) &lt;= 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long weight(Label label) {
+<b class="nc">&nbsp;        return timeSinceStartTime(label) + (long) (label.nTransfers * betaTransfers) + (long) (label.streetTime * (betaStreetTime - 1.0)) + label.extraWeight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long timeSinceStartTime(Label label) {
+<b class="nc">&nbsp;        return (reverse ? -1 : 1) * (label.currentTime - startTime);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    Long departureTimeSinceStartTime(Label label) {
+<b class="nc">&nbsp;        return label.departureTime != null ? (reverse ? -1 : 1) * (label.departureTime - startTime) : null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLimitTripTime(long limitTripTime) {
+<b class="nc">&nbsp;        this.limitTripTime = limitTripTime;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLimitStreetTime(long limitStreetTime) {
+<b class="nc">&nbsp;        this.limitStreetTime = limitStreetTime;</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private class LabelComparator implements Comparator&lt;Label&gt; {</b>
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int compare(Label o1, Label o2) {
+<b class="nc">&nbsp;            int c = Long.compare(weight(o1), weight(o2));</b>
+<b class="nc">&nbsp;            if (c != 0)</b>
+<b class="nc">&nbsp;                return c;</b>
+<b class="nc">&nbsp;            c = Integer.compare(o1.nTransfers, o2.nTransfers);</b>
+<b class="nc">&nbsp;            if (c != 0)</b>
+<b class="nc">&nbsp;                return c;</b>
+&nbsp;
+<b class="nc">&nbsp;            c = Long.compare(o1.streetTime, o2.streetTime);</b>
+<b class="nc">&nbsp;            if (c != 0)</b>
+<b class="nc">&nbsp;                return c;</b>
+&nbsp;
+<b class="nc">&nbsp;            c = Long.compare(o1.departureTime != null ? reverse ? o1.departureTime : -o1.departureTime : 0, o2.departureTime != null ? reverse ? o2.departureTime : -o2.departureTime : 0);</b>
+<b class="nc">&nbsp;            if (c != 0)</b>
+<b class="nc">&nbsp;                return c;</b>
+&nbsp;
+<b class="nc">&nbsp;            c = Integer.compare(o1.impossible ? 1 : 0, o2.impossible ? 1 : 0);</b>
+<b class="nc">&nbsp;            return c;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

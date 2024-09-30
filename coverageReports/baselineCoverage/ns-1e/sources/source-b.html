@@ -1,0 +1,369 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > RouteResource</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.resources</a>
+</div>
+
+<h1>Coverage Summary for Class: RouteResource (com.graphhopper.resources)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RouteResource</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/106)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.resources;
+&nbsp;
+&nbsp;import com.graphhopper.GHRequest;
+&nbsp;import com.graphhopper.GHResponse;
+&nbsp;import com.graphhopper.GraphHopper;
+&nbsp;import com.graphhopper.GraphHopperConfig;
+&nbsp;import com.graphhopper.gpx.GpxConversions;
+&nbsp;import com.graphhopper.http.GHPointParam;
+&nbsp;import com.graphhopper.http.GHRequestTransformer;
+&nbsp;import com.graphhopper.http.ProfileResolver;
+&nbsp;import com.graphhopper.jackson.MultiException;
+&nbsp;import com.graphhopper.jackson.ResponsePathSerializer;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import io.dropwizard.jersey.params.AbstractParam;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.annotation.Nullable;
+&nbsp;import javax.inject.Inject;
+&nbsp;import javax.inject.Named;
+&nbsp;import javax.servlet.http.HttpServletRequest;
+&nbsp;import javax.validation.constraints.NotNull;
+&nbsp;import javax.ws.rs.*;
+&nbsp;import javax.ws.rs.core.*;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Parameters.Details.PATH_DETAILS;
+&nbsp;import static com.graphhopper.util.Parameters.Routing.*;
+&nbsp;import static java.util.stream.Collectors.toList;
+&nbsp;
+&nbsp;/**
+&nbsp; * Resource to use GraphHopper in a remote client application like mobile or browser. Note: If type
+&nbsp; * is json it returns the points in GeoJson array format [longitude,latitude] unlike the format &quot;lat,lon&quot;
+&nbsp; * used for the request. See the full API response format in docs/web/api-doc.md
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;@Path(&quot;route&quot;)
+&nbsp;public class RouteResource {
+&nbsp;
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(RouteResource.class);</b>
+&nbsp;
+&nbsp;    private final GraphHopperConfig config;
+&nbsp;    private final GraphHopper graphHopper;
+&nbsp;    private final ProfileResolver profileResolver;
+&nbsp;    private final GHRequestTransformer ghRequestTransformer;
+&nbsp;    private final Boolean hasElevation;
+&nbsp;    @Nullable
+&nbsp;    private final String osmDate;
+&nbsp;
+&nbsp;    @Inject
+<b class="nc">&nbsp;    public RouteResource(GraphHopperConfig config, GraphHopper graphHopper, ProfileResolver profileResolver, GHRequestTransformer ghRequestTransformer, @Named(&quot;hasElevation&quot;) Boolean hasElevation) {</b>
+<b class="nc">&nbsp;        this.config = config;</b>
+<b class="nc">&nbsp;        this.graphHopper = graphHopper;</b>
+<b class="nc">&nbsp;        this.profileResolver = profileResolver;</b>
+<b class="nc">&nbsp;        this.ghRequestTransformer = ghRequestTransformer;</b>
+<b class="nc">&nbsp;        this.hasElevation = hasElevation;</b>
+<b class="nc">&nbsp;        this.osmDate = graphHopper.getProperties().getAll().get(&quot;datareader.data.date&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GET
+&nbsp;    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, &quot;application/gpx+xml&quot;})
+&nbsp;    public Response doGet(
+&nbsp;            @Context HttpServletRequest httpReq,
+&nbsp;            @Context UriInfo uriInfo,
+&nbsp;            @QueryParam(WAY_POINT_MAX_DISTANCE) @DefaultValue(&quot;0.5&quot;) double minPathPrecision,
+&nbsp;            @QueryParam(ELEVATION_WAY_POINT_MAX_DISTANCE) Double minPathElevationPrecision,
+&nbsp;            @QueryParam(&quot;point&quot;) @NotNull List&lt;GHPointParam&gt; pointParams,
+&nbsp;            @QueryParam(&quot;type&quot;) @DefaultValue(&quot;json&quot;) String type,
+&nbsp;            @QueryParam(INSTRUCTIONS) @DefaultValue(&quot;true&quot;) boolean instructions,
+&nbsp;            @QueryParam(CALC_POINTS) @DefaultValue(&quot;true&quot;) boolean calcPoints,
+&nbsp;            @QueryParam(&quot;elevation&quot;) @DefaultValue(&quot;false&quot;) boolean enableElevation,
+&nbsp;            @QueryParam(&quot;points_encoded&quot;) @DefaultValue(&quot;true&quot;) boolean pointsEncoded,
+&nbsp;            @QueryParam(&quot;points_encoded_multiplier&quot;) @DefaultValue(&quot;1e5&quot;) double pointsEncodedMultiplier,
+&nbsp;            @QueryParam(&quot;profile&quot;) String profileName,
+&nbsp;            @QueryParam(ALGORITHM) @DefaultValue(&quot;&quot;) String algoStr,
+&nbsp;            @QueryParam(&quot;locale&quot;) @DefaultValue(&quot;en&quot;) String localeStr,
+&nbsp;            @QueryParam(POINT_HINT) List&lt;String&gt; pointHints,
+&nbsp;            @QueryParam(CURBSIDE) List&lt;String&gt; curbsides,
+&nbsp;            @QueryParam(SNAP_PREVENTION) List&lt;String&gt; snapPreventions,
+&nbsp;            @QueryParam(PATH_DETAILS) List&lt;String&gt; pathDetails,
+&nbsp;            @QueryParam(&quot;heading&quot;) @NotNull List&lt;Double&gt; headings,
+&nbsp;            @QueryParam(&quot;gpx.route&quot;) @DefaultValue(&quot;true&quot;) boolean withRoute /* default to false for the route part in next API version, see #437 */,
+&nbsp;            @QueryParam(&quot;gpx.track&quot;) @DefaultValue(&quot;true&quot;) boolean withTrack,
+&nbsp;            @QueryParam(&quot;gpx.waypoints&quot;) @DefaultValue(&quot;false&quot;) boolean withWayPoints,
+&nbsp;            @QueryParam(&quot;gpx.trackname&quot;) @DefaultValue(&quot;GraphHopper Track&quot;) String trackName,
+&nbsp;            @QueryParam(&quot;gpx.millis&quot;) String timeString) {
+<b class="nc">&nbsp;        StopWatch sw = new StopWatch().start();</b>
+<b class="nc">&nbsp;        List&lt;GHPoint&gt; points = pointParams.stream().map(AbstractParam::get).collect(toList());</b>
+<b class="nc">&nbsp;        boolean writeGPX = &quot;gpx&quot;.equalsIgnoreCase(type);</b>
+<b class="nc">&nbsp;        instructions = writeGPX || instructions;</b>
+<b class="nc">&nbsp;        if (enableElevation &amp;&amp; !hasElevation)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Elevation not supported!&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        GHRequest request = new GHRequest();</b>
+<b class="nc">&nbsp;        initHints(request.getHints(), uriInfo.getQueryParameters());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (minPathElevationPrecision != null)</b>
+<b class="nc">&nbsp;            request.getHints().putObject(ELEVATION_WAY_POINT_MAX_DISTANCE, minPathElevationPrecision);</b>
+&nbsp;
+<b class="nc">&nbsp;        request.setPoints(points).</b>
+<b class="nc">&nbsp;                setProfile(profileName).</b>
+<b class="nc">&nbsp;                setAlgorithm(algoStr).</b>
+<b class="nc">&nbsp;                setLocale(localeStr).</b>
+<b class="nc">&nbsp;                setHeadings(headings).</b>
+<b class="nc">&nbsp;                setPointHints(pointHints).</b>
+<b class="nc">&nbsp;                setCurbsides(curbsides).</b>
+<b class="nc">&nbsp;                setSnapPreventions(snapPreventions).</b>
+<b class="nc">&nbsp;                setPathDetails(pathDetails).</b>
+<b class="nc">&nbsp;                getHints().</b>
+<b class="nc">&nbsp;                putObject(CALC_POINTS, calcPoints).</b>
+<b class="nc">&nbsp;                putObject(INSTRUCTIONS, instructions).</b>
+<b class="nc">&nbsp;                putObject(WAY_POINT_MAX_DISTANCE, minPathPrecision);</b>
+&nbsp;
+<b class="nc">&nbsp;        request = ghRequestTransformer.transformRequest(request);</b>
+&nbsp;
+<b class="nc">&nbsp;        PMap profileResolverHints = new PMap(request.getHints());</b>
+<b class="nc">&nbsp;        profileResolverHints.putObject(&quot;profile&quot;, profileName);</b>
+<b class="nc">&nbsp;        profileResolverHints.putObject(&quot;has_curbsides&quot;, !curbsides.isEmpty());</b>
+<b class="nc">&nbsp;        profileName = profileResolver.resolveProfile(profileResolverHints);</b>
+<b class="nc">&nbsp;        removeLegacyParameters(request.getHints());</b>
+<b class="nc">&nbsp;        request.setProfile(profileName);</b>
+&nbsp;
+<b class="nc">&nbsp;        GHResponse ghResponse = graphHopper.route(request);</b>
+&nbsp;
+<b class="nc">&nbsp;        double took = sw.stop().getMillisDouble();</b>
+<b class="nc">&nbsp;        String logStr = (httpReq.getRemoteAddr() + &quot; &quot; + httpReq.getLocale() + &quot; &quot; + httpReq.getHeader(&quot;User-Agent&quot;)) + &quot; &quot; + points + &quot;, took: &quot; + String.format(&quot;%.1f&quot;, took) + &quot;ms, algo: &quot; + algoStr + &quot;, profile: &quot; + profileName;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (ghResponse.hasErrors()) {</b>
+<b class="nc">&nbsp;            logger.info(logStr + &quot; &quot; + ghResponse);</b>
+<b class="nc">&nbsp;            return Response.status(Response.Status.BAD_REQUEST).</b>
+<b class="nc">&nbsp;                    entity(new MultiException(ghResponse.getErrors())).</b>
+<b class="nc">&nbsp;                    type(writeGPX ? &quot;application/gpx+xml&quot; : MediaType.APPLICATION_JSON).</b>
+<b class="nc">&nbsp;                    build();</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            logger.info(logStr + &quot;, alternatives: &quot; + ghResponse.getAll().size()</b>
+<b class="nc">&nbsp;                    + &quot;, distance0: &quot; + ghResponse.getBest().getDistance()</b>
+<b class="nc">&nbsp;                    + &quot;, weight0: &quot; + ghResponse.getBest().getRouteWeight()</b>
+<b class="nc">&nbsp;                    + &quot;, time0: &quot; + Math.round(ghResponse.getBest().getTime() / 60000f) + &quot;min&quot;</b>
+<b class="nc">&nbsp;                    + &quot;, points0: &quot; + ghResponse.getBest().getPoints().size()</b>
+<b class="nc">&nbsp;                    + &quot;, debugInfo: &quot; + ghResponse.getDebugInfo());</b>
+<b class="nc">&nbsp;            return writeGPX ?</b>
+<b class="nc">&nbsp;                    gpxSuccessResponseBuilder(ghResponse, timeString, trackName, enableElevation, withRoute, withTrack, withWayPoints, Constants.VERSION).</b>
+<b class="nc">&nbsp;                            header(&quot;X-GH-Took&quot;, &quot;&quot; + Math.round(took)).</b>
+<b class="nc">&nbsp;                            build()</b>
+&nbsp;                    :
+<b class="nc">&nbsp;                    Response.ok(ResponsePathSerializer.jsonObject(ghResponse, new ResponsePathSerializer.Info(config.getCopyrights(), Math.round(took), osmDate), instructions, calcPoints, enableElevation, pointsEncoded, pointsEncodedMultiplier)).</b>
+<b class="nc">&nbsp;                            header(&quot;X-GH-Took&quot;, &quot;&quot; + Math.round(took)).</b>
+<b class="nc">&nbsp;                            type(MediaType.APPLICATION_JSON).</b>
+<b class="nc">&nbsp;                            build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @POST
+&nbsp;    @Consumes(MediaType.APPLICATION_JSON)
+&nbsp;    @Produces(MediaType.APPLICATION_JSON)
+&nbsp;    public Response doPost(@NotNull GHRequest request, @Context HttpServletRequest httpReq) {
+<b class="nc">&nbsp;        StopWatch sw = new StopWatch().start();</b>
+<b class="nc">&nbsp;        request = ghRequestTransformer.transformRequest(request);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (Helper.isEmpty(request.getProfile()) &amp;&amp; request.getCustomModel() != null)</b>
+&nbsp;            // throw a dedicated exception here, otherwise a missing profile is still caught in Router
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The &#39;profile&#39; parameter is required when you use the `custom_model` parameter&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        PMap profileResolverHints = new PMap(request.getHints());</b>
+<b class="nc">&nbsp;        profileResolverHints.putObject(&quot;profile&quot;, request.getProfile());</b>
+<b class="nc">&nbsp;        profileResolverHints.putObject(&quot;has_curbsides&quot;, !request.getCurbsides().isEmpty());</b>
+<b class="nc">&nbsp;        request.setProfile(profileResolver.resolveProfile(profileResolverHints));</b>
+<b class="nc">&nbsp;        removeLegacyParameters(request.getHints());</b>
+&nbsp;
+<b class="nc">&nbsp;        GHResponse ghResponse = graphHopper.route(request);</b>
+<b class="nc">&nbsp;        boolean instructions = request.getHints().getBool(INSTRUCTIONS, true);</b>
+<b class="nc">&nbsp;        boolean enableElevation = request.getHints().getBool(&quot;elevation&quot;, false);</b>
+<b class="nc">&nbsp;        boolean calcPoints = request.getHints().getBool(CALC_POINTS, true);</b>
+<b class="nc">&nbsp;        boolean pointsEncoded = request.getHints().getBool(&quot;points_encoded&quot;, true);</b>
+<b class="nc">&nbsp;        double pointsEncodedMultiplier = request.getHints().getDouble(&quot;points_encoded_multiplier&quot;, 1e5);</b>
+&nbsp;
+<b class="nc">&nbsp;        double took = sw.stop().getMillisDouble();</b>
+<b class="nc">&nbsp;        String infoStr = httpReq.getRemoteAddr() + &quot; &quot; + httpReq.getLocale() + &quot; &quot; + httpReq.getHeader(&quot;User-Agent&quot;);</b>
+<b class="nc">&nbsp;        String logStr = infoStr + &quot; &quot; + request.getPoints().size() + &quot;, took: &quot;</b>
+<b class="nc">&nbsp;                + String.format(&quot;%.1f&quot;, took) + &quot; ms, algo: &quot; + request.getAlgorithm() + &quot;, profile: &quot; + request.getProfile()</b>
+<b class="nc">&nbsp;                + &quot;, custom_model: &quot; + request.getCustomModel();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (ghResponse.hasErrors()) {</b>
+<b class="nc">&nbsp;            throw new MultiException(ghResponse.getErrors());</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            logger.info(logStr + &quot;, alternatives: &quot; + ghResponse.getAll().size()</b>
+<b class="nc">&nbsp;                    + &quot;, distance0: &quot; + ghResponse.getBest().getDistance()</b>
+<b class="nc">&nbsp;                    + &quot;, weight0: &quot; + ghResponse.getBest().getRouteWeight()</b>
+<b class="nc">&nbsp;                    + &quot;, time0: &quot; + Math.round(ghResponse.getBest().getTime() / 60000f) + &quot;min&quot;</b>
+<b class="nc">&nbsp;                    + &quot;, points0: &quot; + ghResponse.getBest().getPoints().size()</b>
+<b class="nc">&nbsp;                    + &quot;, debugInfo: &quot; + ghResponse.getDebugInfo());</b>
+<b class="nc">&nbsp;            return Response.ok(ResponsePathSerializer.jsonObject(ghResponse, new ResponsePathSerializer.Info(config.getCopyrights(), Math.round(took), osmDate), instructions, calcPoints, enableElevation, pointsEncoded, pointsEncodedMultiplier)).</b>
+<b class="nc">&nbsp;                    header(&quot;X-GH-Took&quot;, &quot;&quot; + Math.round(took)).</b>
+<b class="nc">&nbsp;                    type(MediaType.APPLICATION_JSON).</b>
+<b class="nc">&nbsp;                    build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void removeLegacyParameters(PMap hints) {
+&nbsp;        // these parameters should only be used to resolve the profile, but should not be passed to GraphHopper
+<b class="nc">&nbsp;        hints.remove(&quot;weighting&quot;);</b>
+<b class="nc">&nbsp;        hints.remove(&quot;vehicle&quot;);</b>
+<b class="nc">&nbsp;        hints.remove(&quot;edge_based&quot;);</b>
+<b class="nc">&nbsp;        hints.remove(&quot;turn_costs&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Response.ResponseBuilder gpxSuccessResponseBuilder(GHResponse ghRsp, String timeString, String
+&nbsp;            trackName, boolean enableElevation, boolean withRoute, boolean withTrack, boolean withWayPoints, String version) {
+<b class="nc">&nbsp;        if (ghRsp.getAll().size() &gt; 1) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Alternatives are currently not yet supported for GPX&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        long time = timeString != null ? Long.parseLong(timeString) : System.currentTimeMillis();</b>
+<b class="nc">&nbsp;        InstructionList instructions = ghRsp.getBest().getInstructions();</b>
+<b class="nc">&nbsp;        return Response.ok(GpxConversions.createGPX(instructions, trackName, time, enableElevation, withRoute, withTrack, withWayPoints, version, instructions.getTr()), &quot;application/gpx+xml&quot;).</b>
+<b class="nc">&nbsp;                header(&quot;Content-Disposition&quot;, &quot;attachment;filename=&quot; + &quot;GraphHopper.gpx&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static void initHints(PMap m, MultivaluedMap&lt;String, String&gt; parameterMap) {
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, List&lt;String&gt;&gt; e : parameterMap.entrySet()) {</b>
+<b class="nc">&nbsp;            if (e.getValue().size() == 1) {</b>
+<b class="nc">&nbsp;                m.putObject(Helper.camelCaseToUnderScore(e.getKey()), Helper.toObject(e.getValue().get(0)));</b>
+&nbsp;            } else {
+&nbsp;                // TODO e.g. &#39;point&#39; parameter occurs multiple times and we cannot throw an exception here
+&nbsp;                //  unknown parameters (hints) should be allowed to be multiparameters, too, or we shouldn&#39;t use them for
+&nbsp;                //  known parameters either, _or_ known parameters must be filtered before they come to this code point,
+&nbsp;                //  _or_ we stop passing unknown parameters altogether.
+&nbsp;                // throw new WebApplicationException(String.format(&quot;This query parameter (hint) is not allowed to occur multiple times: %s&quot;, e.getKey()));
+&nbsp;                // see also #1976
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

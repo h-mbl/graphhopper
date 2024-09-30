@@ -1,0 +1,152 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PbfRawBlob</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm.pbf</a>
+</div>
+
+<h1>Coverage Summary for Class: PbfRawBlob (com.graphhopper.reader.osm.pbf)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PbfRawBlob</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;// This software is released into the Public Domain.  See copying.txt for details.
+&nbsp;package com.graphhopper.reader.osm.pbf;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents a single piece of raw blob data extracted from the PBF stream. It has not yet been
+&nbsp; * decoded into a PBF blob object.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Brett Henderson
+&nbsp; */
+&nbsp;public class PbfRawBlob {
+&nbsp;    private String type;
+&nbsp;    private byte[] data;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new instance.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param type The type of data represented by this blob. This corresponds to the type field in
+&nbsp;     *             the blob header.
+&nbsp;     * @param data The raw contents of the blob in binary undecoded form.
+&nbsp;     */
+<b class="fc">&nbsp;    public PbfRawBlob(String type, byte[] data) {</b>
+<b class="fc">&nbsp;        this.type = type;</b>
+<b class="fc">&nbsp;        this.data = data;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Gets the type of data represented by this blob. This corresponds to the type field in the
+&nbsp;     * blob header.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return The blob type.
+&nbsp;     */
+&nbsp;    public String getType() {
+<b class="fc">&nbsp;        return type;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Gets the raw contents of the blob in binary undecoded form.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return The raw blob data.
+&nbsp;     */
+&nbsp;    public byte[] getData() {
+<b class="fc">&nbsp;        return data;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

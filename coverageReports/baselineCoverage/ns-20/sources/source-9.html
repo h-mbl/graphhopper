@@ -1,0 +1,455 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > EdgeBasedWitnessPathSearcher</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ch</a>
+</div>
+
+<h1>Coverage Summary for Class: EdgeBasedWitnessPathSearcher (com.graphhopper.routing.ch)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EdgeBasedWitnessPathSearcher</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (14/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.3%
+  </span>
+  <span class="absValue">
+    (59/60)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (95/95)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">EdgeBasedWitnessPathSearcher$Stats</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (17/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.4%
+  </span>
+  <span class="absValue">
+    (61/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (108/108)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.ch;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.graphhopper.apache.commons.collections.IntFloatBinaryHeap;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Locale;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.nf;
+&nbsp;
+&nbsp;/**
+&nbsp; * Helper class used to perform local witness path searches for graph preparation in edge-based Contraction Hierarchies.
+&nbsp; * &lt;p&gt;
+&nbsp; * (source edge) -- s -- x -- t -- (target edge)
+&nbsp; * Let x be a node to be contracted (the &#39;center node&#39;) and s and t neighboring un-contracted nodes of x that are
+&nbsp; * directly connected with x (via a normal edge or a shortcut). This class is used to find out whether a path between a
+&nbsp; * given source edge incoming to s and a given target edge outgoing from t exists with a given maximum weight. The
+&nbsp; * weights of the source and target edges are not counted in, but the turn costs from the source edge to s-&gt;x and from
+&nbsp; * x-&gt;t to the target edge are. We also distinguish whether this path is a &#39;bridge-path&#39; or not:
+&nbsp; * &lt;p&gt;
+&nbsp; * 1) The path only consists of one edge from s to x, an arbitrary number of loops at x, and one edge from x to t.
+&nbsp; * This is called a &#39;bridge-path&#39; here.
+&nbsp; * 2) The path includes an edge from s to a node other than x or an edge from another node than x to t.
+&nbsp; * This is called a &#39;witness-path&#39;. Note that a witness path can still include x! This is because if a witness includes
+&nbsp; * x we still do not need to include a shortcut because the path contains another (smaller) shortcut in this case.
+&nbsp; * &lt;p&gt;
+&nbsp; * To find the optimal path an edge-based unidirectional Dijkstra algorithm is used that takes into account turn-costs.
+&nbsp; * The search is initialized for a given source edge key and node to be contracted x. Subsequent searches for different
+&nbsp; * target edges will keep on building the shortest path tree from previous searches. For the performance of edge-based
+&nbsp; * CH graph preparation it is crucial to limit the local witness path searches as much as possible.
+&nbsp; *
+&nbsp; * @author easbar
+&nbsp; */
+&nbsp;public class EdgeBasedWitnessPathSearcher {
+&nbsp;    private static final int NO_NODE = -1;
+&nbsp;    private static final double MAX_ZERO_WEIGHT_LOOP = 1.e-3;
+&nbsp;
+&nbsp;    private final CHPreparationGraph prepareGraph;
+&nbsp;    private PrepareGraphEdgeExplorer outEdgeExplorer;
+&nbsp;    private PrepareGraphOrigEdgeExplorer origInEdgeExplorer;
+&nbsp;
+&nbsp;    private int sourceNode;
+&nbsp;    private int centerNode;
+&nbsp;
+&nbsp;    // various counters
+&nbsp;    private int numPolls;
+&nbsp;    private int numUpdates;
+&nbsp;
+&nbsp;    // data structures used to build the shortest path tree
+&nbsp;    // we allocate memory for all possible edge keys and keep track which ones have been discovered so far
+&nbsp;    private double[] weights;
+&nbsp;    private int[] parents;
+&nbsp;    private int[] adjNodesAndIsPathToCenters;
+&nbsp;    private IntArrayList changedEdgeKeys;
+&nbsp;    private IntFloatBinaryHeap dijkstraHeap;
+&nbsp;
+&nbsp;    // statistics to analyze performance
+&nbsp;    private Stats stats;
+&nbsp;
+<b class="fc">&nbsp;    public EdgeBasedWitnessPathSearcher(CHPreparationGraph prepareGraph) {</b>
+<b class="fc">&nbsp;        this.prepareGraph = prepareGraph;</b>
+&nbsp;
+<b class="fc">&nbsp;        outEdgeExplorer = prepareGraph.createOutEdgeExplorer();</b>
+<b class="fc">&nbsp;        origInEdgeExplorer = prepareGraph.createInOrigEdgeExplorer();</b>
+&nbsp;
+<b class="fc">&nbsp;        initStorage(2 * prepareGraph.getOriginalEdges());</b>
+<b class="fc">&nbsp;        initCollections();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Deletes the shortest path tree that has been found so far and initializes a new witness path search for a given
+&nbsp;     * node to be contracted and source edge key.
+&nbsp;     *
+&nbsp;     * @param sourceEdgeKey the key of the original edge incoming to s from which the search starts
+&nbsp;     * @param sourceNode    the neighbor node from which the search starts (s)
+&nbsp;     * @param centerNode    the node to be contracted (x)
+&nbsp;     */
+&nbsp;    public void initSearch(int sourceEdgeKey, int sourceNode, int centerNode, Stats stats) {
+<b class="fc">&nbsp;        this.stats = stats;</b>
+<b class="fc">&nbsp;        stats.numTrees++;</b>
+<b class="fc">&nbsp;        this.sourceNode = sourceNode;</b>
+<b class="fc">&nbsp;        this.centerNode = centerNode;</b>
+&nbsp;
+&nbsp;        // set start entry
+<b class="fc">&nbsp;        weights[sourceEdgeKey] = 0;</b>
+<b class="fc">&nbsp;        parents[sourceEdgeKey] = -1;</b>
+<b class="fc">&nbsp;        setAdjNodeAndPathToCenter(sourceEdgeKey, sourceNode, true);</b>
+<b class="fc">&nbsp;        changedEdgeKeys.add(sourceEdgeKey);</b>
+<b class="fc">&nbsp;        dijkstraHeap.insert(0, sourceEdgeKey);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Runs a witness path search for a given target edge key. Results of previous searches (the shortest path tree) are
+&nbsp;     * reused and the previous search is extended if necessary. Note that you need to call
+&nbsp;     * {@link #initSearch(int, int, int, Stats)} before calling this method to initialize the search.
+&nbsp;     *
+&nbsp;     * @param targetNode     the neighbor node that should be reached by the path (t)
+&nbsp;     * @param targetEdgeKey  the original edge key outgoing from t where the search ends
+&nbsp;     * @param acceptedWeight Once we find a path with a weight smaller or equal to this we return the weight. The
+&nbsp;     *                       returned weight might be larger than the weight of the real shortest path. If there is
+&nbsp;     *                       no path with weight smaller than or equal to this we stop the search and return the weight
+&nbsp;     *                       of the best path found so far.
+&nbsp;     * @return the weight of the found path or {@link Double#POSITIVE_INFINITY} if no path was found
+&nbsp;     */
+&nbsp;    public double runSearch(int targetNode, int targetEdgeKey, double acceptedWeight, int maxPolls) {
+<b class="fc">&nbsp;        stats.numSearches++;</b>
+&nbsp;        // first we check if we can already reach the target edge from the shortest path tree we discovered so far
+<b class="fc">&nbsp;        PrepareGraphOrigEdgeIterator inIter = origInEdgeExplorer.setBaseNode(targetNode);</b>
+<b class="fc">&nbsp;        while (inIter.next()) {</b>
+<b class="fc">&nbsp;            final int edgeKey = GHUtility.reverseEdgeKey(inIter.getOrigEdgeKeyLast());</b>
+<b class="fc">&nbsp;            if (weights[edgeKey] == Double.POSITIVE_INFINITY)</b>
+&nbsp;                continue;
+<b class="fc">&nbsp;            double weight = weights[edgeKey] + calcTurnWeight(edgeKey, targetNode, targetEdgeKey);</b>
+<b class="fc">&nbsp;            if (weight &lt; acceptedWeight || (weight == acceptedWeight &amp;&amp; (parents[edgeKey] &lt; 0 || !isPathToCenter(parents[edgeKey]))))</b>
+<b class="fc">&nbsp;                return weight;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // run the search
+<b class="fc">&nbsp;        while (!dijkstraHeap.isEmpty() &amp;&amp; numPolls &lt; maxPolls &amp;&amp;</b>
+&nbsp;                // we *could* use dijkstraHeap.peekKey() instead, but since it is cast to float this might be smaller than
+&nbsp;                // the actual weight in which case the search might continue and find a false witness path when there is
+&nbsp;                // an adjacent zero weight edge *and* u-turn costs are zero. we could check this explicitly somewhere,,
+&nbsp;                // but we just use the exact weight here instead. #2564
+<b class="fc">&nbsp;                weights[dijkstraHeap.peekElement()] &lt; acceptedWeight</b>
+&nbsp;        ) {
+<b class="fc">&nbsp;            int currKey = dijkstraHeap.poll();</b>
+<b class="fc">&nbsp;            numPolls++;</b>
+<b class="fc">&nbsp;            final int currNode = getAdjNode(currKey);</b>
+<b class="fc">&nbsp;            PrepareGraphEdgeIterator iter = outEdgeExplorer.setBaseNode(currNode);</b>
+<b class="fc">&nbsp;            double foundWeight = Double.POSITIVE_INFINITY;</b>
+<b class="fc">&nbsp;            while (iter.next()) {</b>
+&nbsp;                // in a few very special cases this is needed to prevent paths that start with a zero weight loop from
+&nbsp;                // being recognized as witnesses when there are double zero weight loops at the source node
+<b class="pc">&nbsp;                if (currNode == sourceNode &amp;&amp; iter.getAdjNode() == sourceNode &amp;&amp; iter.getWeight() &lt; MAX_ZERO_WEIGHT_LOOP)</b>
+&nbsp;                    continue;
+<b class="fc">&nbsp;                final double weight = weights[currKey] + calcTurnWeight(currKey, currNode, iter.getOrigEdgeKeyFirst()) + iter.getWeight();</b>
+<b class="fc">&nbsp;                if (Double.isInfinite(weight))</b>
+&nbsp;                    continue;
+<b class="fc">&nbsp;                final int key = iter.getOrigEdgeKeyLast();</b>
+<b class="fc">&nbsp;                final boolean isPathToCenter = isPathToCenter(currKey) &amp;&amp; iter.getAdjNode() == centerNode;</b>
+<b class="fc">&nbsp;                if (weights[key] == Double.POSITIVE_INFINITY) {</b>
+<b class="fc">&nbsp;                    weights[key] = weight;</b>
+<b class="fc">&nbsp;                    parents[key] = currKey;</b>
+<b class="fc">&nbsp;                    setAdjNodeAndPathToCenter(key, iter.getAdjNode(), isPathToCenter);</b>
+<b class="fc">&nbsp;                    changedEdgeKeys.add(key);</b>
+<b class="fc">&nbsp;                    dijkstraHeap.insert(weight, key);</b>
+<b class="fc">&nbsp;                    if (iter.getAdjNode() == targetNode &amp;&amp; (!isPathToCenter(currKey) || parents[currKey] &lt; 0))</b>
+<b class="fc">&nbsp;                        foundWeight = Math.min(foundWeight, weight + calcTurnWeight(key, targetNode, targetEdgeKey));</b>
+<b class="fc">&nbsp;                } else if (weight &lt; weights[key]</b>
+&nbsp;                        // if weights are equal make sure we prefer witness paths over bridge paths
+<b class="fc">&nbsp;                        || (weight == weights[key] &amp;&amp; !isPathToCenter(currKey))) {</b>
+<b class="fc">&nbsp;                    numUpdates++;</b>
+<b class="fc">&nbsp;                    weights[key] = weight;</b>
+<b class="fc">&nbsp;                    parents[key] = currKey;</b>
+<b class="fc">&nbsp;                    setAdjNodeAndPathToCenter(key, iter.getAdjNode(), isPathToCenter);</b>
+<b class="fc">&nbsp;                    dijkstraHeap.update(weight, key);</b>
+<b class="fc">&nbsp;                    if (iter.getAdjNode() == targetNode &amp;&amp; (!isPathToCenter(currKey) || parents[currKey] &lt; 0))</b>
+<b class="fc">&nbsp;                        foundWeight = Math.min(foundWeight, weight + calcTurnWeight(key, targetNode, targetEdgeKey));</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            if (foundWeight &lt;= acceptedWeight)</b>
+&nbsp;                // note that we have to finish the iteration for the current node, otherwise we&#39;ll never check the
+&nbsp;                // remaining edges again
+<b class="fc">&nbsp;                return foundWeight;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (numPolls == maxPolls)</b>
+<b class="fc">&nbsp;            stats.numCapped++;</b>
+<b class="fc">&nbsp;        return Double.POSITIVE_INFINITY;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void finishSearch() {
+&nbsp;
+&nbsp;        // update stats using values of last search
+<b class="fc">&nbsp;        stats.numPolls += numPolls;</b>
+<b class="fc">&nbsp;        stats.maxPolls = Math.max(stats.maxPolls, numPolls);</b>
+<b class="fc">&nbsp;        stats.numExplored += changedEdgeKeys.size();</b>
+<b class="fc">&nbsp;        stats.maxExplored = Math.max(stats.maxExplored, changedEdgeKeys.size());</b>
+<b class="fc">&nbsp;        stats.numUpdates += numUpdates;</b>
+<b class="fc">&nbsp;        stats.maxUpdates = Math.max(stats.maxUpdates, numUpdates);</b>
+<b class="fc">&nbsp;        reset();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setAdjNodeAndPathToCenter(int key, int adjNode, boolean isPathToCenter) {
+<b class="fc">&nbsp;        adjNodesAndIsPathToCenters[key] = (adjNode &lt;&lt; 1) + (isPathToCenter ? 1 : 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getAdjNode(int key) {
+<b class="fc">&nbsp;        return (adjNodesAndIsPathToCenters[key] &gt;&gt; 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isPathToCenter(int key) {
+<b class="fc">&nbsp;        return (adjNodesAndIsPathToCenters[key] &amp; 0b01) == 0b01;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close() {
+<b class="fc">&nbsp;        prepareGraph.close();</b>
+<b class="fc">&nbsp;        outEdgeExplorer = null;</b>
+<b class="fc">&nbsp;        origInEdgeExplorer = null;</b>
+<b class="fc">&nbsp;        weights = null;</b>
+<b class="fc">&nbsp;        parents = null;</b>
+<b class="fc">&nbsp;        adjNodesAndIsPathToCenters = null;</b>
+<b class="fc">&nbsp;        changedEdgeKeys.release();</b>
+<b class="fc">&nbsp;        dijkstraHeap = null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void initStorage(int numEntries) {
+<b class="fc">&nbsp;        weights = new double[numEntries];</b>
+<b class="fc">&nbsp;        Arrays.fill(weights, Double.POSITIVE_INFINITY);</b>
+&nbsp;
+<b class="fc">&nbsp;        parents = new int[numEntries];</b>
+<b class="fc">&nbsp;        Arrays.fill(parents, NO_NODE);</b>
+&nbsp;
+<b class="fc">&nbsp;        adjNodesAndIsPathToCenters = new int[numEntries];</b>
+&nbsp;        // need bit shift, see getAdjNode(int)
+<b class="fc">&nbsp;        Arrays.fill(adjNodesAndIsPathToCenters, NO_NODE &lt;&lt; 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void initCollections() {
+<b class="fc">&nbsp;        changedEdgeKeys = new IntArrayList(1000);</b>
+<b class="fc">&nbsp;        dijkstraHeap = new IntFloatBinaryHeap(1000);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void reset() {
+<b class="fc">&nbsp;        numPolls = 0;</b>
+<b class="fc">&nbsp;        numUpdates = 0;</b>
+<b class="fc">&nbsp;        resetShortestPathTree();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void resetShortestPathTree() {
+<b class="fc">&nbsp;        for (int i = 0; i &lt; changedEdgeKeys.size(); ++i)</b>
+<b class="fc">&nbsp;            resetEntry(changedEdgeKeys.get(i));</b>
+<b class="fc">&nbsp;        changedEdgeKeys.elementsCount = 0;</b>
+<b class="fc">&nbsp;        dijkstraHeap.clear();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void resetEntry(int key) {
+<b class="fc">&nbsp;        weights[key] = Double.POSITIVE_INFINITY;</b>
+<b class="fc">&nbsp;        parents[key] = NO_NODE;</b>
+<b class="fc">&nbsp;        setAdjNodeAndPathToCenter(key, NO_NODE, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private double calcTurnWeight(int inEdgeKey, int viaNode, int outEdgeKey) {
+<b class="fc">&nbsp;        return prepareGraph.getTurnWeight(inEdgeKey, viaNode, outEdgeKey);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    static class Stats {</b>
+&nbsp;        long numTrees;
+&nbsp;        long numSearches;
+&nbsp;        long numPolls;
+&nbsp;        long maxPolls;
+&nbsp;        long numExplored;
+&nbsp;        long maxExplored;
+&nbsp;        long numUpdates;
+&nbsp;        long maxUpdates;
+&nbsp;        long numCapped;
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="fc">&nbsp;            return String.format(Locale.ROOT,</b>
+&nbsp;                    &quot;trees: %12s, searches: %15s, capped: %12s (%5.2f%%), polled: avg %s max %6d, explored: avg %s max %6d, updated: avg %s max %6d&quot;,
+<b class="fc">&nbsp;                    nf(numTrees),</b>
+<b class="fc">&nbsp;                    nf(numSearches),</b>
+<b class="fc">&nbsp;                    nf(numCapped),</b>
+<b class="fc">&nbsp;                    100 * (double) numCapped / numSearches,</b>
+<b class="fc">&nbsp;                    quotient(numPolls, numTrees),</b>
+<b class="fc">&nbsp;                    maxPolls,</b>
+<b class="fc">&nbsp;                    quotient(numExplored, numTrees),</b>
+<b class="fc">&nbsp;                    maxExplored,</b>
+<b class="fc">&nbsp;                    quotient(numUpdates, numTrees),</b>
+<b class="fc">&nbsp;                    maxUpdates</b>
+&nbsp;            );
+&nbsp;        }
+&nbsp;
+&nbsp;        private String quotient(long a, long b) {
+<b class="fc">&nbsp;            return b == 0 ? &quot;NaN&quot; : String.format(Locale.ROOT, &quot;%5.1f&quot;, a / ((double) b));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

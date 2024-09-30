@@ -1,0 +1,259 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DistanceCalcEuclidean</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: DistanceCalcEuclidean (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DistanceCalcEuclidean</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    43.8%
+  </span>
+  <span class="absValue">
+    (7/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    61.8%
+  </span>
+  <span class="absValue">
+    (21/34)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import static java.lang.Math.sqrt;
+&nbsp;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;/**
+&nbsp; * Calculates the distance of two points or one point and an edge in euclidean space.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="fc">&nbsp;public class DistanceCalcEuclidean extends DistanceCalcEarth {</b>
+&nbsp;    @Override
+&nbsp;    public double calcDist(double fromY, double fromX, double toY, double toX) {
+<b class="nc">&nbsp;        return sqrt(calcNormalizedDist(fromY, fromX, toY, toX));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcDist3D(double fromY, double fromX, double fromHeight, double toY, double toX, double toHeight) {
+<b class="fc">&nbsp;        return sqrt(calcNormalizedDist(fromY, fromX, toY, toX) + calcNormalizedDist(toHeight - fromHeight));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcDenormalizedDist(double normedDist) {
+<b class="nc">&nbsp;        return sqrt(normedDist);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the specified length in normalized meter.
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public double calcNormalizedDist(double dist) {
+<b class="fc">&nbsp;        return dist * dist;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    double calcShrinkFactor(double a_lat_deg, double b_lat_deg) {
+<b class="fc">&nbsp;        return 1.;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates in normalized meter
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public double calcNormalizedDist(double fromY, double fromX, double toY, double toX) {
+<b class="fc">&nbsp;        double dX = fromX - toX;</b>
+<b class="fc">&nbsp;        double dY = fromY - toY;</b>
+<b class="fc">&nbsp;        return dX * dX + dY * dY;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return &quot;2D&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcCircumference(double lat) {
+<b class="nc">&nbsp;        throw new UnsupportedOperationException(&quot;Not supported for the 2D Euclidean space&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isDateLineCrossOver(double lon1, double lon2) {
+<b class="nc">&nbsp;        throw new UnsupportedOperationException(&quot;Not supported for the 2D Euclidean space&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BBox createBBox(double lat, double lon, double radiusInMeter) {
+<b class="nc">&nbsp;        throw new UnsupportedOperationException(&quot;Not supported for the 2D Euclidean space&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public GHPoint projectCoordinate(double latInDeg, double lonInDeg, double distanceInMeter,
+&nbsp;            double headingClockwiseFromNorth) {
+<b class="nc">&nbsp;        throw new UnsupportedOperationException(&quot;Not supported for the 2D Euclidean space&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public GHPoint intermediatePoint(double f, double lat1, double lon1, double lat2, double lon2) {
+<b class="nc">&nbsp;        double delatLat = lat2 - lat1;</b>
+<b class="nc">&nbsp;        double deltaLon = lon2 - lon1;</b>
+<b class="nc">&nbsp;        double midLat = lat1 + delatLat * f;</b>
+<b class="nc">&nbsp;        double midLon = lon1 + deltaLon * f;</b>
+<b class="nc">&nbsp;        return new GHPoint(midLat, midLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isCrossBoundary(double lon1, double lon2) {
+<b class="nc">&nbsp;        throw new UnsupportedOperationException(&quot;Not supported for the 2D Euclidean space&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcNormalizedEdgeDistance(double ry, double rx,
+&nbsp;                                             double ay, double ax,
+&nbsp;                                             double by, double bx) {
+<b class="fc">&nbsp;        return calcNormalizedEdgeDistance3D(</b>
+&nbsp;            ry, rx, 0,
+&nbsp;            ay, ax, 0,
+&nbsp;            by, bx, 0
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcNormalizedEdgeDistance3D(double ry, double rx, double rz,
+&nbsp;                                               double ay, double ax, double az,
+&nbsp;                                               double by, double bx, double bz) {
+<b class="fc">&nbsp;        double dx = bx - ax;</b>
+<b class="fc">&nbsp;        double dy = by - ay;</b>
+<b class="fc">&nbsp;        double dz = bz - az;</b>
+&nbsp;
+<b class="fc">&nbsp;        double norm = dx * dx + dy * dy + dz * dz;</b>
+<b class="fc">&nbsp;        double factor = ((rx - ax) * dx + (ry - ay) * dy + (rz - az) * dz) / norm;</b>
+<b class="fc">&nbsp;        if (Double.isNaN(factor)) factor = 0;</b>
+&nbsp;
+&nbsp;        // x,y,z is projection of r onto segment a-b
+<b class="fc">&nbsp;        double cx = ax + factor * dx;</b>
+<b class="fc">&nbsp;        double cy = ay + factor * dy;</b>
+<b class="fc">&nbsp;        double cz = az + factor * dz;</b>
+&nbsp;
+<b class="fc">&nbsp;        double rdx = cx - rx;</b>
+<b class="fc">&nbsp;        double rdy = cy - ry;</b>
+<b class="fc">&nbsp;        double rdz = cz - rz;</b>
+&nbsp;
+<b class="fc">&nbsp;        return rdx * rdx + rdy * rdy + rdz * rdz;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

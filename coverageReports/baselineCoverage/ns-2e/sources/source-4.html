@@ -1,0 +1,188 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CHConfig</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: CHConfig (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CHConfig</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.8%
+  </span>
+  <span class="absValue">
+    (9/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (2/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.2%
+  </span>
+  <span class="absValue">
+    (13/18)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.routing.util.TraversalMode;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;
+&nbsp;import static com.graphhopper.config.Profile.validateProfileName;
+&nbsp;
+&nbsp;/**
+&nbsp; * Container to hold properties used for CH preparation Specifies all properties of a CH routing profile.
+&nbsp; *
+&nbsp; * @author easbar
+&nbsp; */
+&nbsp;public class CHConfig {
+&nbsp;    /**
+&nbsp;     * will be used to store and identify the CH graph data on disk
+&nbsp;     */
+&nbsp;    private final String chGraphName;
+&nbsp;    private final Weighting weighting;
+&nbsp;    private final boolean edgeBased;
+&nbsp;
+&nbsp;    public static CHConfig nodeBased(String chGraphName, Weighting weighting) {
+<b class="fc">&nbsp;        return new CHConfig(chGraphName, weighting, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static CHConfig edgeBased(String chGraphName, Weighting weighting) {
+<b class="fc">&nbsp;        return new CHConfig(chGraphName, weighting, true);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public CHConfig(String chGraphName, Weighting weighting, boolean edgeBased) {</b>
+<b class="fc">&nbsp;        validateProfileName(chGraphName);</b>
+<b class="fc">&nbsp;        this.chGraphName = chGraphName;</b>
+<b class="fc">&nbsp;        this.weighting = weighting;</b>
+<b class="fc">&nbsp;        this.edgeBased = edgeBased;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Weighting getWeighting() {
+<b class="fc">&nbsp;        return weighting;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isEdgeBased() {
+<b class="fc">&nbsp;        return edgeBased;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TraversalMode getTraversalMode() {
+<b class="fc">&nbsp;        return edgeBased ? TraversalMode.EDGE_BASED : TraversalMode.NODE_BASED;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toFileName() {
+<b class="nc">&nbsp;        return chGraphName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return chGraphName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getName() {
+<b class="fc">&nbsp;        return chGraphName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object o) {
+<b class="nc">&nbsp;        if (this == o) return true;</b>
+<b class="nc">&nbsp;        if (o == null || getClass() != o.getClass()) return false;</b>
+<b class="nc">&nbsp;        CHConfig chConfig = (CHConfig) o;</b>
+<b class="nc">&nbsp;        return getName().equals(chConfig.getName());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="fc">&nbsp;        return getName().hashCode();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,563 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GraphExplorer</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: GraphExplorer (com.graphhopper.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GraphExplorer</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/34)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/62)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">GraphExplorer$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/50)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">GraphExplorer$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">GraphExplorer$3</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">GraphExplorer$MultiModalEdge</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/37)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/98)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/121)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.gtfs;
+&nbsp;
+&nbsp;import com.google.common.collect.Iterators;
+&nbsp;import com.google.transit.realtime.GtfsRealtime;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.util.EdgeExplorer;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.time.ZoneId;
+&nbsp;import java.time.temporal.ChronoUnit;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Spliterators;
+&nbsp;import java.util.function.Consumer;
+&nbsp;
+&nbsp;public final class GraphExplorer {
+&nbsp;
+&nbsp;    private final EdgeExplorer edgeExplorer;
+&nbsp;    private final GtfsStorage gtfsStorage;
+&nbsp;    private final RealtimeFeed realtimeFeed;
+&nbsp;    private final boolean reverse;
+&nbsp;    private final Weighting accessEgressWeighting;
+&nbsp;    private final boolean streetOnly;
+&nbsp;    private final boolean ptOnly;
+&nbsp;    private final double walkSpeedKmH;
+&nbsp;    private final boolean ignoreValidities;
+&nbsp;    private final int blockedRouteTypes;
+&nbsp;    private final PtGraph ptGraph;
+&nbsp;    private final Graph graph;
+&nbsp;
+<b class="nc">&nbsp;    public GraphExplorer(Graph graph, PtGraph ptGraph, Weighting accessEgressWeighting, GtfsStorage gtfsStorage, RealtimeFeed realtimeFeed, boolean reverse, boolean streetOnly, boolean ptOnly, double walkSpeedKmh, boolean ignoreValidities, int blockedRouteTypes) {</b>
+<b class="nc">&nbsp;        this.graph = graph;</b>
+<b class="nc">&nbsp;        this.ptGraph = ptGraph;</b>
+<b class="nc">&nbsp;        this.accessEgressWeighting = accessEgressWeighting;</b>
+<b class="nc">&nbsp;        this.ignoreValidities = ignoreValidities;</b>
+<b class="nc">&nbsp;        this.blockedRouteTypes = blockedRouteTypes;</b>
+<b class="nc">&nbsp;        this.edgeExplorer = graph.createEdgeExplorer();</b>
+<b class="nc">&nbsp;        this.gtfsStorage = gtfsStorage;</b>
+<b class="nc">&nbsp;        this.realtimeFeed = realtimeFeed;</b>
+<b class="nc">&nbsp;        this.reverse = reverse;</b>
+<b class="nc">&nbsp;        this.streetOnly = streetOnly;</b>
+<b class="nc">&nbsp;        this.ptOnly = ptOnly;</b>
+<b class="nc">&nbsp;        this.walkSpeedKmH = walkSpeedKmh;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    Iterable&lt;MultiModalEdge&gt; exploreEdgesAround(Label label) {
+<b class="nc">&nbsp;        return () -&gt; {</b>
+<b class="nc">&nbsp;            Iterator&lt;MultiModalEdge&gt; ptEdges = label.node.ptNode != -1 ? ptEdgeStream(label.node.ptNode, label.currentTime).iterator() : Collections.emptyIterator();</b>
+<b class="nc">&nbsp;            Iterator&lt;MultiModalEdge&gt; streetEdges = label.node.streetNode != -1 ? streetEdgeStream(label.node.streetNode).iterator() : Collections.emptyIterator();</b>
+<b class="nc">&nbsp;            return Iterators.concat(ptEdges, streetEdges);</b>
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    private Iterable&lt;PtGraph.PtEdge&gt; realtimeEdgesAround(int node) {
+<b class="nc">&nbsp;        return () -&gt; realtimeFeed.getAdditionalEdges().stream().filter(e -&gt; e.getBaseNode() == node).iterator();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Iterable&lt;PtGraph.PtEdge&gt; backRealtimeEdgesAround(int node) {
+<b class="nc">&nbsp;        return () -&gt; realtimeFeed.getAdditionalEdges().stream()</b>
+<b class="nc">&nbsp;                .filter(e -&gt; e.getAdjNode() == node)</b>
+<b class="nc">&nbsp;                .map(e -&gt; new PtGraph.PtEdge(e.getId(), e.getAdjNode(), e.getBaseNode(), e.getAttrs()))</b>
+<b class="nc">&nbsp;                .iterator();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    private Iterable&lt;MultiModalEdge&gt; ptEdgeStream(int ptNode, long currentTime) {
+<b class="nc">&nbsp;        return () -&gt; Spliterators.iterator(new Spliterators.AbstractSpliterator&lt;MultiModalEdge&gt;(0, 0) {</b>
+<b class="nc">&nbsp;            final Iterator&lt;PtGraph.PtEdge&gt; edgeIterator = reverse ?</b>
+<b class="nc">&nbsp;                    Iterators.concat(ptNode &lt; ptGraph.getNodeCount() ? ptGraph.backEdgesAround(ptNode).iterator() : Collections.&lt;PtGraph.PtEdge&gt;emptyIterator(), backRealtimeEdgesAround(ptNode).iterator()) :</b>
+<b class="nc">&nbsp;                    Iterators.concat(ptNode &lt; ptGraph.getNodeCount() ? ptGraph.edgesAround(ptNode).iterator() : Collections.&lt;PtGraph.PtEdge&gt;emptyIterator(), realtimeEdgesAround(ptNode).iterator());</b>
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public boolean tryAdvance(Consumer&lt;? super MultiModalEdge&gt; action) {
+<b class="nc">&nbsp;                while (edgeIterator.hasNext()) {</b>
+<b class="nc">&nbsp;                    PtGraph.PtEdge edge = edgeIterator.next();</b>
+<b class="nc">&nbsp;                    GtfsStorage.EdgeType edgeType = edge.getType();</b>
+&nbsp;
+&nbsp;                    // Optimization (around 20% in Swiss network):
+&nbsp;                    // Only use the (single) least-wait-time edge to enter the
+&nbsp;                    // time expanded network. Later departures are reached via
+&nbsp;                    // WAIT edges. Algorithmically not necessary, and does not
+&nbsp;                    // reduce total number of relaxed nodes, but takes stress
+&nbsp;                    // off the priority queue. Additionally, when only walking,
+&nbsp;                    // don&#39;t bother finding the enterEdge, because we are not going to enter.
+<b class="nc">&nbsp;                    if (edgeType == GtfsStorage.EdgeType.ENTER_TIME_EXPANDED_NETWORK) {</b>
+<b class="nc">&nbsp;                        if (streetOnly) {</b>
+<b class="nc">&nbsp;                            return false;</b>
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            action.accept(new MultiModalEdge(findEnterEdge(edge))); // fully consumes edgeIterator</b>
+<b class="nc">&nbsp;                            return true;</b>
+&nbsp;                        }
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (streetOnly &amp;&amp; edgeType != (reverse ? GtfsStorage.EdgeType.EXIT_PT : GtfsStorage.EdgeType.ENTER_PT)) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (!(ignoreValidities || isValidOn(edge, currentTime))) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (edgeType == GtfsStorage.EdgeType.WAIT_ARRIVAL &amp;&amp; !reverse) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (edgeType == GtfsStorage.EdgeType.ENTER_PT &amp;&amp; reverse &amp;&amp; ptOnly) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (edgeType == GtfsStorage.EdgeType.EXIT_PT &amp;&amp; !reverse &amp;&amp; ptOnly) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    if ((edgeType == GtfsStorage.EdgeType.ENTER_PT || edgeType == GtfsStorage.EdgeType.EXIT_PT || edgeType == GtfsStorage.EdgeType.TRANSFER) &amp;&amp; (blockedRouteTypes &amp; (1 &lt;&lt; edge.getAttrs().route_type)) != 0) {</b>
+&nbsp;                        continue;
+&nbsp;                    }
+<b class="nc">&nbsp;                    action.accept(new MultiModalEdge(edge));</b>
+<b class="nc">&nbsp;                    return true;</b>
+&nbsp;                }
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            private PtGraph.PtEdge findEnterEdge(PtGraph.PtEdge first) {
+<b class="nc">&nbsp;                long firstTT = calcTravelTimeMillis(first, currentTime);</b>
+<b class="nc">&nbsp;                while (edgeIterator.hasNext()) {</b>
+<b class="nc">&nbsp;                    PtGraph.PtEdge result = edgeIterator.next();</b>
+<b class="nc">&nbsp;                    long nextTT = calcTravelTimeMillis(result, currentTime);</b>
+<b class="nc">&nbsp;                    if (nextTT &lt; firstTT) {</b>
+<b class="nc">&nbsp;                        edgeIterator.forEachRemaining(ptEdge -&gt; {</b>
+<b class="nc">&nbsp;                        });</b>
+<b class="nc">&nbsp;                        return result;</b>
+&nbsp;                    }
+&nbsp;                }
+<b class="nc">&nbsp;                return first;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;    private Iterable&lt;MultiModalEdge&gt; streetEdgeStream(int streetNode) {
+<b class="nc">&nbsp;        return () -&gt; Spliterators.iterator(new Spliterators.AbstractSpliterator&lt;MultiModalEdge&gt;(0, 0) {</b>
+<b class="nc">&nbsp;            final EdgeIterator e = edgeExplorer.setBaseNode(streetNode);</b>
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public boolean tryAdvance(Consumer&lt;? super MultiModalEdge&gt; action) {
+<b class="nc">&nbsp;                while (e.next()) {</b>
+<b class="nc">&nbsp;                    if (Double.isFinite(accessEgressWeighting.calcEdgeWeight(e, reverse))) {</b>
+<b class="nc">&nbsp;                        action.accept(new MultiModalEdge(e.getEdge(), e.getBaseNode(), e.getAdjNode(), (long) (accessEgressWeighting.calcEdgeMillis(e.detach(false), reverse) * (5.0 / walkSpeedKmH)), e.getDistance()));</b>
+<b class="nc">&nbsp;                        return true;</b>
+&nbsp;                    }
+&nbsp;                }
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;    long calcTravelTimeMillis(MultiModalEdge edge, long earliestStartTime) {
+<b class="nc">&nbsp;        switch (edge.getType()) {</b>
+&nbsp;            case ENTER_TIME_EXPANDED_NETWORK:
+<b class="nc">&nbsp;                if (reverse) {</b>
+<b class="nc">&nbsp;                    return 0;</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    return waitingTime(edge.ptEdge, earliestStartTime);</b>
+&nbsp;                }
+&nbsp;            case LEAVE_TIME_EXPANDED_NETWORK:
+<b class="nc">&nbsp;                if (reverse) {</b>
+<b class="nc">&nbsp;                    return -waitingTime(edge.ptEdge, earliestStartTime);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    return 0;</b>
+&nbsp;                }
+&nbsp;            default:
+<b class="nc">&nbsp;                return edge.getTime();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    long calcTravelTimeMillis(PtGraph.PtEdge edge, long earliestStartTime) {
+<b class="nc">&nbsp;        switch (edge.getType()) {</b>
+&nbsp;            case ENTER_TIME_EXPANDED_NETWORK:
+<b class="nc">&nbsp;                if (reverse) {</b>
+<b class="nc">&nbsp;                    return 0;</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    return waitingTime(edge, earliestStartTime);</b>
+&nbsp;                }
+&nbsp;            case LEAVE_TIME_EXPANDED_NETWORK:
+<b class="nc">&nbsp;                if (reverse) {</b>
+<b class="nc">&nbsp;                    return -waitingTime(edge, earliestStartTime);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    return 0;</b>
+&nbsp;                }
+&nbsp;            default:
+<b class="nc">&nbsp;                return edge.getTime();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isBlocked(MultiModalEdge edge) {
+<b class="nc">&nbsp;        return realtimeFeed.isBlocked(edge.getId());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long getDelayFromBoardEdge(MultiModalEdge edge, long currentTime) {
+<b class="nc">&nbsp;        return realtimeFeed.getDelayForBoardEdge(edge.ptEdge, Instant.ofEpochMilli(currentTime));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long getDelayFromAlightEdge(MultiModalEdge edge, long currentTime) {
+<b class="nc">&nbsp;        return realtimeFeed.getDelayForAlightEdge(edge.ptEdge, Instant.ofEpochMilli(currentTime));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long waitingTime(PtGraph.PtEdge edge, long earliestStartTime) {
+<b class="nc">&nbsp;        long l = edge.getTime() * 1000L - millisOnTravelDay(edge, earliestStartTime);</b>
+<b class="nc">&nbsp;        if (!reverse) {</b>
+<b class="nc">&nbsp;            if (l &lt; 0) l = l + 24 * 60 * 60 * 1000;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            if (l &gt; 0) l = l - 24 * 60 * 60 * 1000;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return l;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long millisOnTravelDay(PtGraph.PtEdge edge, long instant) {
+<b class="nc">&nbsp;        final ZoneId zoneId = edge.getAttrs().feedIdWithTimezone.zoneId;</b>
+<b class="nc">&nbsp;        return Instant.ofEpochMilli(instant).atZone(zoneId).toLocalTime().toNanoOfDay() / 1000000L;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isValidOn(PtGraph.PtEdge edge, long instant) {
+<b class="nc">&nbsp;        if (edge.getType() == GtfsStorage.EdgeType.BOARD || edge.getType() == GtfsStorage.EdgeType.ALIGHT) {</b>
+<b class="nc">&nbsp;            final GtfsStorage.Validity validity = edge.getAttrs().validity;</b>
+<b class="nc">&nbsp;            final int trafficDay = (int) ChronoUnit.DAYS.between(validity.start, Instant.ofEpochMilli(instant).atZone(validity.zoneId).toLocalDate());</b>
+<b class="nc">&nbsp;            return trafficDay &gt;= 0 &amp;&amp; validity.validity.get(trafficDay);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Label.Transition&gt; walkPath(int[] skippedEdgesForTransfer, long currentTime) {
+<b class="nc">&nbsp;        EdgeIteratorState firstEdge = graph.getEdgeIteratorStateForKey(skippedEdgesForTransfer[0]);</b>
+<b class="nc">&nbsp;        Label label = new Label(currentTime, null, new Label.NodeId(firstEdge.getBaseNode(), -1), 0, null, 0, 0, 0, false, null);</b>
+<b class="nc">&nbsp;        for (int i : skippedEdgesForTransfer) {</b>
+<b class="nc">&nbsp;            EdgeIteratorState e = graph.getEdgeIteratorStateForKey(i);</b>
+<b class="nc">&nbsp;            MultiModalEdge multiModalEdge = new MultiModalEdge(e.getEdge(), e.getBaseNode(), e.getAdjNode(), (long) (accessEgressWeighting.calcEdgeMillis(e, reverse) * (5.0 / walkSpeedKmH)), e.getDistance());</b>
+<b class="nc">&nbsp;            label = new Label(label.currentTime + multiModalEdge.time, multiModalEdge, new Label.NodeId(e.getAdjNode(), -1), 0, null, 0, 0, 0, false, label);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return Label.getTransitions(label, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public class MultiModalEdge {
+&nbsp;        private int baseNode;
+&nbsp;        private int adjNode;
+&nbsp;        private long time;
+&nbsp;        private double distance;
+&nbsp;        private int edge;
+&nbsp;        private PtGraph.PtEdge ptEdge;
+&nbsp;
+<b class="nc">&nbsp;        public MultiModalEdge(PtGraph.PtEdge ptEdge) {</b>
+<b class="nc">&nbsp;            this.ptEdge = ptEdge;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        public MultiModalEdge(int edge, int baseNode, int adjNode, long time, double distance) {</b>
+<b class="nc">&nbsp;            this.edge = edge;</b>
+<b class="nc">&nbsp;            this.baseNode = baseNode;</b>
+<b class="nc">&nbsp;            this.adjNode = adjNode;</b>
+<b class="nc">&nbsp;            this.time = time;</b>
+<b class="nc">&nbsp;            this.distance = distance;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public GtfsStorage.EdgeType getType() {
+<b class="nc">&nbsp;            return ptEdge != null ? ptEdge.getType() : GtfsStorage.EdgeType.HIGHWAY;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getTransfers() {
+<b class="nc">&nbsp;            return ptEdge != null ? ptEdge.getAttrs().transfers : 0;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getId() {
+<b class="nc">&nbsp;            return ptEdge != null ? ptEdge.getId() : edge;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Label.NodeId getAdjNode() {
+<b class="nc">&nbsp;            if (ptEdge != null) {</b>
+<b class="nc">&nbsp;                return new Label.NodeId(gtfsStorage.getPtToStreet().getOrDefault(ptEdge.getAdjNode(), -1), ptEdge.getAdjNode());</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return new Label.NodeId(adjNode, gtfsStorage.getStreetToPt().getOrDefault(adjNode, -1));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        public long getTime() {
+<b class="nc">&nbsp;            return ptEdge != null ? ptEdge.getTime() * 1000L : time;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            return &quot;MultiModalEdge{&quot; + baseNode + &quot;-&gt;&quot; + adjNode +</b>
+&nbsp;                    &quot;, time=&quot; + time +
+&nbsp;                    &quot;, edge=&quot; + edge +
+&nbsp;                    &quot;, ptEdge=&quot; + ptEdge +
+&nbsp;                    &#39;}&#39;;
+&nbsp;        }
+&nbsp;
+&nbsp;        public double getDistance() {
+<b class="nc">&nbsp;            return distance;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getRouteType() {
+<b class="nc">&nbsp;            return ptEdge.getRouteType();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getStopSequence() {
+<b class="nc">&nbsp;            return ptEdge.getAttrs().stop_sequence;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public GtfsRealtime.TripDescriptor getTripDescriptor() {
+<b class="nc">&nbsp;            return ptEdge.getAttrs().tripDescriptor;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public GtfsStorage.PlatformDescriptor getPlatformDescriptor() {
+<b class="nc">&nbsp;            return ptEdge.getAttrs().platformDescriptor;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

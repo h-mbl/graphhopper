@@ -1,0 +1,1687 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GraphHopper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper</a>
+</div>
+
+<h1>Coverage Summary for Class: GraphHopper (com.graphhopper)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GraphHopper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86.1%
+  </span>
+  <span class="absValue">
+    (93/108)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    60.3%
+  </span>
+  <span class="absValue">
+    (251/416)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    73.8%
+  </span>
+  <span class="absValue">
+    (574/778)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper;
+&nbsp;
+&nbsp;import com.bedatadriven.jackson.datatype.jts.JtsModule;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.graphhopper.config.CHProfile;
+&nbsp;import com.graphhopper.config.LMProfile;
+&nbsp;import com.graphhopper.config.Profile;
+&nbsp;import com.graphhopper.jackson.Jackson;
+&nbsp;import com.graphhopper.reader.dem.*;
+&nbsp;import com.graphhopper.reader.osm.OSMReader;
+&nbsp;import com.graphhopper.reader.osm.RestrictionTagParser;
+&nbsp;import com.graphhopper.reader.osm.conditional.DateRangeParser;
+&nbsp;import com.graphhopper.routing.*;
+&nbsp;import com.graphhopper.routing.ch.CHPreparationHandler;
+&nbsp;import com.graphhopper.routing.ch.PrepareContractionHierarchies;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.lm.LMConfig;
+&nbsp;import com.graphhopper.routing.lm.LMPreparationHandler;
+&nbsp;import com.graphhopper.routing.lm.LandmarkStorage;
+&nbsp;import com.graphhopper.routing.lm.PrepareLandmarks;
+&nbsp;import com.graphhopper.routing.subnetwork.PrepareRoutingSubnetworks;
+&nbsp;import com.graphhopper.routing.subnetwork.PrepareRoutingSubnetworks.PrepareJob;
+&nbsp;import com.graphhopper.routing.util.*;
+&nbsp;import com.graphhopper.routing.util.countryrules.CountryRuleFactory;
+&nbsp;import com.graphhopper.routing.util.parsers.OSMBikeNetworkTagParser;
+&nbsp;import com.graphhopper.routing.util.parsers.OSMFootNetworkTagParser;
+&nbsp;import com.graphhopper.routing.util.parsers.OSMMtbNetworkTagParser;
+&nbsp;import com.graphhopper.routing.util.parsers.TagParser;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.routing.weighting.custom.CustomModelParser;
+&nbsp;import com.graphhopper.routing.weighting.custom.CustomWeighting;
+&nbsp;import com.graphhopper.routing.weighting.custom.NameValidator;
+&nbsp;import com.graphhopper.storage.*;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.storage.index.LocationIndexTree;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.Parameters.Landmark;
+&nbsp;import com.graphhopper.util.Parameters.Routing;
+&nbsp;import com.graphhopper.util.details.PathDetailsBuilderFactory;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.nio.charset.StandardCharsets;
+&nbsp;import java.nio.file.DirectoryStream;
+&nbsp;import java.nio.file.Files;
+&nbsp;import java.nio.file.Path;
+&nbsp;import java.nio.file.Paths;
+&nbsp;import java.text.DateFormat;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.BiFunction;
+&nbsp;import java.util.function.Function;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import static com.graphhopper.util.GHUtility.readCountries;
+&nbsp;import static com.graphhopper.util.Helper.*;
+&nbsp;import static com.graphhopper.util.Parameters.Algorithms.RoundTrip;
+&nbsp;
+&nbsp;/**
+&nbsp; * Easy to use access point to configure import and (offline) routing.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="fc">&nbsp;public class GraphHopper {</b>
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(GraphHopper.class);</b>
+&nbsp;    private MaxSpeedCalculator maxSpeedCalculator;
+<b class="fc">&nbsp;    private final Map&lt;String, Profile&gt; profilesByName = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final String fileLockName = &quot;gh.lock&quot;;</b>
+&nbsp;    // utils
+<b class="fc">&nbsp;    private final TranslationMap trMap = new TranslationMap().doImport();</b>
+<b class="fc">&nbsp;    boolean removeZipped = true;</b>
+<b class="fc">&nbsp;    boolean calcChecksums = false;</b>
+&nbsp;    // for country rules:
+<b class="fc">&nbsp;    private CountryRuleFactory countryRuleFactory = null;</b>
+&nbsp;    // for custom areas:
+<b class="fc">&nbsp;    private String customAreasDirectory = &quot;&quot;;</b>
+&nbsp;    // for graph:
+&nbsp;    private BaseGraph baseGraph;
+&nbsp;    private StorableProperties properties;
+&nbsp;    protected EncodingManager encodingManager;
+&nbsp;    private OSMParsers osmParsers;
+<b class="fc">&nbsp;    private int defaultSegmentSize = -1;</b>
+<b class="fc">&nbsp;    private String ghLocation = &quot;&quot;;</b>
+<b class="fc">&nbsp;    private DAType dataAccessDefaultType = DAType.RAM_STORE;</b>
+<b class="fc">&nbsp;    private final LinkedHashMap&lt;String, String&gt; dataAccessConfig = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private boolean elevation = false;</b>
+<b class="fc">&nbsp;    private LockFactory lockFactory = new NativeFSLockFactory();</b>
+<b class="fc">&nbsp;    private boolean allowWrites = true;</b>
+<b class="fc">&nbsp;    private boolean fullyLoaded = false;</b>
+<b class="fc">&nbsp;    private final OSMReaderConfig osmReaderConfig = new OSMReaderConfig();</b>
+&nbsp;    // for routing
+<b class="fc">&nbsp;    private final RouterConfig routerConfig = new RouterConfig();</b>
+&nbsp;    // for index
+&nbsp;    private LocationIndex locationIndex;
+<b class="fc">&nbsp;    private int preciseIndexResolution = 300;</b>
+<b class="fc">&nbsp;    private int maxRegionSearch = 4;</b>
+&nbsp;    // subnetworks
+<b class="fc">&nbsp;    private int minNetworkSize = 200;</b>
+<b class="fc">&nbsp;    private int subnetworksThreads = 1;</b>
+&nbsp;    // residential areas
+<b class="fc">&nbsp;    private double residentialAreaRadius = 400;</b>
+<b class="fc">&nbsp;    private double residentialAreaSensitivity = 6000;</b>
+<b class="fc">&nbsp;    private double cityAreaRadius = 1500;</b>
+<b class="fc">&nbsp;    private double cityAreaSensitivity = 1000;</b>
+<b class="fc">&nbsp;    private int urbanDensityCalculationThreads = 0;</b>
+&nbsp;
+&nbsp;    // preparation handlers
+<b class="fc">&nbsp;    private final LMPreparationHandler lmPreparationHandler = new LMPreparationHandler();</b>
+<b class="fc">&nbsp;    private final CHPreparationHandler chPreparationHandler = new CHPreparationHandler();</b>
+<b class="fc">&nbsp;    private Map&lt;String, RoutingCHGraph&gt; chGraphs = Collections.emptyMap();</b>
+<b class="fc">&nbsp;    private Map&lt;String, LandmarkStorage&gt; landmarks = Collections.emptyMap();</b>
+&nbsp;
+&nbsp;    // for data reader
+&nbsp;    private String osmFile;
+<b class="fc">&nbsp;    private ElevationProvider eleProvider = ElevationProvider.NOOP;</b>
+<b class="fc">&nbsp;    private ImportRegistry importRegistry = new DefaultImportRegistry();</b>
+<b class="fc">&nbsp;    private PathDetailsBuilderFactory pathBuilderFactory = new PathDetailsBuilderFactory();</b>
+&nbsp;
+<b class="fc">&nbsp;    private String dateRangeParserString = &quot;&quot;;</b>
+<b class="fc">&nbsp;    private String encodedValuesString = &quot;&quot;;</b>
+&nbsp;
+&nbsp;    public GraphHopper setEncodedValuesString(String encodedValuesString) {
+<b class="fc">&nbsp;        this.encodedValuesString = encodedValuesString;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getEncodedValuesString() {
+<b class="nc">&nbsp;        return encodedValuesString;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public EncodingManager getEncodingManager() {
+<b class="pc">&nbsp;        if (encodingManager == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;EncodingManager not yet built&quot;);</b>
+<b class="fc">&nbsp;        return encodingManager;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OSMParsers getOSMParsers() {
+<b class="nc">&nbsp;        if (osmParsers == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;OSMParsers not yet built&quot;);</b>
+<b class="nc">&nbsp;        return osmParsers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ElevationProvider getElevationProvider() {
+<b class="nc">&nbsp;        return eleProvider;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setElevationProvider(ElevationProvider eleProvider) {
+<b class="pc">&nbsp;        if (eleProvider == null || eleProvider == ElevationProvider.NOOP)</b>
+<b class="fc">&nbsp;            setElevation(false);</b>
+&nbsp;        else
+<b class="fc">&nbsp;            setElevation(true);</b>
+<b class="fc">&nbsp;        this.eleProvider = eleProvider;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setPathDetailsBuilderFactory(PathDetailsBuilderFactory pathBuilderFactory) {
+<b class="nc">&nbsp;        this.pathBuilderFactory = pathBuilderFactory;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public PathDetailsBuilderFactory getPathDetailsBuilderFactory() {
+<b class="nc">&nbsp;        return pathBuilderFactory;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Precise location resolution index means also more space (disc/RAM) could be consumed and
+&nbsp;     * probably slower query times, which would be e.g. not suitable for Android. The resolution
+&nbsp;     * specifies the tile width (in meter).
+&nbsp;     */
+&nbsp;    public GraphHopper setPreciseIndexResolution(int precision) {
+<b class="nc">&nbsp;        ensureNotLoaded();</b>
+<b class="nc">&nbsp;        preciseIndexResolution = precision;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setMinNetworkSize(int minNetworkSize) {
+<b class="fc">&nbsp;        ensureNotLoaded();</b>
+<b class="fc">&nbsp;        this.minNetworkSize = minNetworkSize;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Configures the urban density classification. Each edge will be classified as &#39;rural&#39;,&#39;residential&#39; or &#39;city&#39;, {@link UrbanDensity}
+&nbsp;     *
+&nbsp;     * @param residentialAreaRadius      in meters. The higher this value the longer the calculation will take and the bigger the area for
+&nbsp;     *                                   which the road density used to identify residential areas is calculated.
+&nbsp;     * @param residentialAreaSensitivity Use this to find a trade-off between too many roads being classified as residential (too high
+&nbsp;     *                                   values) and not enough roads being classified as residential (too small values)
+&nbsp;     * @param cityAreaRadius             in meters. The higher this value the longer the calculation will take and the bigger the area for
+&nbsp;     *                                   which the road density used to identify city areas is calculated. Set this to zero
+&nbsp;     *                                   to skip the city classification.
+&nbsp;     * @param cityAreaSensitivity        Use this to find a trade-off between too many roads being classified as city (too high values)
+&nbsp;     *                                   and not enough roads being classified as city (too small values)
+&nbsp;     * @param threads                    the number of threads used for the calculation. If this is zero the urban density
+&nbsp;     *                                   calculation is skipped entirely
+&nbsp;     */
+&nbsp;    public GraphHopper setUrbanDensityCalculation(double residentialAreaRadius, double residentialAreaSensitivity,
+&nbsp;                                                  double cityAreaRadius, double cityAreaSensitivity, int threads) {
+<b class="nc">&nbsp;        ensureNotLoaded();</b>
+<b class="nc">&nbsp;        this.residentialAreaRadius = residentialAreaRadius;</b>
+<b class="nc">&nbsp;        this.residentialAreaSensitivity = residentialAreaSensitivity;</b>
+<b class="nc">&nbsp;        this.cityAreaRadius = cityAreaRadius;</b>
+<b class="nc">&nbsp;        this.cityAreaSensitivity = cityAreaSensitivity;</b>
+<b class="nc">&nbsp;        this.urbanDensityCalculationThreads = threads;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Only valid option for in-memory graph and if you e.g. want to disable store on flush for unit
+&nbsp;     * tests. Specify storeOnFlush to true if you want that existing data will be loaded FROM disc
+&nbsp;     * and all in-memory data will be flushed TO disc after flush is called e.g. while OSM import.
+&nbsp;     *
+&nbsp;     * @param storeOnFlush true by default
+&nbsp;     */
+&nbsp;    public GraphHopper setStoreOnFlush(boolean storeOnFlush) {
+<b class="fc">&nbsp;        ensureNotLoaded();</b>
+<b class="fc">&nbsp;        if (storeOnFlush)</b>
+<b class="fc">&nbsp;            dataAccessDefaultType = DAType.RAM_STORE;</b>
+&nbsp;        else
+<b class="fc">&nbsp;            dataAccessDefaultType = DAType.RAM;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the routing profiles that shall be supported by this GraphHopper instance. The (and only the) given profiles
+&nbsp;     * can be used for routing without preparation and for CH/LM preparation.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Here is an example how to setup two CH profiles and one LM profile (via the Java API)
+&nbsp;     *
+&nbsp;     * &lt;pre&gt;
+&nbsp;     * {@code
+&nbsp;     *   hopper.setProfiles(
+&nbsp;     *     new Profile(&quot;my_car&quot;),
+&nbsp;     *     new Profile(&quot;your_bike&quot;)
+&nbsp;     *   );
+&nbsp;     *   hopper.getCHPreparationHandler().setCHProfiles(
+&nbsp;     *     new CHProfile(&quot;my_car&quot;),
+&nbsp;     *     new CHProfile(&quot;your_bike&quot;)
+&nbsp;     *   );
+&nbsp;     *   hopper.getLMPreparationHandler().setLMProfiles(
+&nbsp;     *     new LMProfile(&quot;your_bike&quot;)
+&nbsp;     *   );
+&nbsp;     * }
+&nbsp;     * &lt;/pre&gt;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * See also https://github.com/graphhopper/graphhopper/pull/1922.
+&nbsp;     *
+&nbsp;     * @see CHPreparationHandler#setCHProfiles
+&nbsp;     * @see LMPreparationHandler#setLMProfiles
+&nbsp;     */
+&nbsp;    public GraphHopper setProfiles(Profile... profiles) {
+<b class="fc">&nbsp;        return setProfiles(Arrays.asList(profiles));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setProfiles(List&lt;Profile&gt; profiles) {
+<b class="pc">&nbsp;        if (!profilesByName.isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot initialize profiles multiple times&quot;);</b>
+<b class="pc">&nbsp;        if (encodingManager != null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot set profiles after EncodingManager was built&quot;);</b>
+<b class="fc">&nbsp;        for (Profile profile : profiles) {</b>
+<b class="fc">&nbsp;            Profile previous = this.profilesByName.put(profile.getName(), profile);</b>
+<b class="fc">&nbsp;            if (previous != null)</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;Profile names must be unique. Duplicate name: &#39;&quot; + profile.getName() + &quot;&#39;&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Profile&gt; getProfiles() {
+<b class="fc">&nbsp;        return new ArrayList&lt;&gt;(profilesByName.values());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the profile for the given profile name, or null if it does not exist
+&nbsp;     */
+&nbsp;    public Profile getProfile(String profileName) {
+<b class="fc">&nbsp;        return profilesByName.get(profileName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if storing and fetching elevation data is enabled. Default is false
+&nbsp;     */
+&nbsp;    public boolean hasElevation() {
+<b class="fc">&nbsp;        return elevation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Enable storing and fetching elevation data. Default is false
+&nbsp;     */
+&nbsp;    public GraphHopper setElevation(boolean includeElevation) {
+<b class="fc">&nbsp;        this.elevation = includeElevation;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getGraphHopperLocation() {
+<b class="fc">&nbsp;        return ghLocation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the graphhopper folder.
+&nbsp;     */
+&nbsp;    public GraphHopper setGraphHopperLocation(String ghLocation) {
+<b class="fc">&nbsp;        ensureNotLoaded();</b>
+<b class="pc">&nbsp;        if (ghLocation == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;graphhopper location cannot be null&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.ghLocation = ghLocation;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getOSMFile() {
+<b class="fc">&nbsp;        return osmFile;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This file can be an osm xml (.osm), a compressed xml (.osm.zip or .osm.gz) or a protobuf file
+&nbsp;     * (.pbf).
+&nbsp;     */
+&nbsp;    public GraphHopper setOSMFile(String osmFile) {
+<b class="fc">&nbsp;        ensureNotLoaded();</b>
+<b class="pc">&nbsp;        if (isEmpty(osmFile))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;OSM file cannot be empty.&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.osmFile = osmFile;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setMaxSpeedCalculator(MaxSpeedCalculator maxSpeedCalculator) {
+<b class="nc">&nbsp;        this.maxSpeedCalculator = maxSpeedCalculator;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The underlying graph used in algorithms.
+&nbsp;     *
+&nbsp;     * @throws IllegalStateException if graph is not instantiated.
+&nbsp;     */
+&nbsp;    public BaseGraph getBaseGraph() {
+<b class="pc">&nbsp;        if (baseGraph == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;GraphHopper storage not initialized&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        return baseGraph;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setBaseGraph(BaseGraph baseGraph) {
+<b class="fc">&nbsp;        this.baseGraph = baseGraph;</b>
+<b class="fc">&nbsp;        setFullyLoaded();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public StorableProperties getProperties() {
+<b class="fc">&nbsp;        return properties;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return a mapping between profile names and according CH preparations. The map will be empty before loading
+&nbsp;     * or import.
+&nbsp;     */
+&nbsp;    public Map&lt;String, RoutingCHGraph&gt; getCHGraphs() {
+<b class="fc">&nbsp;        return chGraphs;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return a mapping between profile names and according landmark preparations. The map will be empty before loading
+&nbsp;     * or import.
+&nbsp;     */
+&nbsp;    public Map&lt;String, LandmarkStorage&gt; getLandmarks() {
+<b class="fc">&nbsp;        return landmarks;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The location index created from the graph.
+&nbsp;     *
+&nbsp;     * @throws IllegalStateException if index is not initialized
+&nbsp;     */
+&nbsp;    public LocationIndex getLocationIndex() {
+<b class="pc">&nbsp;        if (locationIndex == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;LocationIndex not initialized&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        return locationIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void setLocationIndex(LocationIndex locationIndex) {
+<b class="nc">&nbsp;        this.locationIndex = locationIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isAllowWrites() {
+<b class="fc">&nbsp;        return allowWrites;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Specifies if it is allowed for GraphHopper to write. E.g. for read only filesystems it is not
+&nbsp;     * possible to create a lock file and so we can avoid write locks.
+&nbsp;     */
+&nbsp;    public GraphHopper setAllowWrites(boolean allowWrites) {
+<b class="fc">&nbsp;        this.allowWrites = allowWrites;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TranslationMap getTranslationMap() {
+<b class="fc">&nbsp;        return trMap;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setImportRegistry(ImportRegistry importRegistry) {
+<b class="fc">&nbsp;        this.importRegistry = importRegistry;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ImportRegistry getImportRegistry() {
+<b class="nc">&nbsp;        return importRegistry;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopper setCustomAreasDirectory(String customAreasDirectory) {
+<b class="nc">&nbsp;        this.customAreasDirectory = customAreasDirectory;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getCustomAreasDirectory() {
+<b class="nc">&nbsp;        return this.customAreasDirectory;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the factory used to create country rules. Use `null` to disable country rules
+&nbsp;     */
+&nbsp;    public GraphHopper setCountryRuleFactory(CountryRuleFactory countryRuleFactory) {
+<b class="fc">&nbsp;        this.countryRuleFactory = countryRuleFactory;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public CountryRuleFactory getCountryRuleFactory() {
+<b class="nc">&nbsp;        return this.countryRuleFactory;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Reads the configuration from a {@link GraphHopperConfig} object which can be manually filled, or more typically
+&nbsp;     * is read from `config.yml`.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Important note: Calling this method overwrites the configuration done in some of the setter methods of this class,
+&nbsp;     * so generally it is advised to either use this method to configure GraphHopper or the different setter methods,
+&nbsp;     * but not both. Unfortunately, this still does not cover all cases and sometimes you have to use both, but then you
+&nbsp;     * should make sure there are no conflicts. If you need both it might also help to call the init before calling the
+&nbsp;     * setters, because this way the init method won&#39;t apply defaults to configuration options you already chose using
+&nbsp;     * the setters.
+&nbsp;     */
+&nbsp;    public GraphHopper init(GraphHopperConfig ghConfig) {
+<b class="fc">&nbsp;        ensureNotLoaded();</b>
+&nbsp;        // disabling_allowed config options were removed for GH 3.0
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;routing.ch.disabling_allowed&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The &#39;routing.ch.disabling_allowed&#39; configuration option is no longer supported&quot;);</b>
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;routing.lm.disabling_allowed&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The &#39;routing.lm.disabling_allowed&#39; configuration option is no longer supported&quot;);</b>
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;osmreader.osm&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Instead of osmreader.osm use datareader.file, for other changes see CHANGELOG.md&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        String tmpOsmFile = ghConfig.getString(&quot;datareader.file&quot;, &quot;&quot;);</b>
+<b class="pc">&nbsp;        if (!isEmpty(tmpOsmFile))</b>
+<b class="fc">&nbsp;            osmFile = tmpOsmFile;</b>
+&nbsp;
+<b class="fc">&nbsp;        String graphHopperFolder = ghConfig.getString(&quot;graph.location&quot;, &quot;&quot;);</b>
+<b class="pc">&nbsp;        if (isEmpty(graphHopperFolder) &amp;&amp; isEmpty(ghLocation)) {</b>
+<b class="pc">&nbsp;            if (isEmpty(osmFile))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;If no graph.location is provided you need to specify an OSM file.&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;            graphHopperFolder = pruneFileEnd(osmFile) + &quot;-gh&quot;;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        ghLocation = graphHopperFolder;</b>
+&nbsp;
+<b class="pc">&nbsp;        countryRuleFactory = ghConfig.getBool(&quot;country_rules.enabled&quot;, false) ? new CountryRuleFactory() : null;</b>
+<b class="fc">&nbsp;        customAreasDirectory = ghConfig.getString(&quot;custom_areas.directory&quot;, customAreasDirectory);</b>
+&nbsp;
+<b class="fc">&nbsp;        defaultSegmentSize = ghConfig.getInt(&quot;graph.dataaccess.segment_size&quot;, defaultSegmentSize);</b>
+&nbsp;
+<b class="fc">&nbsp;        String daTypeString = ghConfig.getString(&quot;graph.dataaccess.default_type&quot;, ghConfig.getString(&quot;graph.dataaccess&quot;, &quot;RAM_STORE&quot;));</b>
+<b class="fc">&nbsp;        dataAccessDefaultType = DAType.fromString(daTypeString);</b>
+<b class="fc">&nbsp;        for (Map.Entry&lt;String, Object&gt; entry : ghConfig.asPMap().toMap().entrySet()) {</b>
+<b class="pc">&nbsp;            if (entry.getKey().startsWith(&quot;graph.dataaccess.type.&quot;))</b>
+<b class="nc">&nbsp;                dataAccessConfig.put(entry.getKey().substring(&quot;graph.dataaccess.type.&quot;.length()), entry.getValue().toString());</b>
+<b class="pc">&nbsp;            if (entry.getKey().startsWith(&quot;graph.dataaccess.mmap.preload.&quot;))</b>
+<b class="nc">&nbsp;                dataAccessConfig.put(entry.getKey().substring(&quot;graph.dataaccess.mmap.&quot;.length()), entry.getValue().toString());</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (ghConfig.getBool(&quot;max_speed_calculator.enabled&quot;, false))</b>
+<b class="nc">&nbsp;            maxSpeedCalculator = new MaxSpeedCalculator(MaxSpeedCalculator.createLegalDefaultSpeeds());</b>
+&nbsp;
+<b class="fc">&nbsp;        removeZipped = ghConfig.getBool(&quot;graph.remove_zipped&quot;, removeZipped);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (!ghConfig.getString(&quot;spatial_rules.location&quot;, &quot;&quot;).isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;spatial_rules.location has been deprecated. Please use custom_areas.directory instead and read the documentation for custom areas.&quot;);</b>
+<b class="pc">&nbsp;        if (!ghConfig.getString(&quot;spatial_rules.borders_directory&quot;, &quot;&quot;).isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;spatial_rules.borders_directory has been deprecated. Please use custom_areas.directory instead and read the documentation for custom areas.&quot;);</b>
+&nbsp;        // todo: maybe introduce custom_areas.max_bbox if this is needed later
+<b class="pc">&nbsp;        if (!ghConfig.getString(&quot;spatial_rules.max_bbox&quot;, &quot;&quot;).isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;spatial_rules.max_bbox has been deprecated. There is no replacement, all custom areas will be considered.&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        String customAreasDirectory = ghConfig.getString(&quot;custom_areas.directory&quot;, &quot;&quot;);</b>
+<b class="fc">&nbsp;        JsonFeatureCollection globalAreas = GraphHopper.resolveCustomAreas(customAreasDirectory);</b>
+<b class="fc">&nbsp;        String customModelFolder = ghConfig.getString(&quot;custom_models.directory&quot;, ghConfig.getString(&quot;custom_model_folder&quot;, &quot;&quot;));</b>
+<b class="fc">&nbsp;        setProfiles(GraphHopper.resolveCustomModelFiles(customModelFolder, ghConfig.getProfiles(), globalAreas));</b>
+&nbsp;
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;graph.vehicles&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The option graph.vehicles is no longer supported. Use the appropriate turn_costs and custom_model instead, see docs/migration/config-migration-08-09.md&quot;);</b>
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;graph.flag_encoders&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The option graph.flag_encoders is no longer supported.&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        encodedValuesString = ghConfig.getString(&quot;graph.encoded_values&quot;, encodedValuesString);</b>
+<b class="fc">&nbsp;        dateRangeParserString = ghConfig.getString(&quot;datareader.date_range_parser_day&quot;, dateRangeParserString);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (ghConfig.getString(&quot;graph.locktype&quot;, &quot;native&quot;).equals(&quot;simple&quot;))</b>
+<b class="nc">&nbsp;            lockFactory = new SimpleFSLockFactory();</b>
+&nbsp;        else
+<b class="fc">&nbsp;            lockFactory = new NativeFSLockFactory();</b>
+&nbsp;
+&nbsp;        // elevation
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;graph.elevation.smoothing&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Use &#39;graph.elevation.edge_smoothing: moving_average&#39; or the new &#39;graph.elevation.edge_smoothing: ramer&#39;. See #2634.&quot;);</b>
+<b class="fc">&nbsp;        osmReaderConfig.setElevationSmoothing(ghConfig.getString(&quot;graph.elevation.edge_smoothing&quot;, osmReaderConfig.getElevationSmoothing()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setSmoothElevationAverageWindowSize(ghConfig.getDouble(&quot;graph.elevation.edge_smoothing.moving_average.window_size&quot;, osmReaderConfig.getSmoothElevationAverageWindowSize()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setElevationSmoothingRamerMax(ghConfig.getInt(&quot;graph.elevation.edge_smoothing.ramer.max_elevation&quot;, osmReaderConfig.getElevationSmoothingRamerMax()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setLongEdgeSamplingDistance(ghConfig.getDouble(&quot;graph.elevation.long_edge_sampling_distance&quot;, osmReaderConfig.getLongEdgeSamplingDistance()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setElevationMaxWayPointDistance(ghConfig.getDouble(&quot;graph.elevation.way_point_max_distance&quot;, osmReaderConfig.getElevationMaxWayPointDistance()));</b>
+<b class="fc">&nbsp;        routerConfig.setElevationWayPointMaxDistance(ghConfig.getDouble(&quot;graph.elevation.way_point_max_distance&quot;, routerConfig.getElevationWayPointMaxDistance()));</b>
+<b class="fc">&nbsp;        ElevationProvider elevationProvider = createElevationProvider(ghConfig);</b>
+<b class="fc">&nbsp;        setElevationProvider(elevationProvider);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (osmReaderConfig.getLongEdgeSamplingDistance() &lt; Double.MAX_VALUE &amp;&amp; !elevationProvider.canInterpolate())</b>
+<b class="nc">&nbsp;            logger.warn(&quot;Long edge sampling enabled, but bilinear interpolation disabled. See #1953&quot;);</b>
+&nbsp;
+&nbsp;        // optimizable prepare
+<b class="fc">&nbsp;        minNetworkSize = ghConfig.getInt(&quot;prepare.min_network_size&quot;, minNetworkSize);</b>
+<b class="fc">&nbsp;        subnetworksThreads = ghConfig.getInt(&quot;prepare.subnetworks.threads&quot;, subnetworksThreads);</b>
+&nbsp;
+&nbsp;        // prepare CH&amp;LM
+<b class="fc">&nbsp;        chPreparationHandler.init(ghConfig);</b>
+<b class="fc">&nbsp;        lmPreparationHandler.init(ghConfig);</b>
+&nbsp;
+&nbsp;        // osm import
+&nbsp;        // We do a few checks for import.osm.ignored_highways to prevent configuration errors when migrating from an older
+&nbsp;        // GH version.
+<b class="pc">&nbsp;        if (!ghConfig.has(&quot;import.osm.ignored_highways&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Missing &#39;import.osm.ignored_highways&#39;. Not using this parameter can decrease performance, see config-example.yml for more details&quot;);</b>
+<b class="fc">&nbsp;        String ignoredHighwaysString = ghConfig.getString(&quot;import.osm.ignored_highways&quot;, &quot;&quot;);</b>
+<b class="pc">&nbsp;        if ((ignoredHighwaysString.contains(&quot;footway&quot;) || ignoredHighwaysString.contains(&quot;path&quot;)) &amp;&amp; ghConfig.getProfiles().stream().map(Profile::getName).anyMatch(p -&gt; p.contains(&quot;foot&quot;) || p.contains(&quot;hike&quot;)))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;You should not use import.osm.ignored_highways=footway or =path in conjunction with pedestrian profiles. This is probably an error in your configuration.&quot;);</b>
+<b class="pc">&nbsp;        if ((ignoredHighwaysString.contains(&quot;cycleway&quot;) || ignoredHighwaysString.contains(&quot;path&quot;)) &amp;&amp; ghConfig.getProfiles().stream().map(Profile::getName).anyMatch(p -&gt; p.contains(&quot;mtb&quot;) || p.contains(&quot;bike&quot;)))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;You should not use import.osm.ignored_highways=cycleway or =path in conjunction with bicycle profiles. This is probably an error in your configuration&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        osmReaderConfig.setIgnoredHighways(Arrays.stream(ghConfig.getString(&quot;import.osm.ignored_highways&quot;, String.join(&quot;,&quot;, osmReaderConfig.getIgnoredHighways()))</b>
+<b class="fc">&nbsp;                .split(&quot;,&quot;)).map(String::trim).collect(Collectors.toList()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setParseWayNames(ghConfig.getBool(&quot;datareader.instructions&quot;, osmReaderConfig.isParseWayNames()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setPreferredLanguage(ghConfig.getString(&quot;datareader.preferred_language&quot;, osmReaderConfig.getPreferredLanguage()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setMaxWayPointDistance(ghConfig.getDouble(Routing.INIT_WAY_POINT_MAX_DISTANCE, osmReaderConfig.getMaxWayPointDistance()));</b>
+<b class="fc">&nbsp;        osmReaderConfig.setWorkerThreads(ghConfig.getInt(&quot;datareader.worker_threads&quot;, osmReaderConfig.getWorkerThreads()));</b>
+&nbsp;
+&nbsp;        // index
+<b class="fc">&nbsp;        preciseIndexResolution = ghConfig.getInt(&quot;index.high_resolution&quot;, preciseIndexResolution);</b>
+<b class="fc">&nbsp;        maxRegionSearch = ghConfig.getInt(&quot;index.max_region_search&quot;, maxRegionSearch);</b>
+&nbsp;
+&nbsp;        // urban density calculation
+<b class="fc">&nbsp;        residentialAreaRadius = ghConfig.getDouble(&quot;graph.urban_density.residential_radius&quot;, residentialAreaRadius);</b>
+<b class="fc">&nbsp;        residentialAreaSensitivity = ghConfig.getDouble(&quot;graph.urban_density.residential_sensitivity&quot;, residentialAreaSensitivity);</b>
+<b class="fc">&nbsp;        cityAreaRadius = ghConfig.getDouble(&quot;graph.urban_density.city_radius&quot;, cityAreaRadius);</b>
+<b class="fc">&nbsp;        cityAreaSensitivity = ghConfig.getDouble(&quot;graph.urban_density.city_sensitivity&quot;, cityAreaSensitivity);</b>
+<b class="fc">&nbsp;        urbanDensityCalculationThreads = ghConfig.getInt(&quot;graph.urban_density.threads&quot;, urbanDensityCalculationThreads);</b>
+&nbsp;
+&nbsp;        // routing
+<b class="fc">&nbsp;        routerConfig.setMaxVisitedNodes(ghConfig.getInt(Routing.INIT_MAX_VISITED_NODES, routerConfig.getMaxVisitedNodes()));</b>
+<b class="fc">&nbsp;        routerConfig.setTimeoutMillis(ghConfig.getLong(Routing.INIT_TIMEOUT_MS, routerConfig.getTimeoutMillis()));</b>
+<b class="fc">&nbsp;        routerConfig.setMaxRoundTripRetries(ghConfig.getInt(RoundTrip.INIT_MAX_RETRIES, routerConfig.getMaxRoundTripRetries()));</b>
+<b class="fc">&nbsp;        routerConfig.setNonChMaxWaypointDistance(ghConfig.getInt(Parameters.NON_CH.MAX_NON_CH_POINT_DISTANCE, routerConfig.getNonChMaxWaypointDistance()));</b>
+<b class="fc">&nbsp;        routerConfig.setInstructionsEnabled(ghConfig.getBool(Routing.INIT_INSTRUCTIONS, routerConfig.isInstructionsEnabled()));</b>
+<b class="fc">&nbsp;        int activeLandmarkCount = ghConfig.getInt(Landmark.ACTIVE_COUNT_DEFAULT, Math.min(8, lmPreparationHandler.getLandmarks()));</b>
+<b class="pc">&nbsp;        if (activeLandmarkCount &gt; lmPreparationHandler.getLandmarks())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Default value for active landmarks &quot; + activeLandmarkCount</b>
+<b class="nc">&nbsp;                    + &quot; should be less or equal to landmark count of &quot; + lmPreparationHandler.getLandmarks());</b>
+<b class="fc">&nbsp;        routerConfig.setActiveLandmarkCount(activeLandmarkCount);</b>
+&nbsp;
+<b class="fc">&nbsp;        calcChecksums = ghConfig.getBool(&quot;graph.calc_checksums&quot;, false);</b>
+&nbsp;
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected EncodingManager buildEncodingManager(Map&lt;String, PMap&gt; encodedValuesWithProps,
+&nbsp;                                                   Map&lt;String, ImportUnit&gt; activeImportUnits,
+&nbsp;                                                   Map&lt;String, List&lt;String&gt;&gt; restrictionVehicleTypesByProfile) {
+<b class="fc">&nbsp;        List&lt;EncodedValue&gt; encodedValues = new ArrayList&lt;&gt;(activeImportUnits.entrySet().stream()</b>
+<b class="fc">&nbsp;                .map(e -&gt; {</b>
+<b class="fc">&nbsp;                    Function&lt;PMap, EncodedValue&gt; f = e.getValue().getCreateEncodedValue();</b>
+<b class="fc">&nbsp;                    return f == null ? null : f.apply(encodedValuesWithProps.getOrDefault(e.getKey(), new PMap()));</b>
+&nbsp;                })
+<b class="fc">&nbsp;                .filter(Objects::nonNull)</b>
+<b class="fc">&nbsp;                .toList());</b>
+<b class="fc">&nbsp;        profilesByName.values().forEach(profile -&gt; encodedValues.add(Subnetwork.create(profile.getName())));</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;String&gt; sortedEVs = getEVSortIndex(profilesByName);</b>
+<b class="fc">&nbsp;        encodedValues.sort(Comparator.comparingInt(ev -&gt; sortedEVs.indexOf(ev.getName())));</b>
+&nbsp;
+<b class="fc">&nbsp;        EncodingManager.Builder emBuilder = new EncodingManager.Builder();</b>
+<b class="fc">&nbsp;        encodedValues.forEach(emBuilder::add);</b>
+<b class="fc">&nbsp;        restrictionVehicleTypesByProfile.entrySet().stream()</b>
+<b class="fc">&nbsp;                .filter(e -&gt; !e.getValue().isEmpty())</b>
+<b class="fc">&nbsp;                .forEach(e -&gt; emBuilder.addTurnCostEncodedValue(TurnRestriction.create(e.getKey())));</b>
+<b class="fc">&nbsp;        return emBuilder.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected List&lt;String&gt; getEVSortIndex(Map&lt;String, Profile&gt; profilesByName) {
+<b class="fc">&nbsp;        return Collections.emptyList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected OSMParsers buildOSMParsers(Map&lt;String, PMap&gt; encodedValuesWithProps,
+&nbsp;                                         Map&lt;String, ImportUnit&gt; activeImportUnits,
+&nbsp;                                         Map&lt;String, List&lt;String&gt;&gt; restrictionVehicleTypesByProfile,
+&nbsp;                                         List&lt;String&gt; ignoredHighways) {
+<b class="fc">&nbsp;        ImportUnitSorter sorter = new ImportUnitSorter(activeImportUnits);</b>
+<b class="fc">&nbsp;        Map&lt;String, ImportUnit&gt; sortedImportUnits = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        sorter.sort().forEach(name -&gt; sortedImportUnits.put(name, activeImportUnits.get(name)));</b>
+<b class="fc">&nbsp;        List&lt;TagParser&gt; sortedParsers = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        sortedImportUnits.forEach((name, importUnit) -&gt; {</b>
+<b class="fc">&nbsp;            BiFunction&lt;EncodedValueLookup, PMap, TagParser&gt; createTagParser = importUnit.getCreateTagParser();</b>
+<b class="fc">&nbsp;            if (createTagParser != null) {</b>
+<b class="fc">&nbsp;                PMap pmap = encodedValuesWithProps.getOrDefault(name, new PMap());</b>
+<b class="pc">&nbsp;                if (!pmap.has(&quot;date_range_parser_day&quot;))</b>
+<b class="fc">&nbsp;                    pmap.putObject(&quot;date_range_parser_day&quot;, dateRangeParserString);</b>
+<b class="fc">&nbsp;                sortedParsers.add(createTagParser.apply(encodingManager, pmap));</b>
+&nbsp;            }
+&nbsp;        });
+&nbsp;
+<b class="fc">&nbsp;        OSMParsers osmParsers = new OSMParsers();</b>
+<b class="fc">&nbsp;        ignoredHighways.forEach(osmParsers::addIgnoredHighway);</b>
+<b class="fc">&nbsp;        sortedParsers.forEach(osmParsers::addWayTagParser);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (maxSpeedCalculator != null) {</b>
+<b class="nc">&nbsp;            maxSpeedCalculator.checkEncodedValues(encodingManager);</b>
+<b class="nc">&nbsp;            osmParsers.addWayTagParser(maxSpeedCalculator.getParser());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (encodingManager.hasEncodedValue(BikeNetwork.KEY))</b>
+<b class="fc">&nbsp;            osmParsers.addRelationTagParser(relConfig -&gt; new OSMBikeNetworkTagParser(encodingManager.getEnumEncodedValue(BikeNetwork.KEY, RouteNetwork.class), relConfig));</b>
+<b class="pc">&nbsp;        if (encodingManager.hasEncodedValue(MtbNetwork.KEY))</b>
+<b class="nc">&nbsp;            osmParsers.addRelationTagParser(relConfig -&gt; new OSMMtbNetworkTagParser(encodingManager.getEnumEncodedValue(MtbNetwork.KEY, RouteNetwork.class), relConfig));</b>
+<b class="fc">&nbsp;        if (encodingManager.hasEncodedValue(FootNetwork.KEY))</b>
+<b class="fc">&nbsp;            osmParsers.addRelationTagParser(relConfig -&gt; new OSMFootNetworkTagParser(encodingManager.getEnumEncodedValue(FootNetwork.KEY, RouteNetwork.class), relConfig));</b>
+&nbsp;
+<b class="fc">&nbsp;        restrictionVehicleTypesByProfile.forEach((profile, restrictionVehicleTypes) -&gt; {</b>
+<b class="fc">&nbsp;            osmParsers.addRestrictionTagParser(new RestrictionTagParser(</b>
+<b class="fc">&nbsp;                    restrictionVehicleTypes, encodingManager.getTurnBooleanEncodedValue(TurnRestriction.key(profile))));</b>
+&nbsp;        });
+<b class="fc">&nbsp;        return osmParsers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Map&lt;String, PMap&gt; parseEncodedValueString(String encodedValuesStr) {
+<b class="fc">&nbsp;        Map&lt;String, PMap&gt; encodedValuesWithProps = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        Arrays.stream(encodedValuesStr.split(&quot;,&quot;))</b>
+<b class="fc">&nbsp;                .filter(evStr -&gt; !evStr.isBlank())</b>
+<b class="fc">&nbsp;                .forEach(evStr -&gt; {</b>
+<b class="fc">&nbsp;                    String key = evStr.trim().split(&quot;\\|&quot;)[0];</b>
+<b class="pc">&nbsp;                    if (encodedValuesWithProps.put(key, new PMap(evStr)) != null)</b>
+<b class="nc">&nbsp;                        throw new IllegalArgumentException(&quot;duplicate encoded value in config graph.encoded_values: &quot; + key);</b>
+&nbsp;                });
+<b class="fc">&nbsp;        return encodedValuesWithProps;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Map&lt;String, List&lt;String&gt;&gt; getRestrictionVehicleTypesByProfile(Collection&lt;Profile&gt; profiles) {
+<b class="fc">&nbsp;        Map&lt;String, List&lt;String&gt;&gt; result = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (Profile profile : profiles)</b>
+<b class="fc">&nbsp;            if (profile.hasTurnCosts())</b>
+<b class="fc">&nbsp;                result.put(profile.getName(), profile.getTurnCostsConfig().getVehicleTypes());</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static ElevationProvider createElevationProvider(GraphHopperConfig ghConfig) {
+<b class="fc">&nbsp;        String eleProviderStr = toLowerCase(ghConfig.getString(&quot;graph.elevation.provider&quot;, &quot;noop&quot;));</b>
+&nbsp;
+<b class="pc">&nbsp;        if (ghConfig.has(&quot;graph.elevation.calcmean&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;graph.elevation.calcmean is deprecated, use graph.elevation.interpolate&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        String cacheDirStr = ghConfig.getString(&quot;graph.elevation.cache_dir&quot;, &quot;&quot;);</b>
+<b class="pc">&nbsp;        if (cacheDirStr.isEmpty() &amp;&amp; ghConfig.has(&quot;graph.elevation.cachedir&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;use graph.elevation.cache_dir not cachedir in configuration&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        ElevationProvider elevationProvider = ElevationProvider.NOOP;</b>
+<b class="pc">&nbsp;        if (eleProviderStr.equalsIgnoreCase(&quot;hgt&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new HGTProvider(cacheDirStr);</b>
+<b class="pc">&nbsp;        } else if (eleProviderStr.equalsIgnoreCase(&quot;srtm&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new SRTMProvider(cacheDirStr);</b>
+<b class="pc">&nbsp;        } else if (eleProviderStr.equalsIgnoreCase(&quot;cgiar&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new CGIARProvider(cacheDirStr);</b>
+<b class="pc">&nbsp;        } else if (eleProviderStr.equalsIgnoreCase(&quot;gmted&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new GMTEDProvider(cacheDirStr);</b>
+<b class="pc">&nbsp;        } else if (eleProviderStr.equalsIgnoreCase(&quot;srtmgl1&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new SRTMGL1Provider(cacheDirStr);</b>
+<b class="pc">&nbsp;        } else if (eleProviderStr.equalsIgnoreCase(&quot;multi&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new MultiSourceElevationProvider(cacheDirStr);</b>
+<b class="pc">&nbsp;        } else if (eleProviderStr.equalsIgnoreCase(&quot;skadi&quot;)) {</b>
+<b class="nc">&nbsp;            elevationProvider = new SkadiProvider(cacheDirStr);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (elevationProvider instanceof TileBasedElevationProvider) {</b>
+<b class="nc">&nbsp;            TileBasedElevationProvider provider = (TileBasedElevationProvider) elevationProvider;</b>
+&nbsp;
+<b class="nc">&nbsp;            String baseURL = ghConfig.getString(&quot;graph.elevation.base_url&quot;, &quot;&quot;);</b>
+<b class="nc">&nbsp;            if (baseURL.isEmpty() &amp;&amp; ghConfig.has(&quot;graph.elevation.baseurl&quot;))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;use graph.elevation.base_url not baseurl in configuration&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            DAType elevationDAType = DAType.fromString(ghConfig.getString(&quot;graph.elevation.dataaccess&quot;, &quot;MMAP&quot;));</b>
+&nbsp;
+<b class="nc">&nbsp;            boolean interpolate = ghConfig.has(&quot;graph.elevation.interpolate&quot;)</b>
+<b class="nc">&nbsp;                    ? &quot;bilinear&quot;.equals(ghConfig.getString(&quot;graph.elevation.interpolate&quot;, &quot;none&quot;))</b>
+<b class="nc">&nbsp;                    : ghConfig.getBool(&quot;graph.elevation.calc_mean&quot;, false);</b>
+&nbsp;
+<b class="nc">&nbsp;            boolean removeTempElevationFiles = ghConfig.getBool(&quot;graph.elevation.cgiar.clear&quot;, true);</b>
+<b class="nc">&nbsp;            removeTempElevationFiles = ghConfig.getBool(&quot;graph.elevation.clear&quot;, removeTempElevationFiles);</b>
+&nbsp;
+<b class="nc">&nbsp;            provider</b>
+<b class="nc">&nbsp;                    .setAutoRemoveTemporaryFiles(removeTempElevationFiles)</b>
+<b class="nc">&nbsp;                    .setInterpolate(interpolate)</b>
+<b class="nc">&nbsp;                    .setDAType(elevationDAType);</b>
+<b class="nc">&nbsp;            if (!baseURL.isEmpty())</b>
+<b class="nc">&nbsp;                provider.setBaseURL(baseURL);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return elevationProvider;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void printInfo() {
+<b class="fc">&nbsp;        logger.info(&quot;version &quot; + Constants.VERSION + &quot;|&quot; + Constants.BUILD_DATE + &quot; (&quot; + Constants.getVersions() + &quot;)&quot;);</b>
+<b class="fc">&nbsp;        if (baseGraph != null)</b>
+<b class="fc">&nbsp;            logger.info(&quot;graph &quot; + getBaseGraphString() + &quot;, details:&quot; + baseGraph.toDetailsString());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getBaseGraphString() {
+<b class="fc">&nbsp;        return encodingManager</b>
+<b class="fc">&nbsp;                + &quot;|&quot; + baseGraph.getDirectory().getDefaultType()</b>
+<b class="fc">&nbsp;                + &quot;|&quot; + baseGraph.getNodeAccess().getDimension() + &quot;D&quot;</b>
+<b class="fc">&nbsp;                + &quot;|&quot; + (baseGraph.getTurnCostStorage() != null ? baseGraph.getTurnCostStorage() : &quot;no_turn_cost&quot;)</b>
+<b class="fc">&nbsp;                + &quot;|&quot; + getVersionsString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getVersionsString() {
+<b class="fc">&nbsp;        return &quot;nodes:&quot; + Constants.VERSION_NODE +</b>
+&nbsp;                &quot;,edges:&quot; + Constants.VERSION_EDGE +
+&nbsp;                &quot;,geometry:&quot; + Constants.VERSION_GEOMETRY +
+&nbsp;                &quot;,location_index:&quot; + Constants.VERSION_LOCATION_IDX +
+&nbsp;                &quot;,string_index:&quot; + Constants.VERSION_KV_STORAGE +
+&nbsp;                &quot;,nodesCH:&quot; + Constants.VERSION_NODE_CH +
+&nbsp;                &quot;,shortcuts:&quot; + Constants.VERSION_SHORTCUT;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Imports provided data from disc and creates graph. Depending on the settings the resulting
+&nbsp;     * graph will be stored to disc so on a second call this method will only load the graph from
+&nbsp;     * disc which is usually a lot faster.
+&nbsp;     */
+&nbsp;    public GraphHopper importOrLoad() {
+<b class="fc">&nbsp;        if (!load()) {</b>
+<b class="fc">&nbsp;            printInfo();</b>
+<b class="fc">&nbsp;            process(false);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            printInfo();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Imports and processes data, storing it to disk when complete.
+&nbsp;     */
+&nbsp;    public void importAndClose() {
+<b class="pc">&nbsp;        if (!load()) {</b>
+<b class="fc">&nbsp;            printInfo();</b>
+<b class="fc">&nbsp;            process(true);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            printInfo();</b>
+<b class="nc">&nbsp;            logger.info(&quot;Graph already imported into &quot; + ghLocation);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates the graph from OSM data.
+&nbsp;     */
+&nbsp;    protected void process(boolean closeEarly) {
+<b class="fc">&nbsp;        prepareImport();</b>
+<b class="pc">&nbsp;        if (encodingManager == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;The EncodingManager must be created in `prepareImport()`&quot;);</b>
+<b class="fc">&nbsp;        GHDirectory directory = new GHDirectory(ghLocation, dataAccessDefaultType);</b>
+<b class="fc">&nbsp;        directory.configure(dataAccessConfig);</b>
+<b class="fc">&nbsp;        baseGraph = new BaseGraph.Builder(getEncodingManager())</b>
+<b class="fc">&nbsp;                .setDir(directory)</b>
+<b class="fc">&nbsp;                .set3D(hasElevation())</b>
+<b class="fc">&nbsp;                .withTurnCosts(encodingManager.needsTurnCostsSupport())</b>
+<b class="fc">&nbsp;                .setSegmentSize(defaultSegmentSize)</b>
+<b class="fc">&nbsp;                .build();</b>
+<b class="fc">&nbsp;        properties = new StorableProperties(directory);</b>
+<b class="fc">&nbsp;        checkProfilesConsistency();</b>
+&nbsp;
+<b class="fc">&nbsp;        GHLock lock = null;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            if (directory.getDefaultType().isStoring()) {</b>
+<b class="fc">&nbsp;                lockFactory.setLockDir(new File(ghLocation));</b>
+<b class="fc">&nbsp;                lock = lockFactory.create(fileLockName, true);</b>
+<b class="pc">&nbsp;                if (!lock.tryLock())</b>
+<b class="nc">&nbsp;                    throw new RuntimeException(&quot;To avoid multiple writers we need to obtain a write lock but it failed. In &quot; + ghLocation, lock.getObtainFailedReason());</b>
+&nbsp;            }
+<b class="fc">&nbsp;            ensureWriteAccess();</b>
+&nbsp;
+<b class="fc">&nbsp;            importOSM();</b>
+<b class="fc">&nbsp;            postImportOSM();</b>
+<b class="fc">&nbsp;            cleanUp();</b>
+&nbsp;
+<b class="fc">&nbsp;            properties.put(&quot;profiles&quot;, getProfilesString());</b>
+<b class="fc">&nbsp;            writeEncodingManagerToProperties();</b>
+&nbsp;
+<b class="fc">&nbsp;            postProcessing(closeEarly);</b>
+<b class="fc">&nbsp;            flush();</b>
+&nbsp;        } finally {
+<b class="fc">&nbsp;            if (lock != null)</b>
+<b class="fc">&nbsp;                lock.release();</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void prepareImport() {
+<b class="fc">&nbsp;        Map&lt;String, PMap&gt; encodedValuesWithProps = parseEncodedValueString(encodedValuesString);</b>
+<b class="pc">&nbsp;        NameValidator nameValidator = s -&gt; importRegistry.createImportUnit(s) != null;</b>
+<b class="fc">&nbsp;        Set&lt;String&gt; missing = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;        profilesByName.values().</b>
+<b class="fc">&nbsp;                forEach(profile -&gt; CustomModelParser.findVariablesForEncodedValuesString(profile.getCustomModel(), nameValidator, s -&gt; &quot;&quot;).</b>
+<b class="fc">&nbsp;                        forEach(var -&gt; {</b>
+<b class="pc">&nbsp;                            if (!encodedValuesWithProps.containsKey(var)) missing.add(var);</b>
+<b class="fc">&nbsp;                            encodedValuesWithProps.putIfAbsent(var, new PMap());</b>
+&nbsp;                        }));
+<b class="pc">&nbsp;        if (!missing.isEmpty()) {</b>
+<b class="nc">&nbsp;            String encodedValuesString = encodedValuesWithProps.entrySet().stream()</b>
+<b class="nc">&nbsp;                    .map(e -&gt; e.getKey() + (e.getValue().isEmpty() ? &quot;&quot; : (&quot;|&quot; + e.getValue().toMap().entrySet().stream().map(p -&gt; p.getKey() + &quot;=&quot; + p.getValue()).collect(Collectors.joining(&quot;|&quot;)))))</b>
+<b class="nc">&nbsp;                    .collect(Collectors.joining(&quot;, &quot;));</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Encoded values missing: &quot; + String.join(&quot;, &quot;, missing) + &quot;.\n&quot; +</b>
+&nbsp;                    &quot;To avoid that certain encoded values are automatically removed when you change the custom model later, you need to set the encoded values manually:\n&quot; +
+&nbsp;                    &quot;graph.encoded_values: &quot; + encodedValuesString);
+&nbsp;        }
+&nbsp;
+&nbsp;        // these are used in the snap prevention filter (avoid motorway, tunnel, etc.) so they have to be there
+<b class="fc">&nbsp;        encodedValuesWithProps.putIfAbsent(RoadClass.KEY, new PMap());</b>
+<b class="fc">&nbsp;        encodedValuesWithProps.putIfAbsent(RoadEnvironment.KEY, new PMap());</b>
+&nbsp;        // used by instructions...
+<b class="fc">&nbsp;        encodedValuesWithProps.putIfAbsent(Roundabout.KEY, new PMap());</b>
+<b class="fc">&nbsp;        encodedValuesWithProps.putIfAbsent(RoadClassLink.KEY, new PMap());</b>
+<b class="fc">&nbsp;        encodedValuesWithProps.putIfAbsent(MaxSpeed.KEY, new PMap());</b>
+&nbsp;
+<b class="fc">&nbsp;        Map&lt;String, List&lt;String&gt;&gt; restrictionVehicleTypesByProfile = getRestrictionVehicleTypesByProfile(profilesByName.values());</b>
+&nbsp;
+<b class="pc">&nbsp;        if (urbanDensityCalculationThreads &gt; 0)</b>
+<b class="nc">&nbsp;            encodedValuesWithProps.put(UrbanDensity.KEY, new PMap());</b>
+<b class="pc">&nbsp;        if (maxSpeedCalculator != null)</b>
+<b class="nc">&nbsp;            encodedValuesWithProps.put(MaxSpeedEstimated.KEY, new PMap());</b>
+&nbsp;
+<b class="fc">&nbsp;        Map&lt;String, ImportUnit&gt; activeImportUnits = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        ArrayDeque&lt;String&gt; deque = new ArrayDeque&lt;&gt;(encodedValuesWithProps.keySet());</b>
+<b class="fc">&nbsp;        while (!deque.isEmpty()) {</b>
+<b class="fc">&nbsp;            String ev = deque.removeFirst();</b>
+<b class="fc">&nbsp;            ImportUnit importUnit = importRegistry.createImportUnit(ev);</b>
+<b class="pc">&nbsp;            if (importUnit == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Unknown encoded value: &quot; + ev);</b>
+<b class="fc">&nbsp;            if (activeImportUnits.put(ev, importUnit) == null)</b>
+<b class="fc">&nbsp;                deque.addAll(importUnit.getRequiredImportUnits());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        encodingManager = buildEncodingManager(encodedValuesWithProps, activeImportUnits, restrictionVehicleTypesByProfile);</b>
+<b class="fc">&nbsp;        osmParsers = buildOSMParsers(encodedValuesWithProps, activeImportUnits, restrictionVehicleTypesByProfile, osmReaderConfig.getIgnoredHighways());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void postImportOSM() {
+&nbsp;        // Important note: To deal with via-way turn restrictions we introduce artificial edges in OSMReader (#2689).
+&nbsp;        // These are simply copies of real edges. Any further modifications of the graph edges must take care of keeping
+&nbsp;        // the artificial edges in sync with their real counterparts. So if an edge attribute shall be changed this change
+&nbsp;        // must also be applied to the corresponding artificial edge.
+&nbsp;
+<b class="fc">&nbsp;        calculateUrbanDensity();</b>
+&nbsp;
+<b class="pc">&nbsp;        if (maxSpeedCalculator != null) {</b>
+<b class="nc">&nbsp;            maxSpeedCalculator.fillMaxSpeed(getBaseGraph(), encodingManager);</b>
+<b class="nc">&nbsp;            maxSpeedCalculator.close();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (hasElevation())</b>
+<b class="fc">&nbsp;            interpolateBridgesTunnelsAndFerries();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void importOSM() {
+<b class="fc">&nbsp;        if (osmFile == null)</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Couldn&#39;t load from existing folder: &quot; + ghLocation</b>
+&nbsp;                    + &quot; but also cannot use file for DataReader as it wasn&#39;t specified!&quot;);
+&nbsp;
+<b class="fc">&nbsp;        List&lt;CustomArea&gt; customAreas = readCountries();</b>
+<b class="pc">&nbsp;        if (isEmpty(customAreasDirectory)) {</b>
+<b class="fc">&nbsp;            logger.info(&quot;No custom areas are used, custom_areas.directory not given&quot;);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            logger.info(&quot;Creating custom area index, reading custom areas from: &#39;&quot; + customAreasDirectory + &quot;&#39;&quot;);</b>
+<b class="nc">&nbsp;            customAreas.addAll(readCustomAreas());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        AreaIndex&lt;CustomArea&gt; areaIndex = new AreaIndex&lt;&gt;(customAreas);</b>
+<b class="pc">&nbsp;        if (countryRuleFactory == null || countryRuleFactory.getCountryToRuleMap().isEmpty()) {</b>
+<b class="fc">&nbsp;            logger.info(&quot;No country rules available&quot;);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            logger.info(&quot;Applying rules for the following countries: {}&quot;, countryRuleFactory.getCountryToRuleMap().keySet());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        logger.info(&quot;start creating graph from &quot; + osmFile);</b>
+<b class="fc">&nbsp;        OSMReader reader = new OSMReader(baseGraph.getBaseGraph(), osmParsers, osmReaderConfig).setFile(_getOSMFile()).</b>
+<b class="fc">&nbsp;                setAreaIndex(areaIndex).</b>
+<b class="fc">&nbsp;                setElevationProvider(eleProvider).</b>
+<b class="fc">&nbsp;                setCountryRuleFactory(countryRuleFactory);</b>
+<b class="fc">&nbsp;        logger.info(&quot;using &quot; + getBaseGraphString() + &quot;, memory:&quot; + getMemInfo());</b>
+&nbsp;
+<b class="fc">&nbsp;        createBaseGraphAndProperties();</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            reader.readGraph();</b>
+<b class="nc">&nbsp;        } catch (IOException ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Cannot read file &quot; + getOSMFile(), ex);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        DateFormat f = createFormatter();</b>
+<b class="fc">&nbsp;        properties.put(&quot;datareader.import.date&quot;, f.format(new Date()));</b>
+<b class="fc">&nbsp;        if (reader.getDataDate() != null)</b>
+<b class="fc">&nbsp;            properties.put(&quot;datareader.data.date&quot;, f.format(reader.getDataDate()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void createBaseGraphAndProperties() {
+<b class="fc">&nbsp;        baseGraph.getDirectory().create();</b>
+<b class="fc">&nbsp;        baseGraph.create(100);</b>
+<b class="fc">&nbsp;        properties.create(100);</b>
+<b class="pc">&nbsp;        if (maxSpeedCalculator != null)</b>
+<b class="nc">&nbsp;            maxSpeedCalculator.createDataAccessForParser(baseGraph.getDirectory());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void calculateUrbanDensity() {
+<b class="pc">&nbsp;        if (encodingManager.hasEncodedValue(UrbanDensity.KEY)) {</b>
+<b class="nc">&nbsp;            EnumEncodedValue&lt;UrbanDensity&gt; urbanDensityEnc = encodingManager.getEnumEncodedValue(UrbanDensity.KEY, UrbanDensity.class);</b>
+<b class="nc">&nbsp;            if (!encodingManager.hasEncodedValue(RoadClass.KEY))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Urban density calculation requires &quot; + RoadClass.KEY);</b>
+<b class="nc">&nbsp;            if (!encodingManager.hasEncodedValue(RoadClassLink.KEY))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Urban density calculation requires &quot; + RoadClassLink.KEY);</b>
+<b class="nc">&nbsp;            EnumEncodedValue&lt;RoadClass&gt; roadClassEnc = encodingManager.getEnumEncodedValue(RoadClass.KEY, RoadClass.class);</b>
+<b class="nc">&nbsp;            BooleanEncodedValue roadClassLinkEnc = encodingManager.getBooleanEncodedValue(RoadClassLink.KEY);</b>
+<b class="nc">&nbsp;            UrbanDensityCalculator.calcUrbanDensity(baseGraph, urbanDensityEnc, roadClassEnc,</b>
+&nbsp;                    roadClassLinkEnc, residentialAreaRadius, residentialAreaSensitivity, cityAreaRadius, cityAreaSensitivity, urbanDensityCalculationThreads);
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void writeEncodingManagerToProperties() {
+<b class="fc">&nbsp;        EncodingManager.putEncodingManagerIntoProperties(encodingManager, properties);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;CustomArea&gt; readCustomAreas() {
+<b class="nc">&nbsp;        ObjectMapper objectMapper = new ObjectMapper();</b>
+<b class="nc">&nbsp;        objectMapper.registerModule(new JtsModule());</b>
+<b class="nc">&nbsp;        final Path bordersDirectory = Paths.get(customAreasDirectory);</b>
+<b class="nc">&nbsp;        List&lt;JsonFeatureCollection&gt; jsonFeatureCollections = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        try (DirectoryStream&lt;Path&gt; stream = Files.newDirectoryStream(bordersDirectory, &quot;*.{geojson,json}&quot;)) {</b>
+<b class="nc">&nbsp;            for (Path borderFile : stream) {</b>
+<b class="nc">&nbsp;                try (BufferedReader reader = Files.newBufferedReader(borderFile, StandardCharsets.UTF_8)) {</b>
+<b class="nc">&nbsp;                    JsonFeatureCollection jsonFeatureCollection = objectMapper.readValue(reader, JsonFeatureCollection.class);</b>
+<b class="nc">&nbsp;                    jsonFeatureCollections.add(jsonFeatureCollection);</b>
+<b class="nc">&nbsp;                }</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new UncheckedIOException(e);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return jsonFeatureCollections.stream().flatMap(j -&gt; j.getFeatures().stream())</b>
+<b class="nc">&nbsp;                .map(CustomArea::fromJsonFeature)</b>
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Currently we use this for a few tests where the dataReaderFile is loaded from the classpath
+&nbsp;     */
+&nbsp;    protected File _getOSMFile() {
+<b class="fc">&nbsp;        return new File(osmFile);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Load from existing graph folder.
+&nbsp;     */
+&nbsp;    public boolean load() {
+<b class="fc">&nbsp;        if (isEmpty(ghLocation))</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;GraphHopperLocation is not specified. Call setGraphHopperLocation or init before&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (fullyLoaded)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;graph is already successfully loaded&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        File tmpFileOrFolder = new File(ghLocation);</b>
+<b class="pc">&nbsp;        if (!tmpFileOrFolder.isDirectory() &amp;&amp; tmpFileOrFolder.exists()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;GraphHopperLocation cannot be an existing file. Has to be either non-existing or a folder.&quot;);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            File compressed = new File(ghLocation + &quot;.ghz&quot;);</b>
+<b class="pc">&nbsp;            if (compressed.exists() &amp;&amp; !compressed.isDirectory()) {</b>
+&nbsp;                try {
+<b class="nc">&nbsp;                    new Unzipper().unzip(compressed.getAbsolutePath(), ghLocation, removeZipped);</b>
+<b class="nc">&nbsp;                } catch (IOException ex) {</b>
+<b class="nc">&nbsp;                    throw new RuntimeException(&quot;Couldn&#39;t extract file &quot; + compressed.getAbsolutePath()</b>
+&nbsp;                            + &quot; to &quot; + ghLocation, ex);
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // todo: this does not really belong here, we abuse the load method to derive the dataAccessDefaultType setting from others
+<b class="pc">&nbsp;        if (!allowWrites &amp;&amp; dataAccessDefaultType.isMMap())</b>
+<b class="nc">&nbsp;            dataAccessDefaultType = DAType.MMAP_RO;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!new File(ghLocation).exists())</b>
+&nbsp;            // there is just nothing to load
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        GHDirectory directory = new GHDirectory(ghLocation, dataAccessDefaultType);</b>
+<b class="fc">&nbsp;        directory.configure(dataAccessConfig);</b>
+<b class="fc">&nbsp;        GHLock lock = null;</b>
+&nbsp;        try {
+&nbsp;            // create locks only if writes are allowed, if they are not allowed a lock cannot be created
+&nbsp;            // (e.g. on a read only filesystem locks would fail)
+<b class="fc">&nbsp;            if (directory.getDefaultType().isStoring() &amp;&amp; isAllowWrites()) {</b>
+<b class="fc">&nbsp;                lockFactory.setLockDir(new File(ghLocation));</b>
+<b class="fc">&nbsp;                lock = lockFactory.create(fileLockName, false);</b>
+<b class="fc">&nbsp;                if (!lock.tryLock())</b>
+<b class="fc">&nbsp;                    throw new RuntimeException(&quot;To avoid reading partial data we need to obtain the read lock but it failed. In &quot; + ghLocation, lock.getObtainFailedReason());</b>
+&nbsp;            }
+<b class="fc">&nbsp;            properties = new StorableProperties(directory);</b>
+<b class="fc">&nbsp;            if (!properties.loadExisting())</b>
+&nbsp;                // the -gh folder exists, but there is no properties file. it might be just empty, so let&#39;s act as if
+&nbsp;                // the import did not run yet or is not complete for some reason
+<b class="fc">&nbsp;                return false;</b>
+<b class="fc">&nbsp;            encodingManager = EncodingManager.fromProperties(properties);</b>
+<b class="fc">&nbsp;            baseGraph = new BaseGraph.Builder(encodingManager)</b>
+<b class="fc">&nbsp;                    .setDir(directory)</b>
+<b class="fc">&nbsp;                    .set3D(hasElevation())</b>
+<b class="fc">&nbsp;                    .withTurnCosts(encodingManager.needsTurnCostsSupport())</b>
+<b class="fc">&nbsp;                    .setSegmentSize(defaultSegmentSize)</b>
+<b class="fc">&nbsp;                    .build();</b>
+<b class="fc">&nbsp;            baseGraph.loadExisting();</b>
+<b class="fc">&nbsp;            String storedProfiles = properties.get(&quot;profiles&quot;);</b>
+<b class="fc">&nbsp;            String configuredProfiles = getProfilesString();</b>
+<b class="fc">&nbsp;            if (!storedProfiles.equals(configuredProfiles))</b>
+<b class="fc">&nbsp;                throw new IllegalStateException(&quot;Profiles do not match:&quot;</b>
+&nbsp;                        + &quot;\nGraphhopper config: &quot; + configuredProfiles
+&nbsp;                        + &quot;\nGraph: &quot; + storedProfiles
+<b class="fc">&nbsp;                        + &quot;\nChange configuration to match the graph or delete &quot; + baseGraph.getDirectory().getLocation());</b>
+<b class="fc">&nbsp;            checkProfilesConsistency();</b>
+&nbsp;
+<b class="fc">&nbsp;            postProcessing(false);</b>
+<b class="fc">&nbsp;            directory.loadMMap();</b>
+<b class="fc">&nbsp;            setFullyLoaded();</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        } finally {
+<b class="pc">&nbsp;            if (lock != null)</b>
+<b class="fc">&nbsp;                lock.release();</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getProfilesString() {
+<b class="fc">&nbsp;        return profilesByName.values().stream().map(p -&gt; p.getName() + &quot;|&quot; + p.getVersion()).collect(Collectors.joining(&quot;,&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void checkProfilesConsistency() {
+<b class="fc">&nbsp;        if (profilesByName.isEmpty())</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;There has to be at least one profile&quot;);</b>
+<b class="fc">&nbsp;        for (Profile profile : profilesByName.values()) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                createWeighting(profile, new PMap());</b>
+<b class="fc">&nbsp;            } catch (IllegalArgumentException e) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;Could not create weighting for profile: &#39;&quot; + profile.getName() + &quot;&#39;.\n&quot; +</b>
+&nbsp;                        &quot;Profile: &quot; + profile + &quot;\n&quot; +
+<b class="fc">&nbsp;                        &quot;Error: &quot; + e.getMessage());</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (CustomWeighting.NAME.equals(profile.getWeighting()) &amp;&amp; profile.getCustomModel() == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;custom model for profile &#39;&quot; + profile.getName() + &quot;&#39; was empty&quot;);</b>
+<b class="pc">&nbsp;            if (!CustomWeighting.NAME.equals(profile.getWeighting()) &amp;&amp; profile.getCustomModel() != null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;profile &#39;&quot; + profile.getName() + &quot;&#39; has a custom model but &quot; +</b>
+<b class="nc">&nbsp;                        &quot;weighting=&quot; + profile.getWeighting() + &quot; was defined&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Set&lt;String&gt; chProfileSet = new LinkedHashSet&lt;&gt;(chPreparationHandler.getCHProfiles().size());</b>
+<b class="fc">&nbsp;        for (CHProfile chProfile : chPreparationHandler.getCHProfiles()) {</b>
+<b class="fc">&nbsp;            boolean added = chProfileSet.add(chProfile.getProfile());</b>
+<b class="fc">&nbsp;            if (!added) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;Duplicate CH reference to profile &#39;&quot; + chProfile.getProfile() + &quot;&#39;&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            if (!profilesByName.containsKey(chProfile.getProfile())) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;CH profile references unknown profile &#39;&quot; + chProfile.getProfile() + &quot;&#39;&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        Map&lt;String, LMProfile&gt; lmProfileMap = new LinkedHashMap&lt;&gt;(lmPreparationHandler.getLMProfiles().size());</b>
+<b class="fc">&nbsp;        for (LMProfile lmProfile : lmPreparationHandler.getLMProfiles()) {</b>
+<b class="fc">&nbsp;            LMProfile previous = lmProfileMap.put(lmProfile.getProfile(), lmProfile);</b>
+<b class="fc">&nbsp;            if (previous != null) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;Multiple LM profiles are using the same profile &#39;&quot; + lmProfile.getProfile() + &quot;&#39;&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            if (!profilesByName.containsKey(lmProfile.getProfile())) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;LM profile references unknown profile &#39;&quot; + lmProfile.getProfile() + &quot;&#39;&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            if (lmProfile.usesOtherPreparation() &amp;&amp; !profilesByName.containsKey(lmProfile.getPreparationProfile())) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;LM profile references unknown preparation profile &#39;&quot; + lmProfile.getPreparationProfile() + &quot;&#39;&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        for (LMProfile lmProfile : lmPreparationHandler.getLMProfiles()) {</b>
+<b class="fc">&nbsp;            if (lmProfile.usesOtherPreparation() &amp;&amp; !lmProfileMap.containsKey(lmProfile.getPreparationProfile())) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;Unknown LM preparation profile &#39;&quot; + lmProfile.getPreparationProfile() + &quot;&#39; in LM profile &#39;&quot; + lmProfile.getProfile() + &quot;&#39; cannot be used as preparation_profile&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            if (lmProfile.usesOtherPreparation() &amp;&amp; lmProfileMap.get(lmProfile.getPreparationProfile()).usesOtherPreparation()) {</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;Cannot use &#39;&quot; + lmProfile.getPreparationProfile() + &quot;&#39; as preparation_profile for LM profile &#39;&quot; + lmProfile.getProfile() + &quot;&#39;, because it uses another profile for preparation itself.&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public final CHPreparationHandler getCHPreparationHandler() {
+<b class="fc">&nbsp;        return chPreparationHandler;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;CHConfig&gt; createCHConfigs(List&lt;CHProfile&gt; chProfiles) {
+<b class="fc">&nbsp;        List&lt;CHConfig&gt; chConfigs = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (CHProfile chProfile : chProfiles) {</b>
+<b class="fc">&nbsp;            Profile profile = profilesByName.get(chProfile.getProfile());</b>
+<b class="fc">&nbsp;            if (profile.hasTurnCosts()) {</b>
+<b class="fc">&nbsp;                chConfigs.add(CHConfig.edgeBased(profile.getName(), createWeighting(profile, new PMap())));</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                chConfigs.add(CHConfig.nodeBased(profile.getName(), createWeighting(profile, new PMap())));</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        return chConfigs;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final LMPreparationHandler getLMPreparationHandler() {
+<b class="fc">&nbsp;        return lmPreparationHandler;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;LMConfig&gt; createLMConfigs(List&lt;LMProfile&gt; lmProfiles) {
+<b class="fc">&nbsp;        List&lt;LMConfig&gt; lmConfigs = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (LMProfile lmProfile : lmProfiles) {</b>
+<b class="fc">&nbsp;            if (lmProfile.usesOtherPreparation())</b>
+&nbsp;                continue;
+<b class="fc">&nbsp;            Profile profile = profilesByName.get(lmProfile.getProfile());</b>
+&nbsp;            // Note that we have to make sure the weighting used for LM preparation does not include turn costs, because
+&nbsp;            // the LM preparation is running node-based and the landmark weights will be wrong if there are non-zero
+&nbsp;            // turn costs, see discussion in #1960
+&nbsp;            // Running the preparation without turn costs is also useful to allow e.g. changing the u_turn_costs per
+&nbsp;            // request (we have to use the minimum weight settings (= no turn costs) for the preparation)
+<b class="fc">&nbsp;            Weighting weighting = createWeighting(profile, new PMap(), true);</b>
+<b class="fc">&nbsp;            lmConfigs.add(new LMConfig(profile.getName(), weighting));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return lmConfigs;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Runs both after the import and when loading an existing Graph
+&nbsp;     *
+&nbsp;     * @param closeEarly release resources as early as possible
+&nbsp;     */
+&nbsp;    protected void postProcessing(boolean closeEarly) {
+<b class="fc">&nbsp;        calcChecksums();</b>
+<b class="fc">&nbsp;        initLocationIndex();</b>
+<b class="fc">&nbsp;        importPublicTransit();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (closeEarly) {</b>
+<b class="fc">&nbsp;            boolean includesCustomProfiles = profilesByName.values().stream().anyMatch(p -&gt; CustomWeighting.NAME.equals(p.getWeighting()));</b>
+<b class="pc">&nbsp;            if (!includesCustomProfiles)</b>
+&nbsp;                // when there are custom profiles we must not close way geometry or KVStorage, because
+&nbsp;                // they might be needed to evaluate the custom weightings for the following preparations
+<b class="nc">&nbsp;                baseGraph.flushAndCloseGeometryAndNameStorage();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (lmPreparationHandler.isEnabled())</b>
+<b class="fc">&nbsp;            loadOrPrepareLM(closeEarly);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (closeEarly)</b>
+&nbsp;            // we needed the location index for the LM preparation, but we don&#39;t need it for CH
+<b class="fc">&nbsp;            locationIndex.close();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (chPreparationHandler.isEnabled())</b>
+<b class="fc">&nbsp;            loadOrPrepareCH(closeEarly);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void importPublicTransit() {
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+&nbsp;    void interpolateBridgesTunnelsAndFerries() {
+<b class="pc">&nbsp;        if (encodingManager.hasEncodedValue(RoadEnvironment.KEY)) {</b>
+<b class="fc">&nbsp;            EnumEncodedValue&lt;RoadEnvironment&gt; roadEnvEnc = encodingManager.getEnumEncodedValue(RoadEnvironment.KEY, RoadEnvironment.class);</b>
+<b class="fc">&nbsp;            StopWatch sw = new StopWatch().start();</b>
+<b class="fc">&nbsp;            new EdgeElevationInterpolator(baseGraph.getBaseGraph(), roadEnvEnc, RoadEnvironment.TUNNEL).execute();</b>
+<b class="fc">&nbsp;            float tunnel = sw.stop().getSeconds();</b>
+<b class="fc">&nbsp;            sw = new StopWatch().start();</b>
+<b class="fc">&nbsp;            new EdgeElevationInterpolator(baseGraph.getBaseGraph(), roadEnvEnc, RoadEnvironment.BRIDGE).execute();</b>
+<b class="fc">&nbsp;            float bridge = sw.stop().getSeconds();</b>
+&nbsp;            // The SkadiProvider contains bathymetric data. For ferries this can result in bigger elevation changes
+&nbsp;            // See #2098 for mor information
+<b class="fc">&nbsp;            sw = new StopWatch().start();</b>
+<b class="fc">&nbsp;            new EdgeElevationInterpolator(baseGraph.getBaseGraph(), roadEnvEnc, RoadEnvironment.FERRY).execute();</b>
+<b class="fc">&nbsp;            logger.info(&quot;Bridge interpolation &quot; + (int) bridge + &quot;s, &quot; + &quot;tunnel interpolation &quot; + (int) tunnel + &quot;s, ferry interpolation &quot; + (int) sw.stop().getSeconds() + &quot;s&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public final Weighting createWeighting(Profile profile, PMap hints) {
+<b class="fc">&nbsp;        return createWeighting(profile, hints, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final Weighting createWeighting(Profile profile, PMap hints, boolean disableTurnCosts) {
+<b class="fc">&nbsp;        return createWeightingFactory().createWeighting(profile, hints, disableTurnCosts);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected WeightingFactory createWeightingFactory() {
+<b class="fc">&nbsp;        return new DefaultWeightingFactory(baseGraph.getBaseGraph(), getEncodingManager());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHResponse route(GHRequest request) {
+<b class="fc">&nbsp;        return createRouter().route(request);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Router createRouter() {
+<b class="pc">&nbsp;        if (baseGraph == null || !fullyLoaded)</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Do a successful call to load or importOrLoad before routing&quot;);</b>
+<b class="fc">&nbsp;        if (baseGraph.isClosed())</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;You need to create a new GraphHopper instance as it is already closed&quot;);</b>
+<b class="pc">&nbsp;        if (locationIndex == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Location index not initialized&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        return doCreateRouter(baseGraph, encodingManager, locationIndex, profilesByName, pathBuilderFactory,</b>
+<b class="fc">&nbsp;                trMap, routerConfig, createWeightingFactory(), chGraphs, landmarks);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected Router doCreateRouter(BaseGraph baseGraph, EncodingManager encodingManager, LocationIndex locationIndex, Map&lt;String, Profile&gt; profilesByName,
+&nbsp;                                    PathDetailsBuilderFactory pathBuilderFactory, TranslationMap trMap, RouterConfig routerConfig,
+&nbsp;                                    WeightingFactory weightingFactory, Map&lt;String, RoutingCHGraph&gt; chGraphs, Map&lt;String, LandmarkStorage&gt; landmarks) {
+<b class="fc">&nbsp;        return new Router(baseGraph, encodingManager, locationIndex, profilesByName, pathBuilderFactory,</b>
+&nbsp;                trMap, routerConfig, weightingFactory, chGraphs, landmarks
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    protected LocationIndex createLocationIndex(Directory dir) {
+<b class="fc">&nbsp;        LocationIndexTree tmpIndex = new LocationIndexTree(baseGraph, dir);</b>
+<b class="fc">&nbsp;        tmpIndex.setResolution(preciseIndexResolution);</b>
+<b class="fc">&nbsp;        tmpIndex.setMaxRegionSearch(maxRegionSearch);</b>
+<b class="fc">&nbsp;        if (!tmpIndex.loadExisting()) {</b>
+<b class="fc">&nbsp;            ensureWriteAccess();</b>
+<b class="fc">&nbsp;            tmpIndex.prepareIndex();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return tmpIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void calcChecksums() {
+<b class="pc">&nbsp;        if (!calcChecksums) return;</b>
+<b class="nc">&nbsp;        logger.info(&quot;Calculating checksums for {} profiles&quot;, profilesByName.size());</b>
+<b class="nc">&nbsp;        StopWatch sw = StopWatch.started();</b>
+<b class="nc">&nbsp;        double[] checksums_fwd = new double[profilesByName.size()];</b>
+<b class="nc">&nbsp;        double[] checksums_bwd = new double[profilesByName.size()];</b>
+<b class="nc">&nbsp;        List&lt;Weighting&gt; weightings = profilesByName.values().stream().map(profile -&gt; createWeighting(profile, new PMap())).toList();</b>
+<b class="nc">&nbsp;        AllEdgesIterator edge = baseGraph.getAllEdges();</b>
+<b class="nc">&nbsp;        while (edge.next()) {</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; profilesByName.size(); i++) {</b>
+<b class="nc">&nbsp;                double weightFwd = weightings.get(i).calcEdgeWeight(edge, false);</b>
+<b class="nc">&nbsp;                if (Double.isInfinite(weightFwd)) weightFwd = -1;</b>
+<b class="nc">&nbsp;                weightFwd *= (i % 2 == 0) ? -1 : 1;</b>
+<b class="nc">&nbsp;                double weightBwd = weightings.get(i).calcEdgeWeight(edge, true);</b>
+<b class="nc">&nbsp;                if (Double.isInfinite(weightBwd)) weightBwd = -1;</b>
+<b class="nc">&nbsp;                weightBwd *= (i % 2 == 0) ? -1 : 1;</b>
+<b class="nc">&nbsp;                checksums_fwd[i] += weightFwd;</b>
+<b class="nc">&nbsp;                checksums_bwd[i] += weightBwd;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        int index = 0;</b>
+<b class="nc">&nbsp;        for (Profile profile : profilesByName.values()) {</b>
+<b class="nc">&nbsp;            properties.put(&quot;checksum.fwd.&quot; + profile.getName(), checksums_fwd[index]);</b>
+<b class="nc">&nbsp;            properties.put(&quot;checksum.bwd.&quot; + profile.getName(), checksums_bwd[index]);</b>
+<b class="nc">&nbsp;            logger.info(&quot;checksum.fwd.&quot; + profile.getName() + &quot;: &quot; + checksums_fwd[index]);</b>
+<b class="nc">&nbsp;            logger.info(&quot;checksum.bwd.&quot; + profile.getName() + &quot;: &quot; + checksums_bwd[index]);</b>
+<b class="nc">&nbsp;            index++;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        logger.info(&quot;Calculating checksums took: &quot; + sw.stop().getTimeString());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Initializes the location index after the import is done.
+&nbsp;     */
+&nbsp;    protected void initLocationIndex() {
+<b class="pc">&nbsp;        if (locationIndex != null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot initialize locationIndex twice!&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        locationIndex = createLocationIndex(baseGraph.getDirectory());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getCHProfileVersion(String profile) {
+<b class="fc">&nbsp;        return properties.get(&quot;graph.profiles.ch.&quot; + profile + &quot;.version&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setCHProfileVersion(String profile, int version) {
+<b class="fc">&nbsp;        properties.put(&quot;graph.profiles.ch.&quot; + profile + &quot;.version&quot;, version);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getLMProfileVersion(String profile) {
+<b class="fc">&nbsp;        return properties.get(&quot;graph.profiles.lm.&quot; + profile + &quot;.version&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setLMProfileVersion(String profile, int version) {
+<b class="fc">&nbsp;        properties.put(&quot;graph.profiles.lm.&quot; + profile + &quot;.version&quot;, version);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void loadOrPrepareCH(boolean closeEarly) {
+<b class="fc">&nbsp;        for (CHProfile profile : chPreparationHandler.getCHProfiles())</b>
+<b class="fc">&nbsp;            if (!getCHProfileVersion(profile.getProfile()).isEmpty()</b>
+<b class="fc">&nbsp;                    &amp;&amp; !getCHProfileVersion(profile.getProfile()).equals(&quot;&quot; + profilesByName.get(profile.getProfile()).getVersion()))</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;CH preparation of &quot; + profile.getProfile() + &quot; already exists in storage and doesn&#39;t match configuration&quot;);</b>
+&nbsp;
+&nbsp;        // we load ch graphs that already exist and prepare the other ones
+<b class="fc">&nbsp;        List&lt;CHConfig&gt; chConfigs = createCHConfigs(chPreparationHandler.getCHProfiles());</b>
+<b class="fc">&nbsp;        Map&lt;String, RoutingCHGraph&gt; loaded = chPreparationHandler.load(baseGraph.getBaseGraph(), chConfigs);</b>
+<b class="fc">&nbsp;        List&lt;CHConfig&gt; configsToPrepare = chConfigs.stream().filter(c -&gt; !loaded.containsKey(c.getName())).collect(Collectors.toList());</b>
+<b class="fc">&nbsp;        Map&lt;String, PrepareContractionHierarchies.Result&gt; prepared = prepareCH(closeEarly, configsToPrepare);</b>
+&nbsp;
+&nbsp;        // we map all profile names for which there is CH support to the according CH graphs
+<b class="fc">&nbsp;        chGraphs = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (CHProfile profile : chPreparationHandler.getCHProfiles()) {</b>
+<b class="pc">&nbsp;            if (loaded.containsKey(profile.getProfile()) &amp;&amp; prepared.containsKey(profile.getProfile()))</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;CH graph should be either loaded or prepared, but not both: &quot; + profile.getProfile());</b>
+<b class="fc">&nbsp;            else if (prepared.containsKey(profile.getProfile())) {</b>
+<b class="fc">&nbsp;                setCHProfileVersion(profile.getProfile(), profilesByName.get(profile.getProfile()).getVersion());</b>
+<b class="fc">&nbsp;                PrepareContractionHierarchies.Result res = prepared.get(profile.getProfile());</b>
+<b class="fc">&nbsp;                chGraphs.put(profile.getProfile(), RoutingCHGraphImpl.fromGraph(baseGraph.getBaseGraph(), res.getCHStorage(), res.getCHConfig()));</b>
+<b class="pc">&nbsp;            } else if (loaded.containsKey(profile.getProfile())) {</b>
+<b class="fc">&nbsp;                chGraphs.put(profile.getProfile(), loaded.get(profile.getProfile()));</b>
+&nbsp;            } else
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;CH graph should be either loaded or prepared: &quot; + profile.getProfile());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected Map&lt;String, PrepareContractionHierarchies.Result&gt; prepareCH(boolean closeEarly, List&lt;CHConfig&gt; configsToPrepare) {
+<b class="fc">&nbsp;        if (!configsToPrepare.isEmpty())</b>
+<b class="fc">&nbsp;            ensureWriteAccess();</b>
+<b class="fc">&nbsp;        if (!baseGraph.isFrozen())</b>
+<b class="fc">&nbsp;            baseGraph.freeze();</b>
+<b class="fc">&nbsp;        return chPreparationHandler.prepare(baseGraph, properties, configsToPrepare, closeEarly);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * For landmarks it is required to always call this method: either it creates the landmark data or it loads it.
+&nbsp;     */
+&nbsp;    protected void loadOrPrepareLM(boolean closeEarly) {
+<b class="fc">&nbsp;        for (LMProfile profile : lmPreparationHandler.getLMProfiles())</b>
+<b class="fc">&nbsp;            if (!getLMProfileVersion(profile.getProfile()).isEmpty()</b>
+<b class="fc">&nbsp;                    &amp;&amp; !getLMProfileVersion(profile.getProfile()).equals(&quot;&quot; + profilesByName.get(profile.getProfile()).getVersion()))</b>
+<b class="fc">&nbsp;                throw new IllegalArgumentException(&quot;LM preparation of &quot; + profile.getProfile() + &quot; already exists in storage and doesn&#39;t match configuration&quot;);</b>
+&nbsp;
+&nbsp;        // we load landmark storages that already exist and prepare the other ones
+<b class="fc">&nbsp;        List&lt;LMConfig&gt; lmConfigs = createLMConfigs(lmPreparationHandler.getLMProfiles());</b>
+<b class="fc">&nbsp;        List&lt;LandmarkStorage&gt; loaded = lmPreparationHandler.load(lmConfigs, baseGraph, encodingManager);</b>
+<b class="fc">&nbsp;        List&lt;LMConfig&gt; loadedConfigs = loaded.stream().map(LandmarkStorage::getLMConfig).collect(Collectors.toList());</b>
+<b class="fc">&nbsp;        List&lt;LMConfig&gt; configsToPrepare = lmConfigs.stream().filter(c -&gt; !loadedConfigs.contains(c)).collect(Collectors.toList());</b>
+<b class="fc">&nbsp;        List&lt;PrepareLandmarks&gt; prepared = prepareLM(closeEarly, configsToPrepare);</b>
+&nbsp;
+&nbsp;        // we map all profile names for which there is LM support to the according LM storages
+<b class="fc">&nbsp;        landmarks = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (LMProfile lmp : lmPreparationHandler.getLMProfiles()) {</b>
+&nbsp;            // cross-querying
+<b class="fc">&nbsp;            String prepProfile = lmp.usesOtherPreparation() ? lmp.getPreparationProfile() : lmp.getProfile();</b>
+<b class="fc">&nbsp;            Optional&lt;LandmarkStorage&gt; loadedLMS = loaded.stream().filter(lms -&gt; lms.getLMConfig().getName().equals(prepProfile)).findFirst();</b>
+<b class="fc">&nbsp;            Optional&lt;PrepareLandmarks&gt; preparedLMS = prepared.stream().filter(pl -&gt; pl.getLandmarkStorage().getLMConfig().getName().equals(prepProfile)).findFirst();</b>
+<b class="pc">&nbsp;            if (loadedLMS.isPresent() &amp;&amp; preparedLMS.isPresent())</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;LM should be either loaded or prepared, but not both: &quot; + prepProfile);</b>
+<b class="fc">&nbsp;            else if (preparedLMS.isPresent()) {</b>
+<b class="fc">&nbsp;                setLMProfileVersion(lmp.getProfile(), profilesByName.get(lmp.getProfile()).getVersion());</b>
+<b class="fc">&nbsp;                landmarks.put(lmp.getProfile(), preparedLMS.get().getLandmarkStorage());</b>
+&nbsp;            } else
+<b class="fc">&nbsp;                loadedLMS.ifPresent(landmarkStorage -&gt; landmarks.put(lmp.getProfile(), landmarkStorage));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected List&lt;PrepareLandmarks&gt; prepareLM(boolean closeEarly, List&lt;LMConfig&gt; configsToPrepare) {
+<b class="fc">&nbsp;        if (!configsToPrepare.isEmpty())</b>
+<b class="fc">&nbsp;            ensureWriteAccess();</b>
+<b class="fc">&nbsp;        if (!baseGraph.isFrozen())</b>
+<b class="fc">&nbsp;            baseGraph.freeze();</b>
+<b class="fc">&nbsp;        return lmPreparationHandler.prepare(configsToPrepare, baseGraph, encodingManager, properties, locationIndex, closeEarly);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Internal method to clean up the graph.
+&nbsp;     */
+&nbsp;    protected void cleanUp() {
+<b class="fc">&nbsp;        PrepareRoutingSubnetworks preparation = new PrepareRoutingSubnetworks(baseGraph.getBaseGraph(), buildSubnetworkRemovalJobs());</b>
+<b class="fc">&nbsp;        preparation.setMinNetworkSize(minNetworkSize);</b>
+<b class="fc">&nbsp;        preparation.setThreads(subnetworksThreads);</b>
+<b class="fc">&nbsp;        preparation.doWork();</b>
+<b class="fc">&nbsp;        logger.info(&quot;nodes: &quot; + Helper.nf(baseGraph.getNodes()) + &quot;, edges: &quot; + Helper.nf(baseGraph.getEdges()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;PrepareJob&gt; buildSubnetworkRemovalJobs() {
+<b class="fc">&nbsp;        List&lt;PrepareJob&gt; jobs = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (Profile profile : profilesByName.values()) {</b>
+&nbsp;            // if turn costs are enabled use u-turn costs of zero as we only want to make sure the graph is fully connected assuming finite u-turn costs
+<b class="fc">&nbsp;            Weighting weighting = createWeighting(profile, new PMap().putObject(Parameters.Routing.U_TURN_COSTS, 0));</b>
+<b class="fc">&nbsp;            jobs.add(new PrepareJob(encodingManager.getBooleanEncodedValue(Subnetwork.key(profile.getName())), weighting));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return jobs;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void flush() {
+<b class="fc">&nbsp;        logger.info(&quot;flushing graph &quot; + getBaseGraphString() + &quot;, details:&quot; + baseGraph.toDetailsString() + &quot;, &quot;</b>
+<b class="fc">&nbsp;                + getMemInfo() + &quot;)&quot;);</b>
+<b class="fc">&nbsp;        baseGraph.flush();</b>
+<b class="fc">&nbsp;        properties.flush();</b>
+<b class="fc">&nbsp;        logger.info(&quot;flushed graph &quot; + getMemInfo() + &quot;)&quot;);</b>
+<b class="fc">&nbsp;        setFullyLoaded();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Releases all associated resources like memory or files. But it does not remove them. To
+&nbsp;     * remove the files created in graphhopperLocation you have to call clean().
+&nbsp;     */
+&nbsp;    public void close() {
+<b class="fc">&nbsp;        if (baseGraph != null)</b>
+<b class="fc">&nbsp;            baseGraph.close();</b>
+<b class="fc">&nbsp;        if (properties != null)</b>
+<b class="fc">&nbsp;            properties.close();</b>
+&nbsp;
+<b class="fc">&nbsp;        chGraphs.values().forEach(RoutingCHGraph::close);</b>
+<b class="fc">&nbsp;        landmarks.values().forEach(LandmarkStorage::close);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (locationIndex != null)</b>
+<b class="fc">&nbsp;            locationIndex.close();</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            lockFactory.forceRemove(fileLockName, true);</b>
+<b class="fc">&nbsp;        } catch (Exception ex) {</b>
+&nbsp;            // silently fail e.g. on Windows where we cannot remove an unreleased native lock
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Removes the on-disc routing files. Call only after calling close or before importOrLoad or
+&nbsp;     * load
+&nbsp;     */
+&nbsp;    public void clean() {
+<b class="pc">&nbsp;        if (getGraphHopperLocation().isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot clean GraphHopper without specified graphHopperLocation&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        File folder = new File(getGraphHopperLocation());</b>
+<b class="fc">&nbsp;        removeDir(folder);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void ensureNotLoaded() {
+<b class="pc">&nbsp;        if (fullyLoaded)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;No configuration changes are possible after loading the graph&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void ensureWriteAccess() {
+<b class="pc">&nbsp;        if (!allowWrites)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Writes are not allowed!&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setFullyLoaded() {
+<b class="fc">&nbsp;        fullyLoaded = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean getFullyLoaded() {
+<b class="nc">&nbsp;        return fullyLoaded;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public RouterConfig getRouterConfig() {
+<b class="fc">&nbsp;        return routerConfig;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OSMReaderConfig getReaderConfig() {
+<b class="fc">&nbsp;        return osmReaderConfig;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static JsonFeatureCollection resolveCustomAreas(String customAreasDirectory) {
+<b class="fc">&nbsp;        JsonFeatureCollection globalAreas = new JsonFeatureCollection();</b>
+<b class="pc">&nbsp;        if (!customAreasDirectory.isEmpty()) {</b>
+<b class="nc">&nbsp;            ObjectMapper mapper = new ObjectMapper().registerModule(new JtsModule());</b>
+<b class="nc">&nbsp;            try (DirectoryStream&lt;Path&gt; stream = Files.newDirectoryStream(Paths.get(customAreasDirectory), &quot;*.{geojson,json}&quot;)) {</b>
+<b class="nc">&nbsp;                for (Path customAreaFile : stream) {</b>
+<b class="nc">&nbsp;                    try (BufferedReader reader = Files.newBufferedReader(customAreaFile, StandardCharsets.UTF_8)) {</b>
+<b class="nc">&nbsp;                        globalAreas.getFeatures().addAll(mapper.readValue(reader, JsonFeatureCollection.class).getFeatures());</b>
+<b class="nc">&nbsp;                    }</b>
+&nbsp;                }
+<b class="nc">&nbsp;                logger.info(&quot;Will make &quot; + globalAreas.getFeatures().size() + &quot; areas available to all custom profiles. Found in &quot; + customAreasDirectory);</b>
+<b class="nc">&nbsp;            } catch (IOException e) {</b>
+<b class="nc">&nbsp;                throw new UncheckedIOException(e);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        return globalAreas;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;Profile&gt; resolveCustomModelFiles(String customModelFolder, List&lt;Profile&gt; profiles, JsonFeatureCollection globalAreas) {
+<b class="fc">&nbsp;        ObjectMapper jsonOM = Jackson.newObjectMapper();</b>
+<b class="fc">&nbsp;        List&lt;Profile&gt; newProfiles = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (Profile profile : profiles) {</b>
+<b class="pc">&nbsp;            if (!CustomWeighting.NAME.equals(profile.getWeighting())) {</b>
+<b class="nc">&nbsp;                newProfiles.add(profile);</b>
+&nbsp;                continue;
+&nbsp;            }
+<b class="fc">&nbsp;            Object cm = profile.getHints().getObject(CustomModel.KEY, null);</b>
+&nbsp;            CustomModel customModel;
+<b class="pc">&nbsp;            if (cm != null) {</b>
+<b class="pc">&nbsp;                if (!profile.getHints().getObject(&quot;custom_model_files&quot;, Collections.emptyList()).isEmpty())</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;Do not use custom_model_files and custom_model together&quot;);</b>
+&nbsp;                try {
+&nbsp;                    // custom_model can be an object tree (read from config) or an object (e.g. from tests)
+<b class="fc">&nbsp;                    customModel = jsonOM.readValue(jsonOM.writeValueAsBytes(cm), CustomModel.class);</b>
+<b class="fc">&nbsp;                    newProfiles.add(profile.setCustomModel(customModel));</b>
+<b class="nc">&nbsp;                } catch (Exception ex) {</b>
+<b class="nc">&nbsp;                    throw new RuntimeException(&quot;Cannot load custom_model from &quot; + cm + &quot; for profile &quot; + profile.getName()</b>
+&nbsp;                            + &quot;. If you are trying to load from a file, use &#39;custom_model_files&#39; instead.&quot;, ex);
+&nbsp;                }
+&nbsp;            } else {
+<b class="nc">&nbsp;                if (!profile.getHints().getString(&quot;custom_model_file&quot;, &quot;&quot;).isEmpty())</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;Since 8.0 you must use a custom_model_files array instead of custom_model_file string&quot;);</b>
+<b class="nc">&nbsp;                List&lt;String&gt; customModelFileNames = profile.getHints().getObject(&quot;custom_model_files&quot;, null);</b>
+<b class="nc">&nbsp;                if (customModelFileNames == null)</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;Missing &#39;custom_model&#39; or &#39;custom_model_files&#39; field in profile &#39;&quot;</b>
+<b class="nc">&nbsp;                            + profile.getName() + &quot;&#39;. To use default specify custom_model_files: []&quot;);</b>
+<b class="nc">&nbsp;                if (customModelFileNames.isEmpty()) {</b>
+<b class="nc">&nbsp;                    newProfiles.add(profile.setCustomModel(customModel = new CustomModel()));</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    customModel = new CustomModel();</b>
+<b class="nc">&nbsp;                    for (String file : customModelFileNames) {</b>
+<b class="nc">&nbsp;                        if (file.contains(File.separator))</b>
+<b class="nc">&nbsp;                            throw new IllegalArgumentException(&quot;Use custom_models.directory for the custom_model_files parent&quot;);</b>
+<b class="nc">&nbsp;                        if (!file.endsWith(&quot;.json&quot;))</b>
+<b class="nc">&nbsp;                            throw new IllegalArgumentException(&quot;Yaml is no longer supported, see #2672. Use JSON with optional comments //&quot;);</b>
+&nbsp;
+&nbsp;                        try {
+&nbsp;                            String string;
+&nbsp;                            // 1. try to load custom model from jar
+<b class="nc">&nbsp;                            InputStream is = GHUtility.class.getResourceAsStream(&quot;/com/graphhopper/custom_models/&quot; + file);</b>
+&nbsp;                            // dropwizard makes it very hard to find out the folder of config.yml -&gt; use an extra parameter for the folder
+<b class="nc">&nbsp;                            Path customModelFile = Paths.get(customModelFolder).resolve(file);</b>
+<b class="nc">&nbsp;                            if (is != null) {</b>
+<b class="nc">&nbsp;                                if (Files.exists(customModelFile))</b>
+<b class="nc">&nbsp;                                    throw new RuntimeException(&quot;Custom model file name &#39;&quot; + file + &quot;&#39; is already used for built-in profiles. Use another name&quot;);</b>
+<b class="nc">&nbsp;                                string = readJSONFileWithoutComments(new InputStreamReader(is));</b>
+&nbsp;                            } else {
+&nbsp;                                // 2. try to load custom model file from external location
+<b class="nc">&nbsp;                                string = readJSONFileWithoutComments(customModelFile.toFile().getAbsolutePath());</b>
+&nbsp;                            }
+<b class="nc">&nbsp;                            customModel = CustomModel.merge(customModel, jsonOM.readValue(string, CustomModel.class));</b>
+<b class="nc">&nbsp;                        } catch (IOException ex) {</b>
+<b class="nc">&nbsp;                            throw new RuntimeException(&quot;Cannot load custom_model from location &quot; + file + &quot;, profile:&quot; + profile.getName(), ex);</b>
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;
+<b class="nc">&nbsp;                    newProfiles.add(profile.setCustomModel(customModel));</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            // we can fill in all areas here as in the created template we include only the areas that are used in
+&nbsp;            // statements (see CustomModelParser)
+<b class="fc">&nbsp;            customModel.addAreas(globalAreas);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return newProfiles;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

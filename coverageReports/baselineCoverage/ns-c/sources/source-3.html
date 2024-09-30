@@ -1,0 +1,172 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > LocationIndexExample</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.example</a>
+</div>
+
+<h1>Coverage Summary for Class: LocationIndexExample (com.graphhopper.example)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LocationIndexExample</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/26)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.example;
+&nbsp;
+&nbsp;import com.graphhopper.GraphHopper;
+&nbsp;import com.graphhopper.config.Profile;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;import com.graphhopper.search.KVStorage;
+&nbsp;import com.graphhopper.search.KVStorage.KValue;
+&nbsp;import com.graphhopper.storage.BaseGraph;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.storage.index.LocationIndexTree;
+&nbsp;import com.graphhopper.storage.index.Snap;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;
+&nbsp;import java.util.Map;
+&nbsp;
+<b class="nc">&nbsp;public class LocationIndexExample {</b>
+&nbsp;    public static void main(String[] args) {
+<b class="nc">&nbsp;        String relDir = args.length == 1 ? args[0] : &quot;&quot;;</b>
+<b class="nc">&nbsp;        graphhopperLocationIndex(relDir);</b>
+<b class="nc">&nbsp;        lowLevelLocationIndex();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void graphhopperLocationIndex(String relDir) {
+<b class="nc">&nbsp;        GraphHopper hopper = new GraphHopper();</b>
+<b class="nc">&nbsp;        hopper.setEncodedValuesString(&quot;car_access, car_average_speed&quot;);</b>
+<b class="nc">&nbsp;        hopper.setProfiles(new Profile(&quot;car&quot;).setCustomModel(GHUtility.loadCustomModelFromJar(&quot;car.json&quot;)));</b>
+<b class="nc">&nbsp;        hopper.setOSMFile(relDir + &quot;core/files/andorra.osm.pbf&quot;);</b>
+<b class="nc">&nbsp;        hopper.setGraphHopperLocation(&quot;./target/locationindex-graph-cache&quot;);</b>
+<b class="nc">&nbsp;        hopper.importOrLoad();</b>
+&nbsp;
+<b class="nc">&nbsp;        LocationIndex index = hopper.getLocationIndex();</b>
+&nbsp;
+&nbsp;        // now you can fetch the closest edge via:
+<b class="nc">&nbsp;        Snap snap = index.findClosest(42.508552, 1.532936, EdgeFilter.ALL_EDGES);</b>
+<b class="nc">&nbsp;        EdgeIteratorState edge = snap.getClosestEdge();</b>
+<b class="nc">&nbsp;        assert edge.getName().equals(&quot;Avinguda Meritxell&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void lowLevelLocationIndex() {
+&nbsp;        // If you don&#39;t use the GraphHopper class you have to use the low level API:
+<b class="nc">&nbsp;        BaseGraph graph = new BaseGraph.Builder(4).create();</b>
+<b class="nc">&nbsp;        graph.edge(0, 1).setKeyValues(Map.of(&quot;name&quot;, new KValue( &quot;test edge&quot;)));</b>
+<b class="nc">&nbsp;        graph.getNodeAccess().setNode(0, 12, 42);</b>
+<b class="nc">&nbsp;        graph.getNodeAccess().setNode(1, 12.01, 42.01);</b>
+&nbsp;
+<b class="nc">&nbsp;        LocationIndexTree index = new LocationIndexTree(graph.getBaseGraph(), graph.getDirectory());</b>
+<b class="nc">&nbsp;        index.setResolution(300);</b>
+<b class="nc">&nbsp;        index.setMaxRegionSearch(4);</b>
+<b class="nc">&nbsp;        if (!index.loadExisting())</b>
+<b class="nc">&nbsp;            index.prepareIndex();</b>
+<b class="nc">&nbsp;        Snap snap = index.findClosest(12, 42, EdgeFilter.ALL_EDGES);</b>
+<b class="nc">&nbsp;        EdgeIteratorState edge = snap.getClosestEdge();</b>
+<b class="nc">&nbsp;        assert edge.getValue(&quot;name&quot;).equals(&quot;test edge&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

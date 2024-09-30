@@ -1,0 +1,241 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > IndexStructureInfo</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage.index</a>
+</div>
+
+<h1>Coverage Summary for Class: IndexStructureInfo (com.graphhopper.storage.index)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">IndexStructureInfo</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.9%
+  </span>
+  <span class="absValue">
+    (10/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (15/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.7%
+  </span>
+  <span class="absValue">
+    (50/57)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.storage.index;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.graphhopper.geohash.SpatialKeyAlgo;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;
+&nbsp;import static com.graphhopper.util.DistanceCalcEarth.C;
+&nbsp;import static com.graphhopper.util.DistanceCalcEarth.DIST_EARTH;
+&nbsp;
+&nbsp;public class IndexStructureInfo {
+&nbsp;    private final int[] entries;
+&nbsp;    private final byte[] shifts;
+&nbsp;    private final PixelGridTraversal pixelGridTraversal;
+&nbsp;    private final SpatialKeyAlgo keyAlgo;
+&nbsp;    private final BBox bounds;
+&nbsp;    private final int parts;
+&nbsp;
+<b class="fc">&nbsp;    public IndexStructureInfo(int[] entries, byte[] shifts, PixelGridTraversal pixelGridTraversal, SpatialKeyAlgo keyAlgo, BBox bounds, int parts) {</b>
+<b class="fc">&nbsp;        this.entries = entries;</b>
+<b class="fc">&nbsp;        this.shifts = shifts;</b>
+<b class="fc">&nbsp;        this.pixelGridTraversal = pixelGridTraversal;</b>
+<b class="fc">&nbsp;        this.keyAlgo = keyAlgo;</b>
+<b class="fc">&nbsp;        this.bounds = bounds;</b>
+<b class="fc">&nbsp;        this.parts = parts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static IndexStructureInfo create(BBox bounds, int minResolutionInMeter) {
+&nbsp;        // I still need to be able to save and load an empty LocationIndex, and I can&#39;t when the extent
+&nbsp;        // is zero.
+<b class="pc">&nbsp;        if (!bounds.isValid())</b>
+<b class="nc">&nbsp;            bounds = new BBox(-10.0, 10.0, -10.0, 10.0);</b>
+&nbsp;
+<b class="fc">&nbsp;        double lat = Math.min(Math.abs(bounds.maxLat), Math.abs(bounds.minLat));</b>
+<b class="fc">&nbsp;        double maxDistInMeter = Math.max(</b>
+&nbsp;                (bounds.maxLat - bounds.minLat) / 360 * C,
+<b class="fc">&nbsp;                (bounds.maxLon - bounds.minLon) / 360 * DIST_EARTH.calcCircumference(lat));</b>
+<b class="fc">&nbsp;        double tmp = maxDistInMeter / minResolutionInMeter;</b>
+<b class="fc">&nbsp;        tmp = tmp * tmp;</b>
+<b class="fc">&nbsp;        IntArrayList tmpEntries = new IntArrayList();</b>
+&nbsp;        // the last one is always 4 to reduce costs if only a single entry
+<b class="fc">&nbsp;        tmp /= 4;</b>
+<b class="fc">&nbsp;        while (tmp &gt; 1) {</b>
+&nbsp;            int tmpNo;
+<b class="fc">&nbsp;            if (tmp &gt;= 16) {</b>
+<b class="fc">&nbsp;                tmpNo = 16;</b>
+<b class="fc">&nbsp;            } else if (tmp &gt;= 4) {</b>
+<b class="fc">&nbsp;                tmpNo = 4;</b>
+&nbsp;            } else {
+&nbsp;                break;
+&nbsp;            }
+<b class="fc">&nbsp;            tmpEntries.add(tmpNo);</b>
+<b class="fc">&nbsp;            tmp /= tmpNo;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        tmpEntries.add(4);</b>
+<b class="fc">&nbsp;        int[] entries = tmpEntries.toArray();</b>
+<b class="pc">&nbsp;        if (entries.length &lt; 1) {</b>
+&nbsp;            // at least one depth should have been specified
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;depth needs to be at least 1&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int depth = entries.length;</b>
+<b class="fc">&nbsp;        byte[] shifts = new byte[depth];</b>
+<b class="fc">&nbsp;        int lastEntry = entries[0];</b>
+<b class="fc">&nbsp;        for (int i1 = 0; i1 &lt; depth; i1++) {</b>
+<b class="pc">&nbsp;            if (lastEntry &lt; entries[i1]) {</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;entries should decrease or stay but was:&quot;</b>
+<b class="nc">&nbsp;                        + Arrays.toString(entries));</b>
+&nbsp;            }
+<b class="fc">&nbsp;            lastEntry = entries[i1];</b>
+<b class="fc">&nbsp;            shifts[i1] = getShift(entries[i1]);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int shiftSum = 0;</b>
+<b class="fc">&nbsp;        long parts = 1;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; shifts.length; i++) {</b>
+<b class="fc">&nbsp;            shiftSum += shifts[i];</b>
+<b class="fc">&nbsp;            parts *= entries[i];</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (shiftSum &gt; 64)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;sum of all shifts does not fit into a long variable&quot;);</b>
+<b class="fc">&nbsp;        parts = (int) Math.round(Math.sqrt(parts));</b>
+&nbsp;
+<b class="fc">&nbsp;        return new IndexStructureInfo(entries, shifts, new PixelGridTraversal((int) parts, bounds), new SpatialKeyAlgo(shiftSum, bounds), bounds, (int) parts);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static byte getShift(int entries) {
+<b class="fc">&nbsp;        byte b = (byte) Math.round(Math.log(entries) / Math.log(2));</b>
+<b class="pc">&nbsp;        if (b &lt;= 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;invalid shift:&quot; + b);</b>
+&nbsp;
+<b class="fc">&nbsp;        return b;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int[] getEntries() {
+<b class="fc">&nbsp;        return entries;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public byte[] getShifts() {
+<b class="fc">&nbsp;        return shifts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public PixelGridTraversal getPixelGridTraversal() {
+<b class="fc">&nbsp;        return pixelGridTraversal;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public SpatialKeyAlgo getKeyAlgo() {
+<b class="fc">&nbsp;        return keyAlgo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BBox getBounds() {
+<b class="nc">&nbsp;        return bounds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getParts() {
+<b class="fc">&nbsp;        return parts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getDeltaLat() {
+<b class="fc">&nbsp;        return (bounds.maxLat - bounds.minLat) / parts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getDeltaLon() {
+<b class="fc">&nbsp;        return (bounds.maxLon - bounds.minLon) / parts;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

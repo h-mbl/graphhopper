@@ -1,0 +1,115 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DecimalEncodedValue</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ev</a>
+</div>
+
+<h1>Coverage Summary for Class: DecimalEncodedValue (com.graphhopper.routing.ev)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">DecimalEncodedValue</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.ev;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class defines how and where to store an unsigned decimal value. It is important to note that:
+&nbsp; * 1. the range of the number is highly limited (unlike the Java 32bit float or 64bit double values)
+&nbsp; * so that the storable part of it fits into the specified number of bits (maximum 32 at the moment
+&nbsp; * for all implementations) and 2. the default value is always 0.
+&nbsp; *
+&nbsp; * @see DecimalEncodedValueImpl
+&nbsp; */
+&nbsp;public interface DecimalEncodedValue extends EncodedValue {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method stores the specified double value (rounding with a previously defined factor) into the IntsRef.
+&nbsp;     *
+&nbsp;     * @see #getMaxStorableDecimal()
+&nbsp;     */
+&nbsp;    void setDecimal(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess, double value);
+&nbsp;
+&nbsp;    double getDecimal(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The maximum double value this EncodedValue accepts for setDecimal without throwing an exception.
+&nbsp;     */
+&nbsp;    double getMaxStorableDecimal();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The minimum double value this EncodedValue accepts for setDecimal without throwing an exception.
+&nbsp;     */
+&nbsp;    double getMinStorableDecimal();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @see IntEncodedValue#getMaxOrMaxStorableInt()
+&nbsp;     */
+&nbsp;    double getMaxOrMaxStorableDecimal();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the smallest decimal value that is larger or equal to the given value and that can be stored exactly,
+&nbsp;     * i.e. for which {@link #getDecimal} returns the same value that we put in using {@link #setDecimal}.
+&nbsp;     * For example if the internal scaling factor is 3 calling getDecimal after setDecimal(reverse, ref, 5) will return
+&nbsp;     * 6 not 5! The value returned by this method is guaranteed to be storable without such a modification.
+&nbsp;     */
+&nbsp;    double getNextStorableValue(double value);
+&nbsp;
+&nbsp;    double getSmallestNonZeroValue();
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

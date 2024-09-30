@@ -1,0 +1,428 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OSMNodeData</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMNodeData (com.graphhopper.reader.osm)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMNodeData</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (28/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75.8%
+  </span>
+  <span class="absValue">
+    (47/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    89%
+  </span>
+  <span class="absValue">
+    (105/118)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.reader.osm;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.LongScatterSet;
+&nbsp;import com.carrotsearch.hppc.LongSet;
+&nbsp;import com.graphhopper.coll.GHLongLongBTree;
+&nbsp;import com.graphhopper.coll.LongLongMap;
+&nbsp;import com.graphhopper.reader.ReaderNode;
+&nbsp;import com.graphhopper.search.KVStorage;
+&nbsp;import com.graphhopper.storage.Directory;
+&nbsp;import com.graphhopper.util.PointAccess;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.function.DoubleSupplier;
+&nbsp;import java.util.function.LongUnaryOperator;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class stores OSM node data while reading an OSM file in {@link WaySegmentParser}. It is not trivial to do this
+&nbsp; * in a memory-efficient way. We use the following approach:
+&nbsp; * &lt;pre&gt;
+&nbsp; * - For each OSM node we store an id that points to the nodes coordinates. We separate nodes into
+&nbsp; *   (potential) tower nodes and pillar nodes. We use the negative ids for tower nodes and positive
+&nbsp; *   ids for pillar nodes. The tower nodes are limited to ~2 billion nodes as we later use the ID as positive integer.
+&nbsp; * - We reserve a few special ids like {@link #JUNCTION_NODE} to distinguish the different node types when we read the
+&nbsp; *   OSM file for the first time (pass1) in {@link WaySegmentParser}. We then assign actual ids in the second pass.
+&nbsp; * - We store the node coordinates for tower and pillar nodes in different places. The pillar node storage is only
+&nbsp; *   temporary, because at the time we store the coordinates it is unknown to which edge each pillar node will belong.
+&nbsp; *   The tower node storage, however, can be re-used for the final graph created by {@link OSMReader} so we store the
+&nbsp; *   tower coordinates there already to save memory during import.
+&nbsp; * - We store an additional mapping between OSM node Ids and tag indices that point into a list of node tags. We use
+&nbsp; *   a different mapping, because we store node tags for only a small fraction of all OSM nodes.
+&nbsp; * &lt;/pre&gt;
+&nbsp; */
+&nbsp;class OSMNodeData {
+&nbsp;    static final long JUNCTION_NODE = -2;
+&nbsp;    static final long EMPTY_NODE = -1;
+&nbsp;    static final long END_NODE = 0;
+&nbsp;    static final long INTERMEDIATE_NODE = 1;
+&nbsp;    static final long CONNECTION_NODE = 2;
+&nbsp;
+&nbsp;    // this map stores our internal node id for each OSM node
+&nbsp;    private final LongLongMap idsByOsmNodeIds;
+&nbsp;
+&nbsp;    // here we store node coordinates, separated for pillar and tower nodes
+&nbsp;    private final PillarInfo pillarNodes;
+&nbsp;    private final PointAccess towerNodes;
+&nbsp;
+&nbsp;    // this map stores an index for each OSM node we keep the node tags of. a value of -1 means there is no entry yet.
+&nbsp;    private final LongLongMap nodeTagIndicesByOsmNodeIds;
+&nbsp;
+&nbsp;    // stores node tags
+&nbsp;    private final KVStorage nodeKVStorage;
+&nbsp;    // collect all nodes that should be split and a barrier edge should be created between them.
+&nbsp;    private final LongSet nodesToBeSplit;
+&nbsp;
+<b class="fc">&nbsp;    private int nextTowerId = 0;</b>
+<b class="fc">&nbsp;    private long nextPillarId = 0;</b>
+&nbsp;    // we use negative ids to create artificial OSM node ids
+<b class="fc">&nbsp;    private long nextArtificialOSMNodeId = -Long.MAX_VALUE;</b>
+&nbsp;
+<b class="fc">&nbsp;    public OSMNodeData(PointAccess nodeAccess, Directory directory) {</b>
+&nbsp;        // We use a b-tree that can store as many entries as there are longs. A tree is also more
+&nbsp;        // memory efficient, because there is no waste for empty entries, and it also avoids
+&nbsp;        // allocating big arrays when growing the size.
+<b class="fc">&nbsp;        idsByOsmNodeIds = new GHLongLongBTree(200, 5, EMPTY_NODE);</b>
+<b class="fc">&nbsp;        towerNodes = nodeAccess;</b>
+<b class="fc">&nbsp;        pillarNodes = new PillarInfo(towerNodes.is3D(), directory);</b>
+&nbsp;
+<b class="fc">&nbsp;        nodeTagIndicesByOsmNodeIds = new GHLongLongBTree(200, 4, -1);</b>
+<b class="fc">&nbsp;        nodesToBeSplit = new LongScatterSet();</b>
+<b class="fc">&nbsp;        nodeKVStorage = new KVStorage(directory, false).create(100);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean is3D() {
+<b class="fc">&nbsp;        return towerNodes.is3D();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the internal id stored for the given OSM node id. use {@link #isTowerNode} etc. to find out what this
+&nbsp;     * id means
+&nbsp;     */
+&nbsp;    public long getId(long osmNodeId) {
+<b class="fc">&nbsp;        return idsByOsmNodeIds.get(osmNodeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean isTowerNode(long id) {
+&nbsp;        // tower nodes are indexed -3, -4, -5, ...
+<b class="fc">&nbsp;        return id &lt; JUNCTION_NODE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean isPillarNode(long id) {
+&nbsp;        // pillar nodes are indexed 3, 4, 5, ..
+<b class="fc">&nbsp;        return id &gt; CONNECTION_NODE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean isNodeId(long id) {
+<b class="fc">&nbsp;        return id &gt; CONNECTION_NODE || id &lt; JUNCTION_NODE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setOrUpdateNodeType(long osmNodeId, long newNodeType, LongUnaryOperator nodeTypeUpdate) {
+<b class="fc">&nbsp;        long curr = idsByOsmNodeIds.get(osmNodeId);</b>
+<b class="fc">&nbsp;        if (curr == EMPTY_NODE)</b>
+<b class="fc">&nbsp;            idsByOsmNodeIds.put(osmNodeId, newNodeType);</b>
+&nbsp;        else
+<b class="fc">&nbsp;            idsByOsmNodeIds.put(osmNodeId, nodeTypeUpdate.applyAsLong(curr));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the number of mapped nodes (tower + pillar, but also including pillar nodes that were converted to tower)
+&nbsp;     */
+&nbsp;    public long getNodeCount() {
+<b class="fc">&nbsp;        return idsByOsmNodeIds.getSize();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getTaggedNodeCount() {
+<b class="fc">&nbsp;        return nodeTagIndicesByOsmNodeIds.getSize();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the number of nodes for which we store tags
+&nbsp;     */
+&nbsp;    public long getNodeTagCapacity() {
+<b class="fc">&nbsp;        return nodeKVStorage.getCapacity();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Stores the given coordinates for the given OSM node ID, but only if a non-empty node type was set for this
+&nbsp;     * OSM node ID previously.
+&nbsp;     *
+&nbsp;     * @return the node type this OSM node was associated with before this method was called
+&nbsp;     */
+&nbsp;    public long addCoordinatesIfMapped(long osmNodeId, double lat, double lon, DoubleSupplier getEle) {
+<b class="fc">&nbsp;        long nodeType = idsByOsmNodeIds.get(osmNodeId);</b>
+<b class="fc">&nbsp;        if (nodeType == EMPTY_NODE)</b>
+<b class="fc">&nbsp;            return nodeType;</b>
+<b class="fc">&nbsp;        else if (nodeType == JUNCTION_NODE || nodeType == CONNECTION_NODE)</b>
+<b class="fc">&nbsp;            addTowerNode(osmNodeId, lat, lon, getEle.getAsDouble());</b>
+<b class="pc">&nbsp;        else if (nodeType == INTERMEDIATE_NODE || nodeType == END_NODE)</b>
+<b class="fc">&nbsp;            addPillarNode(osmNodeId, lat, lon, getEle.getAsDouble());</b>
+&nbsp;        else
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Unknown node type: &quot; + nodeType + &quot;, or coordinates already set. Possibly duplicate OSM node ID: &quot; + osmNodeId);</b>
+<b class="fc">&nbsp;        return nodeType;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long addTowerNode(long osmId, double lat, double lon, double ele) {
+<b class="fc">&nbsp;        towerNodes.setNode(nextTowerId, lat, lon, ele);</b>
+<b class="fc">&nbsp;        long id = towerNodeToId(nextTowerId);</b>
+<b class="fc">&nbsp;        idsByOsmNodeIds.put(osmId, id);</b>
+<b class="fc">&nbsp;        nextTowerId++;</b>
+<b class="pc">&nbsp;        if (nextTowerId == Integer.MAX_VALUE)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Tower node id overflow, too many tower nodes&quot;);</b>
+<b class="fc">&nbsp;        return id;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long addPillarNode(long osmId, double lat, double lon, double ele) {
+<b class="fc">&nbsp;        long id = pillarNodeToId(nextPillarId);</b>
+<b class="pc">&nbsp;        if (id &gt; idsByOsmNodeIds.getMaxValue())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;id for pillar node cannot be bigger than &quot; + idsByOsmNodeIds.getMaxValue());</b>
+&nbsp;
+<b class="fc">&nbsp;        pillarNodes.setNode(nextPillarId, lat, lon, ele);</b>
+<b class="fc">&nbsp;        idsByOsmNodeIds.put(osmId, id);</b>
+<b class="fc">&nbsp;        nextPillarId++;</b>
+<b class="fc">&nbsp;        return id;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a copy of the coordinates stored for the given node ID
+&nbsp;     *
+&nbsp;     * @return the (artificial) OSM node ID created for the copied node and the associated ID
+&nbsp;     */
+&nbsp;    SegmentNode addCopyOfNode(SegmentNode node) {
+<b class="fc">&nbsp;        GHPoint3D point = getCoordinates(node.id);</b>
+<b class="pc">&nbsp;        if (point == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot copy node : &quot; + node.osmNodeId + &quot;, because it is missing&quot;);</b>
+<b class="fc">&nbsp;        final long newOsmId = nextArtificialOSMNodeId++;</b>
+<b class="pc">&nbsp;        if (idsByOsmNodeIds.put(newOsmId, INTERMEDIATE_NODE) != EMPTY_NODE)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Artificial osm node id already exists: &quot; + newOsmId);</b>
+<b class="fc">&nbsp;        long id = addPillarNode(newOsmId, point.getLat(), point.getLon(), point.getEle());</b>
+<b class="fc">&nbsp;        return new SegmentNode(newOsmId, id, node.tags);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long convertPillarToTowerNode(long id, long osmNodeId) {
+<b class="pc">&nbsp;        if (!isPillarNode(id))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Not a pillar node: &quot; + id);</b>
+<b class="fc">&nbsp;        long pillar = idToPillarNode(id);</b>
+<b class="fc">&nbsp;        double lat = pillarNodes.getLat(pillar);</b>
+<b class="fc">&nbsp;        double lon = pillarNodes.getLon(pillar);</b>
+<b class="fc">&nbsp;        double ele = pillarNodes.getEle(pillar);</b>
+<b class="pc">&nbsp;        if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Pillar node was already converted to tower node: &quot; + id);</b>
+&nbsp;
+<b class="fc">&nbsp;        pillarNodes.setNode(pillar, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);</b>
+<b class="fc">&nbsp;        return addTowerNode(osmNodeId, lat, lon, ele);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHPoint3D getCoordinates(long id) {
+<b class="fc">&nbsp;        if (isTowerNode(id)) {</b>
+<b class="fc">&nbsp;            int tower = idToTowerNode(id);</b>
+<b class="fc">&nbsp;            return towerNodes.is3D()</b>
+<b class="fc">&nbsp;                    ? new GHPoint3D(towerNodes.getLat(tower), towerNodes.getLon(tower), towerNodes.getEle(tower))</b>
+<b class="fc">&nbsp;                    : new GHPoint3D(towerNodes.getLat(tower), towerNodes.getLon(tower), Double.NaN);</b>
+<b class="pc">&nbsp;        } else if (isPillarNode(id)) {</b>
+<b class="fc">&nbsp;            long pillar = idToPillarNode(id);</b>
+<b class="fc">&nbsp;            return pillarNodes.is3D()</b>
+<b class="fc">&nbsp;                    ? new GHPoint3D(pillarNodes.getLat(pillar), pillarNodes.getLon(pillar), pillarNodes.getEle(pillar))</b>
+<b class="fc">&nbsp;                    : new GHPoint3D(pillarNodes.getLat(pillar), pillarNodes.getLon(pillar), Double.NaN);</b>
+&nbsp;        } else
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addCoordinatesToPointList(long id, PointList pointList) {
+&nbsp;        double lat, lon;
+<b class="fc">&nbsp;        double ele = Double.NaN;</b>
+<b class="fc">&nbsp;        if (isTowerNode(id)) {</b>
+<b class="fc">&nbsp;            int tower = idToTowerNode(id);</b>
+<b class="fc">&nbsp;            lat = towerNodes.getLat(tower);</b>
+<b class="fc">&nbsp;            lon = towerNodes.getLon(tower);</b>
+<b class="fc">&nbsp;            if (towerNodes.is3D())</b>
+<b class="fc">&nbsp;                ele = towerNodes.getEle(tower);</b>
+<b class="pc">&nbsp;        } else if (isPillarNode(id)) {</b>
+<b class="fc">&nbsp;            long pillar = idToPillarNode(id);</b>
+<b class="fc">&nbsp;            lat = pillarNodes.getLat(pillar);</b>
+<b class="fc">&nbsp;            lon = pillarNodes.getLon(pillar);</b>
+<b class="fc">&nbsp;            if (pillarNodes.is3D())</b>
+<b class="fc">&nbsp;                ele = pillarNodes.getEle(pillar);</b>
+&nbsp;        } else
+<b class="nc">&nbsp;            throw new IllegalArgumentException();</b>
+<b class="fc">&nbsp;        pointList.add(lat, lon, ele);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setTags(ReaderNode node) {
+<b class="fc">&nbsp;        int tagIndex = Math.toIntExact(nodeTagIndicesByOsmNodeIds.get(node.getId()));</b>
+<b class="pc">&nbsp;        if (tagIndex == -1) {</b>
+<b class="fc">&nbsp;            long pointer = nodeKVStorage.add(node.getTags().entrySet().stream().collect(</b>
+<b class="fc">&nbsp;                    Collectors.toMap(Map.Entry::getKey, // same key</b>
+<b class="pc">&nbsp;                            e -&gt; new KVStorage.KValue(e.getValue() instanceof String ? KVStorage.cutString((String) e.getValue()) : e.getValue()))));</b>
+<b class="pc">&nbsp;            if (pointer &gt; Integer.MAX_VALUE)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Too many key value pairs are stored in node tags, was &quot; + pointer);</b>
+<b class="fc">&nbsp;            nodeTagIndicesByOsmNodeIds.put(node.getId(), (int) pointer);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot add tags twice, duplicate node OSM ID: &quot; + node.getId());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public Map&lt;String, Object&gt; getTags(long osmNodeId) {
+<b class="fc">&nbsp;        int tagIndex = Math.toIntExact(nodeTagIndicesByOsmNodeIds.get(osmNodeId));</b>
+<b class="fc">&nbsp;        if (tagIndex &lt; 0)</b>
+<b class="fc">&nbsp;            return Collections.emptyMap();</b>
+<b class="fc">&nbsp;        return nodeKVStorage.getMap(tagIndex);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void release() {
+<b class="fc">&nbsp;        idsByOsmNodeIds.clear();</b>
+<b class="fc">&nbsp;        pillarNodes.clear();</b>
+<b class="fc">&nbsp;        nodeTagIndicesByOsmNodeIds.clear();</b>
+<b class="fc">&nbsp;        nodeKVStorage.clear();</b>
+<b class="fc">&nbsp;        nodesToBeSplit.clear();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long towerNodeToId(long towerId) {
+<b class="fc">&nbsp;        return -towerId - 3;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int idToTowerNode(long id) {
+<b class="pc">&nbsp;        if (-id - 3L &gt; Integer.MAX_VALUE)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Invalid tower node id: &quot; + id + &quot;, limit exceeded&quot;);</b>
+<b class="fc">&nbsp;        return Math.toIntExact(-id - 3);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long pillarNodeToId(long pillarId) {
+<b class="fc">&nbsp;        return pillarId + 3;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long idToPillarNode(long id) {
+<b class="fc">&nbsp;        return id - 3;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean setSplitNode(long osmNodeId) {
+<b class="fc">&nbsp;        return nodesToBeSplit.add(osmNodeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void unsetSplitNode(long osmNodeId) {
+<b class="fc">&nbsp;        int removed = nodesToBeSplit.removeAll(osmNodeId);</b>
+<b class="pc">&nbsp;        if (removed == 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Node &quot; + osmNodeId + &quot; was not a split node&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isSplitNode(long osmNodeId) {
+<b class="fc">&nbsp;        return nodesToBeSplit.contains(osmNodeId);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,201 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BalancedWeightApproximator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.weighting</a>
+</div>
+
+<h1>Coverage Summary for Class: BalancedWeightApproximator (com.graphhopper.routing.weighting)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BalancedWeightApproximator</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (5/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (14/16)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.weighting;
+&nbsp;
+&nbsp;/**
+&nbsp; * Turns an unidirectional weight Approximation into a bidirectional balanced one.
+&nbsp; * This means it can be used with an A* implementation that uses the stopping criterion
+&nbsp; * described in [1].
+&nbsp; *
+&nbsp; * Note: In the paper, it is called a consistent (rather than balanced)
+&nbsp; * approximator, but as noted in [2], consistent also means a different property which
+&nbsp; * an approximator must already have before it should be plugged into this class (!).
+&nbsp; *
+&nbsp; * Most literature uses balanced for the property that this class is about.
+&nbsp; *
+&nbsp; * &lt;p&gt;
+&nbsp; * [1] Ikeda, T., Hsu, M.-Y., Imai, H., Nishimura, S., Shimoura, H., Hashimoto, T., Tenmoku, K., and
+&nbsp; * Mitoh, K. (1994). A fast algorithm for finding better routes by ai search techniques. In VNIS,
+&nbsp; * pages 291–296.
+&nbsp; *
+&nbsp; * [2] Pijls, W.H.L.M, &amp;amp; Post, H. (2008). A new bidirectional algorithm for shortest paths (No. EI 2008-25).
+&nbsp; * Report / Econometric Institute, Erasmus University Rotterdam
+&nbsp; *
+&nbsp; * @author jansoe
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class BalancedWeightApproximator {
+&nbsp;
+&nbsp;    private final WeightApproximator uniDirApproximatorForward, uniDirApproximatorReverse;
+&nbsp;
+&nbsp;    // Constants to shift the estimate (reverse estimate) so that it is actually 0 at the destination (source).
+&nbsp;    double fromOffset, toOffset;
+&nbsp;
+<b class="fc">&nbsp;    public BalancedWeightApproximator(WeightApproximator weightApprox) {</b>
+<b class="pc">&nbsp;        if (weightApprox == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;WeightApproximator cannot be null&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        uniDirApproximatorForward = weightApprox;</b>
+<b class="fc">&nbsp;        uniDirApproximatorReverse = weightApprox.reverse();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public WeightApproximator getApproximation() {
+<b class="nc">&nbsp;        return uniDirApproximatorForward;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setFromTo(int from, int to) {
+<b class="fc">&nbsp;        uniDirApproximatorReverse.setTo(from);</b>
+<b class="fc">&nbsp;        uniDirApproximatorForward.setTo(to);</b>
+<b class="fc">&nbsp;        fromOffset = 0.5 * uniDirApproximatorForward.approximate(from);</b>
+<b class="fc">&nbsp;        toOffset = 0.5 * uniDirApproximatorReverse.approximate(to);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double approximate(int node, boolean reverse) {
+<b class="fc">&nbsp;        double weightApproximation = 0.5 * (uniDirApproximatorForward.approximate(node) - uniDirApproximatorReverse.approximate(node));</b>
+<b class="fc">&nbsp;        if (reverse) {</b>
+<b class="fc">&nbsp;            return fromOffset - weightApproximation;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return toOffset + weightApproximation;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getSlack() {
+<b class="fc">&nbsp;        return uniDirApproximatorForward.getSlack();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return uniDirApproximatorForward.toString();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

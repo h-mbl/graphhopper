@@ -1,0 +1,239 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SkadiProvider</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.dem</a>
+</div>
+
+<h1>Coverage Summary for Class: SkadiProvider (com.graphhopper.reader.dem)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SkadiProvider</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (6/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62.5%
+  </span>
+  <span class="absValue">
+    (5/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    34.2%
+  </span>
+  <span class="absValue">
+    (13/38)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.reader.dem;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.util.zip.GZIPInputStream;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.close;
+&nbsp;import static com.graphhopper.util.Helper.toLowerCase;
+&nbsp;
+&nbsp;/**
+&nbsp; * Skadi contains elevation data for the entire world with 1 arc second (~30m) accuracy in SRTM format stitched
+&nbsp; * together from many sources (https://github.com/tilezen/joerd/blob/master/docs/data-sources.md).
+&nbsp; *
+&nbsp; * We use the hosted AWS Open Data mirror (https://registry.opendata.aws/terrain-tiles/) by default but you can
+&nbsp; * change to any mirror by updating the base URL.
+&nbsp; *
+&nbsp; * See https://github.com/tilezen/joerd/blob/master/docs/attribution.md for required attribution of any project
+&nbsp; * using this data.
+&nbsp; *
+&nbsp; * Detailed information can be found here: https://github.com/tilezen/joerd
+&nbsp; */
+&nbsp;public class SkadiProvider extends AbstractSRTMElevationProvider {
+&nbsp;    public SkadiProvider() {
+<b class="fc">&nbsp;        this(&quot;&quot;);</b>
+&nbsp;    }
+&nbsp;    public SkadiProvider(String cacheDir) {
+<b class="fc">&nbsp;        super(</b>
+&nbsp;                &quot;https://elevation-tiles-prod.s3.amazonaws.com/skadi/&quot;,
+<b class="pc">&nbsp;                cacheDir.isEmpty()? &quot;/tmp/srtm&quot;: cacheDir,</b>
+&nbsp;                &quot;GraphHopper SRTMReader&quot;,
+&nbsp;                -90,
+&nbsp;                90,
+&nbsp;                3601
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void main(String[] args) throws IOException {
+<b class="nc">&nbsp;        SkadiProvider provider = new SkadiProvider();</b>
+&nbsp;        // 338
+<b class="nc">&nbsp;        System.out.println(provider.getEle(49.949784, 11.57517));</b>
+&nbsp;        // 468
+<b class="nc">&nbsp;        System.out.println(provider.getEle(49.968668, 11.575127));</b>
+&nbsp;        // 467
+<b class="nc">&nbsp;        System.out.println(provider.getEle(49.968682, 11.574842));</b>
+&nbsp;        // 3110
+<b class="nc">&nbsp;        System.out.println(provider.getEle(-22.532854, -65.110474));</b>
+&nbsp;        // 115
+<b class="nc">&nbsp;        System.out.println(provider.getEle(38.065392, -87.099609));</b>
+&nbsp;        // 1612
+<b class="nc">&nbsp;        System.out.println(provider.getEle(40, -105.2277023));</b>
+<b class="nc">&nbsp;        System.out.println(provider.getEle(39.99999999, -105.2277023));</b>
+<b class="nc">&nbsp;        System.out.println(provider.getEle(39.9999999, -105.2277023));</b>
+<b class="nc">&nbsp;        System.out.println(provider.getEle(39.999999, -105.2277023));</b>
+&nbsp;        // 1015
+<b class="nc">&nbsp;        System.out.println(provider.getEle(47.468668, 14.575127));</b>
+&nbsp;        // 1107
+<b class="nc">&nbsp;        System.out.println(provider.getEle(47.467753, 14.573911));</b>
+&nbsp;        // 1930
+<b class="nc">&nbsp;        System.out.println(provider.getEle(46.468835, 12.578777));</b>
+&nbsp;        // 844
+<b class="nc">&nbsp;        System.out.println(provider.getEle(48.469123, 9.576393));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    byte[] readFile(File file) throws IOException {
+<b class="nc">&nbsp;        InputStream is = new FileInputStream(file);</b>
+<b class="nc">&nbsp;        GZIPInputStream gzis = new GZIPInputStream(is);</b>
+<b class="nc">&nbsp;        BufferedInputStream buff = new BufferedInputStream(gzis);</b>
+<b class="nc">&nbsp;        ByteArrayOutputStream os = new ByteArrayOutputStream();</b>
+<b class="nc">&nbsp;        byte[] buffer = new byte[0xFFFF];</b>
+&nbsp;        int len;
+<b class="nc">&nbsp;        while ((len = buff.read(buffer)) &gt; 0) {</b>
+<b class="nc">&nbsp;            os.write(buffer, 0, len);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        os.flush();</b>
+<b class="nc">&nbsp;        close(buff);</b>
+<b class="nc">&nbsp;        return os.toByteArray();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getLatString(double lat) {
+<b class="fc">&nbsp;        int minLat = (int) Math.floor(lat);</b>
+<b class="fc">&nbsp;        return (minLat &lt; 0 ? &quot;S&quot; : &quot;N&quot;) + getPaddedLatString(minLat);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getLonString(double lon) {
+<b class="fc">&nbsp;        int minLon = (int) Math.floor(lon);</b>
+<b class="fc">&nbsp;        return (minLon &lt; 0 ? &quot;W&quot; : &quot;E&quot;) + getPaddedLonString(minLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    String getFileName(double lat, double lon) {
+<b class="fc">&nbsp;        String latStr = getLatString(lat);</b>
+<b class="fc">&nbsp;        String lonStr = getLonString(lon);</b>
+<b class="fc">&nbsp;        return toLowerCase(latStr + lonStr);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    String getDownloadURL(double lat, double lon) {
+<b class="fc">&nbsp;        String latStr = getLatString(lat);</b>
+<b class="fc">&nbsp;        String lonStr = getLonString(lon);</b>
+&nbsp;
+<b class="fc">&nbsp;        return latStr + &quot;/&quot; + latStr + lonStr + &quot;.hgt.gz&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return &quot;skadi&quot;;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

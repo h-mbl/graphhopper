@@ -1,0 +1,240 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CalendarDate</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: CalendarDate (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CalendarDate</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CalendarDate$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import com.conveyal.gtfs.error.DuplicateKeyError;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.Serializable;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.util.Map;
+&nbsp;
+<b class="nc">&nbsp;public class CalendarDate extends Entity implements Cloneable, Serializable {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = 6936614582249119431L;
+&nbsp;    public String    service_id;
+&nbsp;    public LocalDate date;
+&nbsp;    public int       exception_type;
+&nbsp;
+&nbsp;    public CalendarDate clone () {
+&nbsp;        try {
+<b class="nc">&nbsp;            return (CalendarDate) super.clone();</b>
+<b class="nc">&nbsp;        } catch (CloneNotSupportedException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;CalendarDate&gt; {
+&nbsp;
+&nbsp;        private final Map&lt;String, Service&gt; services;
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Create a loader. The map parameter should be an in-memory map that will be modified. We can&#39;t write directly
+&nbsp;         * to MapDB because we modify services as we load calendar dates, and this creates concurrentmodificationexceptions.
+&nbsp;         */
+&nbsp;        public Loader(GTFSFeed feed, Map&lt;String, Service&gt; services) {
+<b class="nc">&nbsp;            super(feed, &quot;calendar_dates&quot;);</b>
+<b class="nc">&nbsp;            this.services = services;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+&nbsp;            /* Calendars and Fares are special: they are stored as joined tables rather than simple maps. */
+<b class="nc">&nbsp;            String service_id = getStringField(&quot;service_id&quot;, true);</b>
+<b class="nc">&nbsp;            Service service = services.computeIfAbsent(service_id, Service::new);</b>
+<b class="nc">&nbsp;            LocalDate date = getDateField(&quot;date&quot;, true);</b>
+<b class="nc">&nbsp;            if (service.calendar_dates.containsKey(date)) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new DuplicateKeyError(tableName, row, &quot;(service_id, date)&quot;));</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                CalendarDate cd = new CalendarDate();</b>
+<b class="nc">&nbsp;                cd.sourceFileLine = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;                cd.service_id = service_id;</b>
+<b class="nc">&nbsp;                cd.date = date;</b>
+<b class="nc">&nbsp;                cd.exception_type = getIntField(&quot;exception_type&quot;, true, 1, 2);</b>
+<b class="nc">&nbsp;                cd.feed = feed;</b>
+<b class="nc">&nbsp;                service.calendar_dates.put(date, cd);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

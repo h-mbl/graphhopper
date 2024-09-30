@@ -1,0 +1,169 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > RacingBikeAverageSpeedParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: RacingBikeAverageSpeedParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RacingBikeAverageSpeedParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (46/46)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;
+&nbsp;public class RacingBikeAverageSpeedParser extends BikeCommonAverageSpeedParser {
+&nbsp;
+&nbsp;    public RacingBikeAverageSpeedParser(EncodedValueLookup lookup) {
+<b class="fc">&nbsp;        this(lookup.getDecimalEncodedValue(VehicleSpeed.key(&quot;racingbike&quot;)),</b>
+<b class="fc">&nbsp;                lookup.getEnumEncodedValue(Smoothness.KEY, Smoothness.class),</b>
+<b class="fc">&nbsp;                lookup.getDecimalEncodedValue(FerrySpeed.KEY));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected RacingBikeAverageSpeedParser(DecimalEncodedValue speedEnc, EnumEncodedValue&lt;Smoothness&gt; smoothnessEnc, DecimalEncodedValue ferrySpeedEnc) {
+<b class="fc">&nbsp;        super(speedEnc, smoothnessEnc, ferrySpeedEnc);</b>
+&nbsp;
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade1&quot;, 20); // paved</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade2&quot;, 10); // now unpaved ...</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade3&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade4&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade5&quot;, PUSHING_SECTION_SPEED);</b>
+&nbsp;
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;paved&quot;, 20);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;asphalt&quot;, 20);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;concrete&quot;, 20);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;concrete:lanes&quot;, 16);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;concrete:plates&quot;, 16);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;unpaved&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;compacted&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;dirt&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;earth&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;fine_gravel&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;grass&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;grass_paver&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;gravel&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;ground&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;ice&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;metal&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;mud&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;pebblestone&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;salt&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;sand&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;wood&quot;, MIN_SPEED);</b>
+&nbsp;
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;path&quot;, 8);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;footway&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;track&quot;, MIN_SPEED); // assume unpaved</b>
+&nbsp;
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;trunk&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;trunk_link&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;primary&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;primary_link&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;secondary&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;secondary_link&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;tertiary&quot;, 20);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;tertiary_link&quot;, 20);</b>
+&nbsp;
+<b class="fc">&nbsp;        addPushingSection(&quot;path&quot;);</b>
+&nbsp;
+&nbsp;        // overwite map from BikeCommon
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(com.graphhopper.routing.ev.Smoothness.EXCELLENT, 1.2d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(com.graphhopper.routing.ev.Smoothness.VERY_BAD, 0.1);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(com.graphhopper.routing.ev.Smoothness.HORRIBLE, 0.1);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(com.graphhopper.routing.ev.Smoothness.VERY_HORRIBLE, 0.1);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

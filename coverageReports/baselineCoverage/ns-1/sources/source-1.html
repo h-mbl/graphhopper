@@ -1,0 +1,642 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GTFSFeed</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: GTFSFeed (com.conveyal.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GTFSFeed</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/98)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/189)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">GTFSFeed$FirstAndLastStopsDoNotHaveTimes</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/98)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/190)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.error.GTFSError;
+&nbsp;import com.conveyal.gtfs.error.GeneralError;
+&nbsp;import com.conveyal.gtfs.model.Calendar;
+&nbsp;import com.conveyal.gtfs.model.*;
+&nbsp;import com.google.common.collect.Iterables;
+&nbsp;import org.locationtech.jts.geom.Coordinate;
+&nbsp;import org.locationtech.jts.geom.CoordinateList;
+&nbsp;import org.locationtech.jts.geom.GeometryFactory;
+&nbsp;import org.locationtech.jts.geom.LineString;
+&nbsp;import org.mapdb.BTreeMap;
+&nbsp;import org.mapdb.DB;
+&nbsp;import org.mapdb.DBMaker;
+&nbsp;import org.mapdb.Fun;
+&nbsp;import org.mapdb.Fun.Tuple2;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.Closeable;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.format.DateTimeFormatter;
+&nbsp;import java.util.*;
+&nbsp;import java.util.concurrent.ConcurrentNavigableMap;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;import java.util.stream.StreamSupport;
+&nbsp;
+&nbsp;/**
+&nbsp; * All entities must be from a single feed namespace.
+&nbsp; * Composed of several GTFSTables.
+&nbsp; */
+&nbsp;public class GTFSFeed implements Cloneable, Closeable {
+&nbsp;
+<b class="nc">&nbsp;    private static final Logger LOG = LoggerFactory.getLogger(GTFSFeed.class);</b>
+&nbsp;
+&nbsp;    public static final double METERS_PER_DEGREE_LATITUDE = 111111.111;
+&nbsp;
+&nbsp;    private DB db;
+&nbsp;
+<b class="nc">&nbsp;    public String feedId = null;</b>
+&nbsp;
+&nbsp;    public final Map&lt;String, Agency&gt; agency;
+&nbsp;    public final Map&lt;String, FeedInfo&gt; feedInfo;
+&nbsp;    // This is how you do a multimap in mapdb: https://github.com/jankotek/MapDB/blob/release-1.0/src/test/java/examples/MultiMap.java
+&nbsp;    public final NavigableSet&lt;Tuple2&lt;String, Frequency&gt;&gt; frequencies;
+&nbsp;    public final Map&lt;String, Route&gt; routes;
+&nbsp;    public final Map&lt;String, Stop&gt; stops;
+&nbsp;    public final Map&lt;String, Transfer&gt; transfers;
+&nbsp;    public final BTreeMap&lt;String, Trip&gt; trips;
+&nbsp;
+&nbsp;    /** CRC32 of the GTFS file this was loaded from */
+&nbsp;    public long checksum;
+&nbsp;
+&nbsp;    /* Map from 2-tuples of (shape_id, shape_pt_sequence) to shape points */
+&nbsp;    public final ConcurrentNavigableMap&lt;Tuple2&lt;String, Integer&gt;, ShapePoint&gt; shape_points;
+&nbsp;
+&nbsp;    /* Map from 2-tuples of (trip_id, stop_sequence) to stoptimes. */
+&nbsp;    public final BTreeMap&lt;Tuple2, StopTime&gt; stop_times;
+&nbsp;
+&nbsp;    /* A fare is a fare_attribute and all fare_rules that reference that fare_attribute. */
+&nbsp;    public final Map&lt;String, Fare&gt; fares;
+&nbsp;
+&nbsp;    /* A service is a calendar entry and all calendar_dates that modify that calendar entry. */
+&nbsp;    public final BTreeMap&lt;String, Service&gt; services;
+&nbsp;
+&nbsp;    /* A place to accumulate errors while the feed is loaded. Tolerate as many errors as possible and keep on loading. */
+&nbsp;    public final NavigableSet&lt;GTFSError&gt; errors;
+&nbsp;
+&nbsp;    /* Create geometry factory to produce LineString geometries. */
+<b class="nc">&nbsp;    private GeometryFactory gf = new GeometryFactory();</b>
+&nbsp;
+<b class="nc">&nbsp;    private boolean loaded = false;</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The order in which we load the tables is important for two reasons.
+&nbsp;     * 1. We must load feed_info first so we know the feed ID before loading any other entities. This could be relaxed
+&nbsp;     * by having entities point to the feed object rather than its ID String.
+&nbsp;     * 2. Referenced entities must be loaded before any entities that reference them. This is because we check
+&nbsp;     * referential integrity while the files are being loaded. This is done on the fly during loading because it allows
+&nbsp;     * us to associate a line number with errors in objects that don&#39;t have any other clear identifier.
+&nbsp;     *
+&nbsp;     * Interestingly, all references are resolvable when tables are loaded in alphabetical order.
+&nbsp;     */
+&nbsp;    public void loadFromZipfileOrDirectory(File zip, String fid) throws IOException {
+<b class="nc">&nbsp;        if (this.loaded) throw new UnsupportedOperationException(&quot;Attempt to load GTFS into existing database&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        new FeedInfo.Loader(this).loadTable(zip);</b>
+&nbsp;        // maybe we should just point to the feed object itself instead of its ID, and null out its stoptimes map after loading
+<b class="nc">&nbsp;        if (fid != null) {</b>
+<b class="nc">&nbsp;            feedId = fid;</b>
+<b class="nc">&nbsp;            LOG.info(&quot;Feed ID is undefined, pester maintainers to include a feed ID. Using file name {}.&quot;, feedId); // TODO log an error, ideally feeds should include a feedID</b>
+&nbsp;        }
+<b class="nc">&nbsp;        else if (feedId == null || feedId.isEmpty()) {</b>
+<b class="nc">&nbsp;            feedId = new File(zip.getName()).getName().replaceAll(&quot;\\.zip$&quot;, &quot;&quot;);</b>
+<b class="nc">&nbsp;            LOG.info(&quot;Feed ID is undefined, pester maintainers to include a feed ID. Using file name {}.&quot;, feedId); // TODO log an error, ideally feeds should include a feedID</b>
+&nbsp;        }
+&nbsp;        else {
+<b class="nc">&nbsp;            LOG.info(&quot;Feed ID is &#39;{}&#39;.&quot;, feedId);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        db.getAtomicString(&quot;feed_id&quot;).set(feedId);</b>
+&nbsp;
+<b class="nc">&nbsp;        new Agency.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        if (agency.isEmpty()) {</b>
+<b class="nc">&nbsp;            errors.add(new GeneralError(&quot;agency&quot;, 0, &quot;agency_id&quot;, &quot;Need at least one agency.&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // calendars and calendar dates are joined into services. This means a lot of manipulating service objects as
+&nbsp;        // they are loaded; since mapdb keys/values are immutable, load them in memory then copy them to MapDB once
+&nbsp;        // we&#39;re done loading them
+<b class="nc">&nbsp;        Map&lt;String, Service&gt; serviceTable = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        new Calendar.Loader(this, serviceTable).loadTable(zip);</b>
+<b class="nc">&nbsp;        new CalendarDate.Loader(this, serviceTable).loadTable(zip);</b>
+<b class="nc">&nbsp;        this.services.putAll(serviceTable);</b>
+<b class="nc">&nbsp;        serviceTable = null; // free memory</b>
+&nbsp;
+&nbsp;        // Same deal
+<b class="nc">&nbsp;        Map&lt;String, Fare&gt; fares = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        new FareAttribute.Loader(this, fares).loadTable(zip);</b>
+<b class="nc">&nbsp;        new FareRule.Loader(this, fares).loadTable(zip);</b>
+<b class="nc">&nbsp;        this.fares.putAll(fares);</b>
+<b class="nc">&nbsp;        fares = null; // free memory</b>
+&nbsp;
+<b class="nc">&nbsp;        new Route.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        new ShapePoint.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        new Stop.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        new Transfer.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        new Trip.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        new Frequency.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        new StopTime.Loader(this).loadTable(zip);</b>
+<b class="nc">&nbsp;        loaded = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void loadFromFileAndLogErrors(File zip) throws IOException {
+<b class="nc">&nbsp;        loadFromZipfileOrDirectory(zip, null);</b>
+<b class="nc">&nbsp;        for (GTFSError error : errors) {</b>
+<b class="nc">&nbsp;            LOG.error(error.getMessageWithContext());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean hasFeedInfo () {
+<b class="nc">&nbsp;        return !this.feedInfo.isEmpty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public FeedInfo getFeedInfo () {
+<b class="nc">&nbsp;        return this.hasFeedInfo() ? this.feedInfo.values().iterator().next() : null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * For the given trip ID, fetch all the stop times in order of increasing stop_sequence.
+&nbsp;     * This is an efficient iteration over a tree map.
+&nbsp;     */
+&nbsp;    public Iterable&lt;StopTime&gt; getOrderedStopTimesForTrip (String trip_id) {
+<b class="nc">&nbsp;        Map&lt;Fun.Tuple2, StopTime&gt; tripStopTimes =</b>
+<b class="nc">&nbsp;                stop_times.subMap(</b>
+<b class="nc">&nbsp;                        Fun.t2(trip_id, null),</b>
+<b class="nc">&nbsp;                        Fun.t2(trip_id, Fun.HI)</b>
+&nbsp;                );
+<b class="nc">&nbsp;        return tripStopTimes.values();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Get the shape for the given shape ID */
+&nbsp;    public Shape getShape (String shape_id) {
+<b class="nc">&nbsp;        Shape shape = new Shape(this, shape_id);</b>
+<b class="nc">&nbsp;        return shape.shape_dist_traveled.length &gt; 0 ? shape : null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * For the given trip ID, fetch all the stop times in order, and interpolate stop-to-stop travel times.
+&nbsp;     */
+&nbsp;    public Iterable&lt;StopTime&gt; getInterpolatedStopTimesForTrip (String trip_id) throws FirstAndLastStopsDoNotHaveTimes {
+&nbsp;        // clone stop times so as not to modify base GTFS structures
+<b class="nc">&nbsp;        StopTime[] stopTimes = StreamSupport.stream(getOrderedStopTimesForTrip(trip_id).spliterator(), false)</b>
+<b class="nc">&nbsp;                .map(st -&gt; st.clone())</b>
+<b class="nc">&nbsp;                .toArray(i -&gt; new StopTime[i]);</b>
+&nbsp;
+&nbsp;        // avoid having to make sure that the array has length below.
+<b class="nc">&nbsp;        if (stopTimes.length == 0) return Collections.emptyList();</b>
+&nbsp;
+&nbsp;        // first pass: set all partially filled stop times
+<b class="nc">&nbsp;        for (StopTime st : stopTimes) {</b>
+<b class="nc">&nbsp;            if (st.arrival_time != Entity.INT_MISSING &amp;&amp; st.departure_time == Entity.INT_MISSING) {</b>
+<b class="nc">&nbsp;                st.departure_time = st.arrival_time;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (st.arrival_time == Entity.INT_MISSING &amp;&amp; st.departure_time != Entity.INT_MISSING) {</b>
+<b class="nc">&nbsp;                st.arrival_time = st.departure_time;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // quick check: ensure that first and last stops have times.
+&nbsp;        // technically GTFS requires that both arrival_time and departure_time be filled at both the first and last stop,
+&nbsp;        // but we are slightly more lenient and only insist that one of them be filled at both the first and last stop.
+&nbsp;        // The meaning of the first stop&#39;s arrival time is unclear, and same for the last stop&#39;s departure time (except
+&nbsp;        // in the case of interlining).
+&nbsp;
+&nbsp;        // it&#39;s fine to just check departure time, as the above pass ensures that all stop times have either both
+&nbsp;        // arrival and departure times, or neither
+<b class="nc">&nbsp;        if (stopTimes[0].departure_time == Entity.INT_MISSING || stopTimes[stopTimes.length - 1].departure_time == Entity.INT_MISSING) {</b>
+<b class="nc">&nbsp;            throw new FirstAndLastStopsDoNotHaveTimes();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // second pass: fill complete stop times
+<b class="nc">&nbsp;        int startOfInterpolatedBlock = -1;</b>
+<b class="nc">&nbsp;        for (int stopTime = 0; stopTime &lt; stopTimes.length; stopTime++) {</b>
+&nbsp;
+<b class="nc">&nbsp;            if (stopTimes[stopTime].departure_time == Entity.INT_MISSING &amp;&amp; startOfInterpolatedBlock == -1) {</b>
+<b class="nc">&nbsp;                startOfInterpolatedBlock = stopTime;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            else if (stopTimes[stopTime].departure_time != Entity.INT_MISSING &amp;&amp; startOfInterpolatedBlock != -1) {</b>
+&nbsp;                // we have found the end of the interpolated section
+<b class="nc">&nbsp;                int nInterpolatedStops = stopTime - startOfInterpolatedBlock;</b>
+<b class="nc">&nbsp;                double totalLengthOfInterpolatedSection = 0;</b>
+<b class="nc">&nbsp;                double[] lengthOfInterpolatedSections = new double[nInterpolatedStops];</b>
+&nbsp;
+<b class="nc">&nbsp;                for (int stopTimeToInterpolate = startOfInterpolatedBlock, i = 0; stopTimeToInterpolate &lt; stopTime; stopTimeToInterpolate++, i++) {</b>
+<b class="nc">&nbsp;                    Stop start = stops.get(stopTimes[stopTimeToInterpolate - 1].stop_id);</b>
+<b class="nc">&nbsp;                    Stop end = stops.get(stopTimes[stopTimeToInterpolate].stop_id);</b>
+<b class="nc">&nbsp;                    double segLen = fastDistance(start.stop_lat, start.stop_lon, end.stop_lat, end.stop_lon);</b>
+<b class="nc">&nbsp;                    totalLengthOfInterpolatedSection += segLen;</b>
+<b class="nc">&nbsp;                    lengthOfInterpolatedSections[i] = segLen;</b>
+&nbsp;                }
+&nbsp;
+&nbsp;                // add the segment post-last-interpolated-stop
+<b class="nc">&nbsp;                Stop start = stops.get(stopTimes[stopTime - 1].stop_id);</b>
+<b class="nc">&nbsp;                Stop end = stops.get(stopTimes[stopTime].stop_id);</b>
+<b class="nc">&nbsp;                totalLengthOfInterpolatedSection += fastDistance(start.stop_lat, start.stop_lon, end.stop_lat, end.stop_lon);</b>
+&nbsp;
+<b class="nc">&nbsp;                int departureBeforeInterpolation = stopTimes[startOfInterpolatedBlock - 1].departure_time;</b>
+<b class="nc">&nbsp;                int arrivalAfterInterpolation = stopTimes[stopTime].arrival_time;</b>
+<b class="nc">&nbsp;                int totalTime = arrivalAfterInterpolation - departureBeforeInterpolation;</b>
+&nbsp;
+<b class="nc">&nbsp;                double lengthSoFar = 0;</b>
+<b class="nc">&nbsp;                for (int stopTimeToInterpolate = startOfInterpolatedBlock, i = 0; stopTimeToInterpolate &lt; stopTime; stopTimeToInterpolate++, i++) {</b>
+<b class="nc">&nbsp;                    lengthSoFar += lengthOfInterpolatedSections[i];</b>
+&nbsp;
+<b class="nc">&nbsp;                    int time = (int) (departureBeforeInterpolation + totalTime * (lengthSoFar / totalLengthOfInterpolatedSection));</b>
+<b class="nc">&nbsp;                    stopTimes[stopTimeToInterpolate].arrival_time = stopTimes[stopTimeToInterpolate].departure_time = time;</b>
+&nbsp;                }
+&nbsp;
+&nbsp;                // we&#39;re done with this block
+<b class="nc">&nbsp;                startOfInterpolatedBlock = -1;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return Arrays.asList(stopTimes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return Equirectangular approximation to distance.
+&nbsp;     */
+&nbsp;    public static double fastDistance (double lat0, double lon0, double lat1, double lon1) {
+<b class="nc">&nbsp;        double midLat = (lat0 + lat1) / 2;</b>
+<b class="nc">&nbsp;        double xscale = Math.cos(Math.toRadians(midLat));</b>
+<b class="nc">&nbsp;        double dx = xscale * (lon1 - lon0);</b>
+<b class="nc">&nbsp;        double dy = (lat1 - lat0);</b>
+<b class="nc">&nbsp;        return Math.sqrt(dx * dx + dy * dy) * METERS_PER_DEGREE_LATITUDE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Collection&lt;Frequency&gt; getFrequencies (String trip_id) {
+&nbsp;        // IntelliJ tells me all these casts are unnecessary, and that&#39;s also my feeling, but the code won&#39;t compile
+&nbsp;        // without them
+<b class="nc">&nbsp;        return (List&lt;Frequency&gt;) frequencies.subSet(new Fun.Tuple2(trip_id, null), new Fun.Tuple2(trip_id, Fun.HI)).stream()</b>
+<b class="nc">&nbsp;                .map(t2 -&gt; ((Tuple2&lt;String, Frequency&gt;) t2).b)</b>
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LineString getStraightLineForStops(String trip_id) {
+<b class="nc">&nbsp;        CoordinateList coordinates = new CoordinateList();</b>
+<b class="nc">&nbsp;        LineString ls = null;</b>
+<b class="nc">&nbsp;        Trip trip = trips.get(trip_id);</b>
+&nbsp;
+&nbsp;        Iterable&lt;StopTime&gt; stopTimes;
+<b class="nc">&nbsp;        stopTimes = getOrderedStopTimesForTrip(trip.trip_id);</b>
+<b class="nc">&nbsp;        if (Iterables.size(stopTimes) &gt; 1) {</b>
+<b class="nc">&nbsp;            for (StopTime stopTime : stopTimes) {</b>
+<b class="nc">&nbsp;                Stop stop = stops.get(stopTime.stop_id);</b>
+<b class="nc">&nbsp;                Double lat = stop.stop_lat;</b>
+<b class="nc">&nbsp;                Double lon = stop.stop_lon;</b>
+<b class="nc">&nbsp;                coordinates.add(new Coordinate(lon, lat));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            ls = gf.createLineString(coordinates.toCoordinateArray());</b>
+&nbsp;        }
+&nbsp;        // set ls equal to null if there is only one stopTime to avoid an exception when creating linestring
+&nbsp;        else{
+<b class="nc">&nbsp;            ls = null;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ls;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns a trip geometry object (LineString) for a given trip id.
+&nbsp;     * If the trip has a shape reference, this will be used for the geometry.
+&nbsp;     * Otherwise, the ordered stoptimes will be used.
+&nbsp;     *
+&nbsp;     * @param   trip_id   trip id of desired trip geometry
+&nbsp;     * @return          the LineString representing the trip geometry.
+&nbsp;     * @see             LineString
+&nbsp;     */
+&nbsp;    public LineString getTripGeometry(String trip_id){
+&nbsp;
+<b class="nc">&nbsp;        CoordinateList coordinates = new CoordinateList();</b>
+<b class="nc">&nbsp;        LineString ls = null;</b>
+<b class="nc">&nbsp;        Trip trip = trips.get(trip_id);</b>
+&nbsp;
+&nbsp;        // If trip has shape_id, use it to generate geometry.
+<b class="nc">&nbsp;        if (trip.shape_id != null) {</b>
+<b class="nc">&nbsp;            Shape shape = getShape(trip.shape_id);</b>
+<b class="nc">&nbsp;            if (shape != null) ls = shape.geometry;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Use the ordered stoptimes.
+<b class="nc">&nbsp;        if (ls == null) {</b>
+<b class="nc">&nbsp;            ls = getStraightLineForStops(trip_id);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return ls;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Cloning can be useful when you want to make only a few modifications to an existing feed.
+&nbsp;     * Keep in mind that this is a shallow copy, so you&#39;ll have to create new maps in the clone for tables you want
+&nbsp;     * to modify.
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public GTFSFeed clone() {
+&nbsp;        try {
+<b class="nc">&nbsp;            return (GTFSFeed) super.clone();</b>
+<b class="nc">&nbsp;        } catch (CloneNotSupportedException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close () {
+<b class="nc">&nbsp;        db.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Thrown when we cannot interpolate stop times because the first or last stops do not have times */
+<b class="nc">&nbsp;    public class FirstAndLastStopsDoNotHaveTimes extends RuntimeException {</b>
+&nbsp;        /** do nothing */
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Create a GTFS feed in a temp file */
+&nbsp;    public GTFSFeed () {
+<b class="nc">&nbsp;        this(DBMaker.newTempFileDB()</b>
+<b class="nc">&nbsp;                .transactionDisable()</b>
+<b class="nc">&nbsp;                .mmapFileEnable()</b>
+<b class="nc">&nbsp;                .asyncWriteEnable()</b>
+<b class="nc">&nbsp;                .deleteFilesAfterClose()</b>
+<b class="nc">&nbsp;                .closeOnJvmShutdown()</b>
+<b class="nc">&nbsp;                .compressionEnable()</b>
+<b class="nc">&nbsp;                .make());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Create a GTFS feed connected to a particular DB, which will be created if it does not exist. */
+&nbsp;    public GTFSFeed(File file) {
+<b class="nc">&nbsp;        this(constructDB(file));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static DB constructDB(File file) {
+<b class="nc">&nbsp;        DBMaker&lt;?&gt; dbMaker = DBMaker.newFileDB(file)</b>
+<b class="nc">&nbsp;                .transactionDisable()</b>
+<b class="nc">&nbsp;                .mmapFileEnable()</b>
+<b class="nc">&nbsp;                .asyncWriteEnable()</b>
+<b class="nc">&nbsp;                .compressionEnable();</b>
+<b class="nc">&nbsp;        if (file.exists()) {</b>
+<b class="nc">&nbsp;            dbMaker.readOnly();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return dbMaker.make();</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private GTFSFeed (DB db) {</b>
+<b class="nc">&nbsp;        this.db = db;</b>
+<b class="nc">&nbsp;        agency = db.getTreeMap(&quot;agency&quot;);</b>
+<b class="nc">&nbsp;        feedInfo = db.getTreeMap(&quot;feed_info&quot;);</b>
+<b class="nc">&nbsp;        routes = db.getTreeMap(&quot;routes&quot;);</b>
+<b class="nc">&nbsp;        trips = db.getTreeMap(&quot;trips&quot;);</b>
+<b class="nc">&nbsp;        stop_times = db.getTreeMap(&quot;stop_times&quot;);</b>
+<b class="nc">&nbsp;        frequencies = db.getTreeSet(&quot;frequencies&quot;);</b>
+<b class="nc">&nbsp;        transfers = db.getTreeMap(&quot;transfers&quot;);</b>
+<b class="nc">&nbsp;        stops = db.getTreeMap(&quot;stops&quot;);</b>
+<b class="nc">&nbsp;        fares = db.getTreeMap(&quot;fares&quot;);</b>
+<b class="nc">&nbsp;        services = db.getTreeMap(&quot;services&quot;);</b>
+<b class="nc">&nbsp;        shape_points = db.getTreeMap(&quot;shape_points&quot;);</b>
+<b class="nc">&nbsp;        feedId = db.getAtomicString(&quot;feed_id&quot;).get();</b>
+<b class="nc">&nbsp;        errors = db.getTreeSet(&quot;errors&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LocalDate getStartDate() {
+<b class="nc">&nbsp;        LocalDate startDate = getCalendarServiceRangeStart();</b>
+<b class="nc">&nbsp;        if (startDate == null) startDate = getCalendarDateStart();</b>
+&nbsp;
+<b class="nc">&nbsp;        return startDate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LocalDate getCalendarServiceRangeStart() {
+&nbsp;
+<b class="nc">&nbsp;        int startDate = 0;</b>
+<b class="nc">&nbsp;        for (Service service : services.values()) {</b>
+<b class="nc">&nbsp;            if (service.calendar == null)</b>
+&nbsp;                continue;
+<b class="nc">&nbsp;            if (startDate == 0 || service.calendar.start_date &lt; startDate) {</b>
+<b class="nc">&nbsp;                startDate = service.calendar.start_date;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        if (startDate == 0)</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;
+<b class="nc">&nbsp;        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyyMMdd&quot;, Locale.getDefault());</b>
+<b class="nc">&nbsp;        return LocalDate.parse(String.valueOf(startDate), formatter);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public LocalDate getCalendarDateStart() {
+<b class="nc">&nbsp;        LocalDate startDate = null;</b>
+<b class="nc">&nbsp;        for (Service service : services.values()) {</b>
+<b class="nc">&nbsp;            for (LocalDate date : service.calendar_dates.keySet()) {</b>
+<b class="nc">&nbsp;                if (startDate == null</b>
+<b class="nc">&nbsp;                        || date.isBefore(startDate))</b>
+<b class="nc">&nbsp;                    startDate = date;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return startDate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LocalDate getCalendarServiceRangeEnd() {
+&nbsp;
+<b class="nc">&nbsp;        int endDate = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Service service : services.values()) {</b>
+<b class="nc">&nbsp;            if (service.calendar == null)</b>
+&nbsp;                continue;
+&nbsp;
+<b class="nc">&nbsp;            if (endDate == 0 || service.calendar.end_date &gt; endDate) {</b>
+<b class="nc">&nbsp;                endDate = service.calendar.end_date;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        if (endDate == 0)</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;
+<b class="nc">&nbsp;        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyyMMdd&quot;, Locale.getDefault());</b>
+<b class="nc">&nbsp;        return LocalDate.parse(String.valueOf(endDate), formatter);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LocalDate getEndDate() {
+<b class="nc">&nbsp;        LocalDate endDate = getCalendarServiceRangeEnd();</b>
+<b class="nc">&nbsp;        if (endDate == null) endDate = getCalendarDateEnd();</b>
+&nbsp;
+<b class="nc">&nbsp;        return endDate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LocalDate getCalendarDateEnd() {
+<b class="nc">&nbsp;        LocalDate endDate = null;</b>
+<b class="nc">&nbsp;        for (Service service : services.values()) {</b>
+<b class="nc">&nbsp;            for (LocalDate date : service.calendar_dates.keySet()) {</b>
+<b class="nc">&nbsp;                if (endDate == null</b>
+<b class="nc">&nbsp;                        || date.isAfter(endDate))</b>
+<b class="nc">&nbsp;                    endDate = date;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return endDate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

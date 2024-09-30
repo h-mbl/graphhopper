@@ -1,0 +1,841 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PtGraph</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: PtGraph (com.graphhopper.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PtGraph</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/42)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/242)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PtGraph$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">PtGraph$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">PtGraph$3</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">PtGraph$PtEdge</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/56)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/72)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/280)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.gtfs;
+&nbsp;
+&nbsp;import com.google.transit.realtime.GtfsRealtime;
+&nbsp;import com.graphhopper.storage.DataAccess;
+&nbsp;import com.graphhopper.storage.Directory;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.Consumer;
+&nbsp;
+&nbsp;import static com.graphhopper.gtfs.GtfsStorage.EdgeType.BOARD;
+&nbsp;
+<b class="nc">&nbsp;public class PtGraph implements GtfsReader.PtGraphOut {</b>
+&nbsp;
+&nbsp;    // nodes
+&nbsp;    private final DataAccess nodes;
+&nbsp;    private final int nodeEntryBytes;
+&nbsp;    private final Directory dir;
+&nbsp;    private int nodeCount;
+&nbsp;
+&nbsp;    // edges
+&nbsp;    private final DataAccess edges;
+&nbsp;    private final int E_NODEA, E_NODEB, E_LINKA, E_LINKB, E_ATTRS;
+&nbsp;    private final int edgeEntryBytes;
+&nbsp;    private int edgeCount;
+&nbsp;
+&nbsp;    private final DataAccess attrs;
+<b class="nc">&nbsp;    private final static GtfsStorage.EdgeType[] edgeTypeValues = GtfsStorage.EdgeType.values();</b>
+&nbsp;
+<b class="nc">&nbsp;    public PtGraph(Directory dir, int firstNode) {</b>
+<b class="nc">&nbsp;        this.dir = dir;</b>
+<b class="nc">&nbsp;        nextNode = firstNode;</b>
+<b class="nc">&nbsp;        nodes = dir.create(&quot;pt_nodes&quot;, dir.getDefaultType(&quot;pt_nodes&quot;, true), -1);</b>
+<b class="nc">&nbsp;        edges = dir.create(&quot;pt_edges&quot;, dir.getDefaultType(&quot;pt_edges&quot;, true), -1);</b>
+<b class="nc">&nbsp;        attrs = dir.create(&quot;pt_edge_attrs&quot;, dir.getDefaultType(&quot;pt_edge_attrs&quot;, true), -1);</b>
+&nbsp;
+<b class="nc">&nbsp;        nodeEntryBytes = 8;</b>
+&nbsp;
+&nbsp;        // memory layout for edges
+<b class="nc">&nbsp;        E_NODEA = 0;</b>
+<b class="nc">&nbsp;        E_NODEB = 4;</b>
+<b class="nc">&nbsp;        E_LINKA = 8;</b>
+<b class="nc">&nbsp;        E_LINKB = 12;</b>
+<b class="nc">&nbsp;        E_ATTRS = 16;</b>
+<b class="nc">&nbsp;        edgeEntryBytes = E_ATTRS + 8;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void create(long initSize) {
+<b class="nc">&nbsp;        nodes.create(initSize);</b>
+<b class="nc">&nbsp;        edges.create(initSize);</b>
+<b class="nc">&nbsp;        attrs.create(initSize);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean loadExisting() {
+<b class="nc">&nbsp;        if (!nodes.loadExisting() || !edges.loadExisting() || !attrs.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        nodeCount = nodes.getHeader(2 * 4);</b>
+<b class="nc">&nbsp;        edgeCount = edges.getHeader(2 * 4);</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            deserializeExtraStuff();</b>
+<b class="nc">&nbsp;        } catch (IOException | ClassNotFoundException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void flush() {
+<b class="nc">&nbsp;        nodes.setHeader(2 * 4, nodeCount);</b>
+<b class="nc">&nbsp;        edges.setHeader(2 * 4, edgeCount);</b>
+&nbsp;
+<b class="nc">&nbsp;        edges.flush();</b>
+<b class="nc">&nbsp;        nodes.flush();</b>
+<b class="nc">&nbsp;        attrs.flush();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            serializeExtraStuff();</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close() {
+<b class="nc">&nbsp;        edges.close();</b>
+<b class="nc">&nbsp;        nodes.close();</b>
+<b class="nc">&nbsp;        attrs.flush();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNodeCount() {
+<b class="nc">&nbsp;        return nodeCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEdgeCount() {
+<b class="nc">&nbsp;        return edgeCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isClosed() {
+<b class="nc">&nbsp;        assert nodes.isClosed() == edges.isClosed();</b>
+<b class="nc">&nbsp;        return nodes.isClosed();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int addEdge(int nodeA, int nodeB, long attrPointer) {
+<b class="nc">&nbsp;        if (edgeCount == Integer.MAX_VALUE)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Maximum edge count exceeded: &quot; + edgeCount);</b>
+<b class="nc">&nbsp;        ensureNodeCapacity(Math.max(nodeA, nodeB));</b>
+<b class="nc">&nbsp;        final int edge = edgeCount;</b>
+<b class="nc">&nbsp;        final long edgePointer = (long) edgeCount * edgeEntryBytes;</b>
+<b class="nc">&nbsp;        edgeCount++;</b>
+<b class="nc">&nbsp;        edges.ensureCapacity((long) edgeCount * edgeEntryBytes);</b>
+&nbsp;
+<b class="nc">&nbsp;        setNodeA(edgePointer, nodeA);</b>
+<b class="nc">&nbsp;        setNodeB(edgePointer, nodeB);</b>
+<b class="nc">&nbsp;        setAttrPointer(edgePointer, attrPointer);</b>
+&nbsp;        // we keep a linked list of edges at each node. here we prepend the new edge at the already existing linked
+&nbsp;        // list of edges.
+<b class="nc">&nbsp;        long nodePointerA = toNodePointer(nodeA);</b>
+<b class="nc">&nbsp;        int edgeRefA = getEdgeRefOut(nodePointerA);</b>
+<b class="nc">&nbsp;        setLinkA(edgePointer, edgeRefA &gt;= 0 ? edgeRefA : -1);</b>
+<b class="nc">&nbsp;        setEdgeRefOut(nodePointerA, edge);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (nodeA != nodeB) {</b>
+<b class="nc">&nbsp;            long nodePointerB = toNodePointer(nodeB);</b>
+<b class="nc">&nbsp;            int edgeRefB = getEdgeRefIn(nodePointerB);</b>
+<b class="nc">&nbsp;            setLinkB(edgePointer, EdgeIterator.Edge.isValid(edgeRefB) ? edgeRefB : -1);</b>
+<b class="nc">&nbsp;            setEdgeRefIn(nodePointerB, edge);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void ensureNodeCapacity(int node) {
+<b class="nc">&nbsp;        if (node &lt; nodeCount)</b>
+&nbsp;            return;
+&nbsp;
+<b class="nc">&nbsp;        int oldNodes = nodeCount;</b>
+<b class="nc">&nbsp;        nodeCount = node + 1;</b>
+<b class="nc">&nbsp;        nodes.ensureCapacity((long) nodeCount * nodeEntryBytes);</b>
+<b class="nc">&nbsp;        for (int n = oldNodes; n &lt; nodeCount; ++n) {</b>
+<b class="nc">&nbsp;            setEdgeRefOut(toNodePointer(n), -1);</b>
+<b class="nc">&nbsp;            setEdgeRefIn(toNodePointer(n), -1);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public long toNodePointer(int node) {
+<b class="nc">&nbsp;        if (node &lt; 0 || node &gt;= nodeCount)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;node: &quot; + node + &quot; out of bounds [0,&quot; + nodeCount + &quot;[&quot;);</b>
+<b class="nc">&nbsp;        return (long) node * nodeEntryBytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long toEdgePointer(int edge) {
+<b class="nc">&nbsp;        if (edge &lt; 0 || edge &gt;= edgeCount)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;edge: &quot; + edge + &quot; out of bounds [0,&quot; + edgeCount + &quot;[&quot;);</b>
+<b class="nc">&nbsp;        return (long) edge * edgeEntryBytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setNodeA(long edgePointer, int nodeA) {
+<b class="nc">&nbsp;        edges.setInt(edgePointer + E_NODEA, nodeA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setAttrPointer(long edgePointer, long attrPointer) {
+<b class="nc">&nbsp;        edges.setInt(edgePointer + E_ATTRS, getIntLow(attrPointer));</b>
+<b class="nc">&nbsp;        edges.setInt(edgePointer + E_ATTRS + 4, getIntHigh(attrPointer));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long getAttrPointer(long edgePointer) {
+<b class="nc">&nbsp;        return combineIntsToLong(</b>
+<b class="nc">&nbsp;                edges.getInt(edgePointer + E_ATTRS),</b>
+<b class="nc">&nbsp;                edges.getInt(edgePointer + E_ATTRS + 4));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    final int getIntLow(long longValue) {
+<b class="nc">&nbsp;        return (int) (longValue &amp; 0xFFFFFFFFL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    final int getIntHigh(long longValue) {
+<b class="nc">&nbsp;        return (int) (longValue &gt;&gt; 32);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    final long combineIntsToLong(int intLow, int intHigh) {
+<b class="nc">&nbsp;        return ((long) intHigh &lt;&lt; 32) | (intLow &amp; 0xFFFFFFFFL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public void setNodeB(long edgePointer, int nodeB) {
+<b class="nc">&nbsp;        edges.setInt(edgePointer + E_NODEB, nodeB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLinkA(long edgePointer, int linkA) {
+<b class="nc">&nbsp;        edges.setInt(edgePointer + E_LINKA, linkA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLinkB(long edgePointer, int linkB) {
+<b class="nc">&nbsp;        edges.setInt(edgePointer + E_LINKB, linkB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNodeA(long edgePointer) {
+<b class="nc">&nbsp;        return edges.getInt(edgePointer + E_NODEA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNodeB(long edgePointer) {
+<b class="nc">&nbsp;        return edges.getInt(edgePointer + E_NODEB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getLinkA(long edgePointer) {
+<b class="nc">&nbsp;        return edges.getInt(edgePointer + E_LINKA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getLinkB(long edgePointer) {
+<b class="nc">&nbsp;        return edges.getInt(edgePointer + E_LINKB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setEdgeRefOut(long nodePointer, int edgeRef) {
+<b class="nc">&nbsp;        nodes.setInt(nodePointer, edgeRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setEdgeRefIn(long nodePointer, int edgeRef) {
+<b class="nc">&nbsp;        nodes.setInt(nodePointer + 4, edgeRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEdgeRefOut(long nodePointer) {
+<b class="nc">&nbsp;        return nodes.getInt(nodePointer);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEdgeRefIn(long nodePointer) {
+<b class="nc">&nbsp;        return nodes.getInt(nodePointer + 4);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    int nextNode = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;    long currentPointer = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;    Map&lt;GtfsStorage.Validity, Integer&gt; validities = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    List&lt;GtfsStorage.Validity&gt; validityList = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;    Map&lt;GtfsStorage.PlatformDescriptor, Integer&gt; platformDescriptors = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    List&lt;GtfsStorage.PlatformDescriptor&gt; platformDescriptorList = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;    Map&lt;GtfsRealtime.TripDescriptor, Integer&gt; tripDescriptors = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    List&lt;GtfsRealtime.TripDescriptor&gt; tripDescriptorList = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;    Map&lt;GtfsStorage.FeedIdWithTimezone, Integer&gt; feedIdWithTimezones = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    List&lt;GtfsStorage.FeedIdWithTimezone&gt; feedIdWithTimezoneList = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;    private void serializeExtraStuff() throws IOException {
+<b class="nc">&nbsp;        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(dir.getLocation() + &quot;/pt_extra&quot;))) {</b>
+<b class="nc">&nbsp;            os.writeObject(validityList);</b>
+<b class="nc">&nbsp;            os.writeObject(platformDescriptorList);</b>
+<b class="nc">&nbsp;            os.writeObject(tripDescriptorList);</b>
+<b class="nc">&nbsp;            os.writeObject(feedIdWithTimezoneList);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void deserializeExtraStuff() throws IOException, ClassNotFoundException {
+<b class="nc">&nbsp;        try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(dir.getLocation() + &quot;/pt_extra&quot;))) {</b>
+<b class="nc">&nbsp;            validityList = ((List&lt;GtfsStorage.Validity&gt;) is.readObject());</b>
+<b class="nc">&nbsp;            platformDescriptorList = ((List&lt;GtfsStorage.PlatformDescriptor&gt;) is.readObject());</b>
+<b class="nc">&nbsp;            tripDescriptorList = ((List&lt;GtfsRealtime.TripDescriptor&gt;) is.readObject());</b>
+<b class="nc">&nbsp;            feedIdWithTimezoneList = ((List&lt;GtfsStorage.FeedIdWithTimezone&gt;) is.readObject());</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int createEdge(int src, int dest, PtEdgeAttributes attrs) {
+<b class="nc">&nbsp;        this.attrs.ensureCapacity(currentPointer + 10000);</b>
+&nbsp;
+<b class="nc">&nbsp;        int edge = addEdge(src, dest, currentPointer);</b>
+<b class="nc">&nbsp;        this.attrs.setInt(currentPointer, attrs.type.ordinal());</b>
+<b class="nc">&nbsp;        currentPointer += 4;</b>
+<b class="nc">&nbsp;        this.attrs.setInt(currentPointer, attrs.time);</b>
+<b class="nc">&nbsp;        currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;        switch (attrs.type) {</b>
+&nbsp;            case ENTER_PT:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, attrs.route_type);</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, sharePlatformDescriptor(attrs.platformDescriptor));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case EXIT_PT:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, sharePlatformDescriptor(attrs.platformDescriptor));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case ENTER_TIME_EXPANDED_NETWORK:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, shareFeedIdWithTimezone(attrs.feedIdWithTimezone));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case LEAVE_TIME_EXPANDED_NETWORK:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, shareFeedIdWithTimezone(attrs.feedIdWithTimezone));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case BOARD:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, attrs.stop_sequence);</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, shareTripDescriptor(attrs.tripDescriptor));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, shareValidity(attrs.validity));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, attrs.transfers);</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case ALIGHT:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, attrs.stop_sequence);</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, shareTripDescriptor(attrs.tripDescriptor));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, shareValidity(attrs.validity));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case WAIT:
+&nbsp;                break;
+&nbsp;            case WAIT_ARRIVAL:
+&nbsp;                break;
+&nbsp;            case OVERNIGHT:
+&nbsp;                break;
+&nbsp;            case HOP:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, attrs.stop_sequence);</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            case DWELL:
+&nbsp;                break;
+&nbsp;            case TRANSFER:
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, attrs.route_type);</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;                this.attrs.setInt(currentPointer, sharePlatformDescriptor(attrs.platformDescriptor));</b>
+<b class="nc">&nbsp;                currentPointer += 4;</b>
+&nbsp;
+&nbsp;                break;
+&nbsp;            default:
+<b class="nc">&nbsp;                throw new RuntimeException();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int shareValidity(GtfsStorage.Validity validity) {
+<b class="nc">&nbsp;        Integer validityId = validities.get(validity);</b>
+<b class="nc">&nbsp;        if (validityId == null) {</b>
+<b class="nc">&nbsp;            validityId = validityList.size();</b>
+<b class="nc">&nbsp;            validities.put(validity, validityId);</b>
+<b class="nc">&nbsp;            validityList.add(validity);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return validityId;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int shareTripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor) {
+<b class="nc">&nbsp;        Integer tripDescriptorId = tripDescriptors.get(tripDescriptor);</b>
+<b class="nc">&nbsp;        if (tripDescriptorId == null) {</b>
+<b class="nc">&nbsp;            tripDescriptorId = tripDescriptorList.size();</b>
+<b class="nc">&nbsp;            tripDescriptors.put(tripDescriptor, tripDescriptorId);</b>
+<b class="nc">&nbsp;            tripDescriptorList.add(tripDescriptor);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return tripDescriptorId;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Integer shareFeedIdWithTimezone(GtfsStorage.FeedIdWithTimezone feedIdWithTimezone1) {
+<b class="nc">&nbsp;        Integer feedIdWithTimezone = feedIdWithTimezones.get(feedIdWithTimezone1);</b>
+<b class="nc">&nbsp;        if (feedIdWithTimezone == null) {</b>
+<b class="nc">&nbsp;            feedIdWithTimezone = feedIdWithTimezoneList.size();</b>
+<b class="nc">&nbsp;            feedIdWithTimezones.put(feedIdWithTimezone1, feedIdWithTimezone);</b>
+<b class="nc">&nbsp;            feedIdWithTimezoneList.add(feedIdWithTimezone1);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return feedIdWithTimezone;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Integer sharePlatformDescriptor(GtfsStorage.PlatformDescriptor platformDescriptor) {
+<b class="nc">&nbsp;        Integer platformDescriptorId = platformDescriptors.get(platformDescriptor);</b>
+<b class="nc">&nbsp;        if (platformDescriptorId == null) {</b>
+<b class="nc">&nbsp;            platformDescriptorId = platformDescriptorList.size();</b>
+<b class="nc">&nbsp;            platformDescriptors.put(platformDescriptor, platformDescriptorId);</b>
+<b class="nc">&nbsp;            platformDescriptorList.add(platformDescriptor);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return platformDescriptorId;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int createNode() {
+<b class="nc">&nbsp;        return nextNode++;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Iterable&lt;PtEdge&gt; edgesAround(int baseNode) {
+<b class="nc">&nbsp;        Spliterators.AbstractSpliterator&lt;PtEdge&gt; spliterator = new Spliterators.AbstractSpliterator&lt;PtEdge&gt;(0, 0) {</b>
+<b class="nc">&nbsp;            int edgeId = getEdgeRefOut(toNodePointer(baseNode));</b>
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public boolean tryAdvance(Consumer&lt;? super PtEdge&gt; action) {
+<b class="nc">&nbsp;                if (edgeId &lt; 0)</b>
+<b class="nc">&nbsp;                    return false;</b>
+&nbsp;
+<b class="nc">&nbsp;                long edgePointer = toEdgePointer(edgeId);</b>
+&nbsp;
+<b class="nc">&nbsp;                int nodeA = getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;                int nodeB = getNodeB(edgePointer);</b>
+<b class="nc">&nbsp;                PtEdgeAttributes attrs = pullAttrs(edgeId);</b>
+<b class="nc">&nbsp;                action.accept(new PtEdge(edgeId, nodeA, nodeB, attrs));</b>
+<b class="nc">&nbsp;                edgeId = getLinkA(edgePointer);</b>
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        };
+<b class="nc">&nbsp;        return () -&gt; Spliterators.iterator(spliterator);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    private PtEdgeAttributes pullAttrs(int edgeId) {
+<b class="nc">&nbsp;        long attrPointer = getAttrPointer(toEdgePointer(edgeId));</b>
+<b class="nc">&nbsp;        GtfsStorage.EdgeType type = edgeTypeValues[attrs.getInt(attrPointer)];</b>
+<b class="nc">&nbsp;        attrPointer += 4;</b>
+<b class="nc">&nbsp;        int time = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;        attrPointer += 4;</b>
+<b class="nc">&nbsp;        switch (type) {</b>
+&nbsp;            case BOARD: {
+<b class="nc">&nbsp;                int stop_sequence = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int tripDescriptor = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int validity = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int transfers = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(BOARD, time, validityList.get(validity), -1, null,</b>
+<b class="nc">&nbsp;                        transfers, stop_sequence, tripDescriptorList.get(tripDescriptor), null);</b>
+&nbsp;            }
+&nbsp;            case ALIGHT: {
+<b class="nc">&nbsp;                int stop_sequence = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int tripDescriptor = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int validity = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.ALIGHT, time, validityList.get(validity), -1, null,</b>
+<b class="nc">&nbsp;                        0, stop_sequence, tripDescriptorList.get(tripDescriptor), null);</b>
+&nbsp;            }
+&nbsp;            case ENTER_PT: {
+<b class="nc">&nbsp;                int routeType = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int platformDescriptor = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.ENTER_PT, time, null, routeType, null,</b>
+<b class="nc">&nbsp;                        0, -1, null, platformDescriptorList.get(platformDescriptor));</b>
+&nbsp;            }
+&nbsp;            case EXIT_PT: {
+<b class="nc">&nbsp;                int platformDescriptor = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.EXIT_PT, time, null, -1, null,</b>
+<b class="nc">&nbsp;                        0, -1, null, platformDescriptorList.get(platformDescriptor));</b>
+&nbsp;            }
+&nbsp;            case HOP: {
+<b class="nc">&nbsp;                int stop_sequence = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.HOP, time, null, -1, null,</b>
+&nbsp;                        0, stop_sequence, null, null);
+&nbsp;            }
+&nbsp;            case DWELL: {
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.DWELL, time, null, -1, null,</b>
+&nbsp;                        0, -1, null, null);
+&nbsp;            }
+&nbsp;            case ENTER_TIME_EXPANDED_NETWORK: {
+<b class="nc">&nbsp;                int feedId = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.ENTER_TIME_EXPANDED_NETWORK, time, null, -1, feedIdWithTimezoneList.get(feedId),</b>
+&nbsp;                        0, -1, null, null);
+&nbsp;            }
+&nbsp;            case LEAVE_TIME_EXPANDED_NETWORK: {
+<b class="nc">&nbsp;                int feedId = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.LEAVE_TIME_EXPANDED_NETWORK, time, null, -1, feedIdWithTimezoneList.get(feedId),</b>
+&nbsp;                        0, -1, null, null);
+&nbsp;            }
+&nbsp;            case WAIT: {
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.WAIT, time, null, -1, null,</b>
+&nbsp;                        0, -1, null, null);
+&nbsp;            }
+&nbsp;            case WAIT_ARRIVAL: {
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.WAIT_ARRIVAL, time, null, -1, null,</b>
+&nbsp;                        0, -1, null, null);
+&nbsp;            }
+&nbsp;            case OVERNIGHT: {
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.OVERNIGHT, time, null, -1, null,</b>
+&nbsp;                        0, -1, null, null);
+&nbsp;            }
+&nbsp;            case TRANSFER: {
+<b class="nc">&nbsp;                int routeType = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                int platformDescriptor = attrs.getInt(attrPointer);</b>
+<b class="nc">&nbsp;                attrPointer += 4;</b>
+<b class="nc">&nbsp;                return new PtEdgeAttributes(GtfsStorage.EdgeType.TRANSFER, time, null, routeType, null,</b>
+<b class="nc">&nbsp;                        0, -1, null, platformDescriptorList.get(platformDescriptor));</b>
+&nbsp;            }
+&nbsp;            default:
+<b class="nc">&nbsp;                throw new RuntimeException();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public PtEdge edge(int edgeId) {
+<b class="nc">&nbsp;        long edgePointer = toEdgePointer(edgeId);</b>
+<b class="nc">&nbsp;        int nodeA = getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;        int nodeB = getNodeB(edgePointer);</b>
+<b class="nc">&nbsp;        return new PtEdge(edgeId, nodeA, nodeB, pullAttrs(edgeId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Iterable&lt;PtEdge&gt; backEdgesAround(int adjNode) {
+<b class="nc">&nbsp;        Spliterators.AbstractSpliterator&lt;PtEdge&gt; spliterator = new Spliterators.AbstractSpliterator&lt;PtEdge&gt;(0, 0) {</b>
+<b class="nc">&nbsp;            int edgeId = getEdgeRefIn(toNodePointer(adjNode));</b>
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public boolean tryAdvance(Consumer&lt;? super PtEdge&gt; action) {
+<b class="nc">&nbsp;                if (edgeId &lt; 0)</b>
+<b class="nc">&nbsp;                    return false;</b>
+&nbsp;
+<b class="nc">&nbsp;                long edgePointer = toEdgePointer(edgeId);</b>
+&nbsp;
+<b class="nc">&nbsp;                int nodeA = getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;                int nodeB = getNodeB(edgePointer);</b>
+<b class="nc">&nbsp;                action.accept(new PtEdge(edgeId, nodeB, nodeA, pullAttrs(edgeId)));</b>
+<b class="nc">&nbsp;                edgeId = getLinkB(edgePointer);</b>
+&nbsp;
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;            }
+&nbsp;        };
+<b class="nc">&nbsp;        return () -&gt; Spliterators.iterator(spliterator);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class PtEdge {
+&nbsp;        private final int edgeId;
+&nbsp;        private final int baseNode;
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            return &quot;PtEdge{&quot; +</b>
+&nbsp;                    &quot;edgeId=&quot; + edgeId +
+&nbsp;                    &quot;, baseNode=&quot; + baseNode +
+&nbsp;                    &quot;, adjNode=&quot; + adjNode +
+&nbsp;                    &quot;, attrs=&quot; + attrs +
+&nbsp;                    &#39;}&#39;;
+&nbsp;        }
+&nbsp;
+&nbsp;        private final int adjNode;
+&nbsp;        private final PtEdgeAttributes attrs;
+&nbsp;
+<b class="nc">&nbsp;        public PtEdge(int edgeId, int baseNode, int adjNode, PtEdgeAttributes attrs) {</b>
+<b class="nc">&nbsp;            this.edgeId = edgeId;</b>
+<b class="nc">&nbsp;            this.baseNode = baseNode;</b>
+<b class="nc">&nbsp;            this.adjNode = adjNode;</b>
+<b class="nc">&nbsp;            this.attrs = attrs;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public GtfsStorage.EdgeType getType() {
+<b class="nc">&nbsp;            return attrs.type;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getTime() {
+<b class="nc">&nbsp;            return attrs.time;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getAdjNode() {
+<b class="nc">&nbsp;            return adjNode;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public PtEdgeAttributes getAttrs() {
+<b class="nc">&nbsp;            return attrs;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getId() {
+<b class="nc">&nbsp;            return edgeId;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;        public int getRouteType() {
+<b class="nc">&nbsp;            GtfsStorage.EdgeType edgeType = getType();</b>
+<b class="nc">&nbsp;            if ((edgeType == GtfsStorage.EdgeType.ENTER_PT || edgeType == GtfsStorage.EdgeType.EXIT_PT || edgeType == GtfsStorage.EdgeType.TRANSFER)) {</b>
+<b class="nc">&nbsp;                return getAttrs().route_type;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Edge type &quot;+edgeType+&quot; doesn&#39;t encode route type.&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getBaseNode() {
+<b class="nc">&nbsp;            return baseNode;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

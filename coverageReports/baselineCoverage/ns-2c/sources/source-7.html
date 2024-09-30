@@ -1,0 +1,404 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ValueExpressionVisitor</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.weighting.custom</a>
+</div>
+
+<h1>Coverage Summary for Class: ValueExpressionVisitor (com.graphhopper.routing.weighting.custom)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ValueExpressionVisitor</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.6%
+  </span>
+  <span class="absValue">
+    (11/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.4%
+  </span>
+  <span class="absValue">
+    (69/88)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.4%
+  </span>
+  <span class="absValue">
+    (121/145)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.weighting.custom;
+&nbsp;
+&nbsp;import com.graphhopper.json.MinMax;
+&nbsp;import com.graphhopper.json.Statement;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EncodedValueLookup;
+&nbsp;import com.graphhopper.routing.ev.IntEncodedValue;
+&nbsp;import org.codehaus.commons.compiler.CompileException;
+&nbsp;import org.codehaus.janino.*;
+&nbsp;import org.codehaus.janino.Scanner;
+&nbsp;
+&nbsp;import java.io.StringReader;
+&nbsp;import java.lang.reflect.InvocationTargetException;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.json.Statement.Keyword.IF;
+&nbsp;
+&nbsp;/**
+&nbsp; * Expression visitor for right-hand side value of limit_to or multiply_by.
+&nbsp; */
+&nbsp;public class ValueExpressionVisitor implements Visitor.AtomVisitor&lt;Boolean, Exception&gt; {
+&nbsp;
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; allowedMethodParents = new HashSet&lt;&gt;(Arrays.asList(&quot;Math&quot;));</b>
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; allowedMethods = new HashSet&lt;&gt;(Arrays.asList(&quot;sqrt&quot;));</b>
+&nbsp;    private final ParseResult result;
+&nbsp;    private final NameValidator variableValidator;
+&nbsp;    private String invalidMessage;
+&nbsp;
+<b class="fc">&nbsp;    public ValueExpressionVisitor(ParseResult result, NameValidator variableValidator) {</b>
+<b class="fc">&nbsp;        this.result = result;</b>
+<b class="fc">&nbsp;        this.variableValidator = variableValidator;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // allow only methods and other identifiers (constants and encoded values)
+&nbsp;    boolean isValidIdentifier(String identifier) {
+<b class="fc">&nbsp;        if (variableValidator.isValid(identifier)) {</b>
+<b class="pc">&nbsp;            if (!Character.isUpperCase(identifier.charAt(0)))</b>
+<b class="fc">&nbsp;                result.guessedVariables.add(identifier);</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Boolean visitRvalue(Java.Rvalue rv) throws Exception {
+<b class="fc">&nbsp;        if (rv instanceof Java.AmbiguousName) {</b>
+<b class="fc">&nbsp;            Java.AmbiguousName n = (Java.AmbiguousName) rv;</b>
+<b class="fc">&nbsp;            if (n.identifiers.length == 1) {</b>
+<b class="fc">&nbsp;                String arg = n.identifiers[0];</b>
+&nbsp;                // e.g. like road_class
+<b class="fc">&nbsp;                if (isValidIdentifier(arg)) return true;</b>
+<b class="fc">&nbsp;                invalidMessage = &quot;&#39;&quot; + arg + &quot;&#39; not available&quot;;</b>
+<b class="fc">&nbsp;                return false;</b>
+&nbsp;            }
+<b class="fc">&nbsp;            invalidMessage = &quot;identifier &quot; + n + &quot; invalid&quot;;</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (rv instanceof Java.Literal) {</b>
+<b class="fc">&nbsp;            return true;</b>
+<b class="fc">&nbsp;        } else if (rv instanceof Java.UnaryOperation) {</b>
+<b class="fc">&nbsp;            Java.UnaryOperation uop = (Java.UnaryOperation) rv;</b>
+<b class="fc">&nbsp;            result.operators.add(uop.operator);</b>
+<b class="pc">&nbsp;            if (uop.operator.equals(&quot;-&quot;))</b>
+<b class="fc">&nbsp;                return uop.operand.accept(this);</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="fc">&nbsp;        } else if (rv instanceof Java.MethodInvocation) {</b>
+<b class="fc">&nbsp;            Java.MethodInvocation mi = (Java.MethodInvocation) rv;</b>
+<b class="fc">&nbsp;            if (allowedMethods.contains(mi.methodName)) {</b>
+&nbsp;                // skip methods like this.in()
+<b class="pc">&nbsp;                if (mi.target != null) {</b>
+&nbsp;                    // edge.getDistance(), Math.sqrt(2) =&gt; check target name (edge or Math)
+<b class="fc">&nbsp;                    Java.AmbiguousName n = (Java.AmbiguousName) mi.target.toRvalue();</b>
+<b class="pc">&nbsp;                    if (n.identifiers.length == 2) {</b>
+<b class="pc">&nbsp;                        if (allowedMethodParents.contains(n.identifiers[0])) {</b>
+&nbsp;                            // edge.getDistance(), Math.sqrt(x) =&gt; check target name i.e. edge or Math
+<b class="pc">&nbsp;                            if (mi.arguments.length == 0) {</b>
+<b class="nc">&nbsp;                                result.guessedVariables.add(n.identifiers[0]); // return &quot;edge&quot;</b>
+<b class="nc">&nbsp;                                return true;</b>
+<b class="pc">&nbsp;                            } else if (mi.arguments.length == 1) {</b>
+&nbsp;                                // return &quot;x&quot; but verify before
+<b class="fc">&nbsp;                                return mi.arguments[0].accept(this);</b>
+&nbsp;                            }
+&nbsp;                        }
+&nbsp;                        // TODO unlike in ConditionalExpressionVisitor we don&#39;t support a call like road_class.ordinal()
+&nbsp;                        //  as this is currently unsupported in FindMinMax
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            invalidMessage = mi.methodName + &quot; is an illegal method in a value expression&quot;;</b>
+<b class="fc">&nbsp;            return false;</b>
+<b class="pc">&nbsp;        } else if (rv instanceof Java.ParenthesizedExpression) {</b>
+<b class="nc">&nbsp;            return ((Java.ParenthesizedExpression) rv).value.accept(this);</b>
+<b class="fc">&nbsp;        } else if (rv instanceof Java.BinaryOperation) {</b>
+<b class="fc">&nbsp;            Java.BinaryOperation binOp = (Java.BinaryOperation) rv;</b>
+<b class="fc">&nbsp;            String op = binOp.operator;</b>
+<b class="fc">&nbsp;            result.operators.add(op);</b>
+<b class="fc">&nbsp;            if (op.equals(&quot;*&quot;) || op.equals(&quot;+&quot;) || binOp.operator.equals(&quot;-&quot;)) {</b>
+<b class="fc">&nbsp;                return binOp.lhs.accept(this) &amp;&amp; binOp.rhs.accept(this);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            invalidMessage = &quot;invalid operation &#39;&quot; + op + &quot;&#39;&quot;;</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Boolean visitPackage(Java.Package p) {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Boolean visitType(Java.Type t) {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Boolean visitConstructorInvocation(Java.ConstructorInvocation ci) {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static ParseResult parse(String expression, NameValidator variableValidator) {
+<b class="fc">&nbsp;        ParseResult result = new ParseResult();</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            Parser parser = new Parser(new Scanner(&quot;ignore&quot;, new StringReader(expression)));</b>
+<b class="fc">&nbsp;            Java.Atom atom = parser.parseConditionalExpression();</b>
+<b class="fc">&nbsp;            if (parser.peek().type == TokenType.END_OF_INPUT) {</b>
+<b class="fc">&nbsp;                result.guessedVariables = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;                result.operators = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;                ValueExpressionVisitor visitor = new ValueExpressionVisitor(result, variableValidator);</b>
+<b class="fc">&nbsp;                result.ok = atom.accept(visitor);</b>
+<b class="fc">&nbsp;                result.invalidMessage = visitor.invalidMessage;</b>
+&nbsp;            }
+<b class="fc">&nbsp;        } catch (Exception ex) {</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static Set&lt;String&gt; findVariables(List&lt;Statement&gt; statements, EncodedValueLookup lookup) {
+<b class="fc">&nbsp;        List&lt;List&lt;Statement&gt;&gt; groups = CustomModelParser.splitIntoGroup(statements);</b>
+<b class="fc">&nbsp;        Set&lt;String&gt; variables = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (List&lt;Statement&gt; group : groups) findVariablesForGroup(variables, group, lookup);</b>
+<b class="fc">&nbsp;        return variables;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void findVariablesForGroup(Set&lt;String&gt; createdObjects, List&lt;Statement&gt; group, EncodedValueLookup lookup) {
+<b class="pc">&nbsp;        if (group.isEmpty() || !IF.equals(group.get(0).keyword()))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Every group of statements must start with an if-statement&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        Statement first = group.get(0);</b>
+<b class="fc">&nbsp;        if (first.condition().trim().equals(&quot;true&quot;)) {</b>
+<b class="pc">&nbsp;            if(first.isBlock()) {</b>
+<b class="nc">&nbsp;                List&lt;List&lt;Statement&gt;&gt; groups = CustomModelParser.splitIntoGroup(first.doBlock());</b>
+<b class="nc">&nbsp;                for (List&lt;Statement&gt; subGroup : groups) findVariablesForGroup(createdObjects, subGroup, lookup);</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                createdObjects.addAll(ValueExpressionVisitor.findVariables(first.value(), lookup));</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="fc">&nbsp;            for (Statement st : group) {</b>
+<b class="fc">&nbsp;                if(st.isBlock()) {</b>
+<b class="fc">&nbsp;                    List&lt;List&lt;Statement&gt;&gt; groups = CustomModelParser.splitIntoGroup(st.doBlock());</b>
+<b class="fc">&nbsp;                    for (List&lt;Statement&gt; subGroup : groups) findVariablesForGroup(createdObjects, subGroup, lookup);</b>
+&nbsp;                } else {
+<b class="fc">&nbsp;                    createdObjects.addAll(ValueExpressionVisitor.findVariables(st.value(), lookup));</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    static Set&lt;String&gt; findVariables(String valueExpression, EncodedValueLookup lookup) {
+<b class="fc">&nbsp;        ParseResult result = parse(valueExpression, lookup::hasEncodedValue);</b>
+<b class="fc">&nbsp;        if (!result.ok)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(result.invalidMessage);</b>
+<b class="fc">&nbsp;        if (result.guessedVariables.size() &gt; 1)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Currently only a single EncodedValue is allowed on the right-hand side, but was &quot; + result.guessedVariables.size() + &quot;. Value expression: &quot; + valueExpression);</b>
+&nbsp;
+&nbsp;        // TODO Nearly duplicate code as in findMinMax
+&nbsp;        double value;
+&nbsp;        try {
+&nbsp;            // Speed optimization for numbers only as its over 200x faster than ExpressionEvaluator+cook+evaluate!
+&nbsp;            // We still call the parse() method before as it is only ~3x slower and might increase security slightly. Because certain
+&nbsp;            // expressions are accepted from Double.parseDouble but parse() rejects them. With this call order we avoid unexpected security problems.
+<b class="fc">&nbsp;            value = Double.parseDouble(valueExpression);</b>
+<b class="fc">&nbsp;        } catch (NumberFormatException ex) {</b>
+&nbsp;            try {
+<b class="pc">&nbsp;                if (result.guessedVariables.isEmpty()) { // without encoded values</b>
+<b class="nc">&nbsp;                    ExpressionEvaluator ee = new ExpressionEvaluator();</b>
+<b class="nc">&nbsp;                    ee.cook(valueExpression);</b>
+<b class="nc">&nbsp;                    value = ((Number) ee.evaluate()).doubleValue();</b>
+<b class="nc">&nbsp;                } else if (lookup.hasEncodedValue(valueExpression)) { // speed up for common case that complete right-hand side is the encoded value</b>
+<b class="fc">&nbsp;                    EncodedValue enc = lookup.getEncodedValue(valueExpression, EncodedValue.class);</b>
+<b class="fc">&nbsp;                    value = Math.min(getMin(enc), getMax(enc));</b>
+&nbsp;                } else {
+&nbsp;                    // single encoded value
+<b class="fc">&nbsp;                    ExpressionEvaluator ee = new ExpressionEvaluator();</b>
+<b class="fc">&nbsp;                    String var = result.guessedVariables.iterator().next();</b>
+<b class="fc">&nbsp;                    ee.setParameters(new String[]{var}, new Class[]{double.class});</b>
+<b class="fc">&nbsp;                    ee.cook(valueExpression);</b>
+<b class="fc">&nbsp;                    double max = getMax(lookup.getEncodedValue(var, EncodedValue.class));</b>
+<b class="fc">&nbsp;                    Number val1 = (Number) ee.evaluate(max);</b>
+<b class="fc">&nbsp;                    double min = getMin(lookup.getEncodedValue(var, EncodedValue.class));</b>
+<b class="fc">&nbsp;                    Number val2 = (Number) ee.evaluate(min);</b>
+<b class="fc">&nbsp;                    value = Math.min(val1.doubleValue(), val2.doubleValue());</b>
+&nbsp;                }
+<b class="nc">&nbsp;            } catch (CompileException | InvocationTargetException ex2) {</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(ex2);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        if (value &lt; 0)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;illegal expression as it can result in a negative weight: &quot; + valueExpression);</b>
+&nbsp;
+<b class="fc">&nbsp;        return result.guessedVariables;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static MinMax findMinMax(String valueExpression, EncodedValueLookup lookup) {
+<b class="fc">&nbsp;        ParseResult result = parse(valueExpression, lookup::hasEncodedValue);</b>
+<b class="fc">&nbsp;        if (!result.ok)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(result.invalidMessage);</b>
+<b class="fc">&nbsp;        if (result.guessedVariables.size() &gt; 1)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Currently only a single EncodedValue is allowed on the right-hand side, but was &quot; + result.guessedVariables.size() + &quot;. Value expression: &quot; + valueExpression);</b>
+&nbsp;
+&nbsp;        // TODO Nearly duplicate as in findVariables
+&nbsp;        try {
+&nbsp;            // Speed optimization for numbers only as its over 200x faster than ExpressionEvaluator+cook+evaluate!
+&nbsp;            // We still call the parse() method before as it is only ~3x slower and might increase security slightly. Because certain
+&nbsp;            // expressions are accepted from Double.parseDouble but parse() rejects them. With this call order we avoid unexpected security problems.
+<b class="fc">&nbsp;            double val = Double.parseDouble(valueExpression);</b>
+<b class="fc">&nbsp;            return new MinMax(val, val);</b>
+<b class="fc">&nbsp;        } catch (NumberFormatException ex) {</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="pc">&nbsp;            if (result.guessedVariables.isEmpty()) { // without encoded values</b>
+<b class="nc">&nbsp;                ExpressionEvaluator ee = new ExpressionEvaluator();</b>
+<b class="nc">&nbsp;                ee.cook(valueExpression);</b>
+<b class="nc">&nbsp;                double val = ((Number) ee.evaluate()).doubleValue();</b>
+<b class="nc">&nbsp;                return new MinMax(val, val);</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            if (lookup.hasEncodedValue(valueExpression)) { // speed up for common case that complete right-hand side is the encoded value</b>
+<b class="fc">&nbsp;                EncodedValue enc = lookup.getEncodedValue(valueExpression, EncodedValue.class);</b>
+<b class="fc">&nbsp;                double min = getMin(enc), max = getMax(enc);</b>
+<b class="fc">&nbsp;                return new MinMax(min, max);</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            ExpressionEvaluator ee = new ExpressionEvaluator();</b>
+<b class="fc">&nbsp;            String var = result.guessedVariables.iterator().next();</b>
+<b class="fc">&nbsp;            ee.setParameters(new String[]{var}, new Class[]{double.class});</b>
+<b class="fc">&nbsp;            ee.cook(valueExpression);</b>
+<b class="fc">&nbsp;            double max = getMax(lookup.getEncodedValue(var, EncodedValue.class));</b>
+<b class="fc">&nbsp;            Number val1 = (Number) ee.evaluate(max);</b>
+<b class="fc">&nbsp;            double min = getMin(lookup.getEncodedValue(var, EncodedValue.class));</b>
+<b class="fc">&nbsp;            Number val2 = (Number) ee.evaluate(min);</b>
+<b class="fc">&nbsp;            return new MinMax(Math.min(val1.doubleValue(), val2.doubleValue()), Math.max(val1.doubleValue(), val2.doubleValue()));</b>
+<b class="nc">&nbsp;        } catch (CompileException | InvocationTargetException ex) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    static double getMin(EncodedValue enc) {
+<b class="fc">&nbsp;        if (enc instanceof DecimalEncodedValue) return ((DecimalEncodedValue) enc).getMinStorableDecimal();</b>
+<b class="pc">&nbsp;        else if (enc instanceof IntEncodedValue) return ((IntEncodedValue) enc).getMinStorableInt();</b>
+<b class="nc">&nbsp;        throw new IllegalArgumentException(&quot;Cannot use non-number data &#39;&quot; + enc.getName() + &quot;&#39; in value expression&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static double getMax(EncodedValue enc) {
+<b class="fc">&nbsp;        if (enc instanceof DecimalEncodedValue) return ((DecimalEncodedValue) enc).getMaxOrMaxStorableDecimal();</b>
+<b class="pc">&nbsp;        else if (enc instanceof IntEncodedValue) return ((IntEncodedValue) enc).getMaxOrMaxStorableInt();</b>
+<b class="nc">&nbsp;        throw new IllegalArgumentException(&quot;Cannot use non-number data &#39;&quot; + enc.getName() + &quot;&#39; in value expression&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,302 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CustomModel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: CustomModel (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CustomModel</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (21/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62.5%
+  </span>
+  <span class="absValue">
+    (15/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.8%
+  </span>
+  <span class="absValue">
+    (56/66)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+&nbsp;import com.graphhopper.jackson.CustomModelAreasDeserializer;
+&nbsp;import com.graphhopper.json.Statement;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;public class CustomModel {
+&nbsp;
+&nbsp;    public static final String KEY = &quot;custom_model&quot;;
+&nbsp;
+&nbsp;    // &#39;Double&#39; instead of &#39;double&#39; is required to know if it was 0 or not specified in the request.
+&nbsp;    private Double distanceInfluence;
+&nbsp;    private Double headingPenalty;
+&nbsp;    private boolean internal;
+<b class="fc">&nbsp;    private List&lt;Statement&gt; speedStatements = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;Statement&gt; priorityStatements = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private JsonFeatureCollection areas = new JsonFeatureCollection();</b>
+&nbsp;
+<b class="fc">&nbsp;    public CustomModel() {</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public CustomModel(CustomModel toCopy) {</b>
+<b class="fc">&nbsp;        this.headingPenalty = toCopy.headingPenalty;</b>
+<b class="fc">&nbsp;        this.distanceInfluence = toCopy.distanceInfluence;</b>
+&nbsp;        // do not copy &quot;internal&quot; boolean
+&nbsp;
+<b class="fc">&nbsp;        speedStatements = deepCopy(toCopy.getSpeed());</b>
+<b class="fc">&nbsp;        priorityStatements = deepCopy(toCopy.getPriority());</b>
+&nbsp;
+<b class="fc">&nbsp;        addAreas(toCopy.getAreas());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Map&lt;String, JsonFeature&gt; getAreasAsMap(JsonFeatureCollection areas) {
+<b class="fc">&nbsp;        Map&lt;String, JsonFeature&gt; map = new HashMap&lt;&gt;(areas.getFeatures().size());</b>
+<b class="fc">&nbsp;        areas.getFeatures().forEach(f -&gt; {</b>
+<b class="pc">&nbsp;            if (map.put(f.getId(), f) != null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Cannot handle duplicate area &quot; + f.getId());</b>
+&nbsp;        });
+<b class="fc">&nbsp;        return map;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addAreas(JsonFeatureCollection externalAreas) {
+<b class="fc">&nbsp;        Set&lt;String&gt; indexed = areas.getFeatures().stream().map(JsonFeature::getId).collect(Collectors.toSet());</b>
+<b class="fc">&nbsp;        for (JsonFeature ext : externalAreas.getFeatures()) {</b>
+<b class="pc">&nbsp;            if (!JsonFeature.isValidId(&quot;in_&quot; + ext.getId()))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;The area &#39;&quot; + ext.getId() + &quot;&#39; has an invalid id. Only letters, numbers and underscore are allowed.&quot;);</b>
+<b class="pc">&nbsp;            if (indexed.contains(ext.getId()))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;area &quot; + ext.getId() + &quot; already exists&quot;);</b>
+<b class="fc">&nbsp;            areas.getFeatures().add(ext);</b>
+<b class="fc">&nbsp;            indexed.add(ext.getId());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is for internal usage only! Parsing a CustomModel is expensive and so we cache the result, which is
+&nbsp;     * especially important for fast landmark queries (hybrid mode). Now this method ensures that all server-side custom
+&nbsp;     * models are cached in a special internal cache which does not remove seldom accessed entries.
+&nbsp;     */
+&nbsp;    public CustomModel internal() {
+<b class="fc">&nbsp;        this.internal = true;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isInternal() {
+<b class="fc">&nbsp;        return internal;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private &lt;T&gt; T deepCopy(T originalObject) {
+<b class="fc">&nbsp;        if (originalObject instanceof List) {</b>
+<b class="fc">&nbsp;            List&lt;Object&gt; newList = new ArrayList&lt;&gt;(((List) originalObject).size());</b>
+<b class="fc">&nbsp;            for (Object item : (List) originalObject) {</b>
+<b class="fc">&nbsp;                newList.add(deepCopy(item));</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return (T) newList;</b>
+<b class="pc">&nbsp;        } else if (originalObject instanceof Map) {</b>
+<b class="nc">&nbsp;            Map copy = originalObject instanceof LinkedHashMap ? new LinkedHashMap&lt;&gt;(((Map) originalObject).size()) :</b>
+<b class="nc">&nbsp;                    new HashMap&lt;&gt;(((Map) originalObject).size());</b>
+<b class="nc">&nbsp;            for (Object o : ((Map) originalObject).entrySet()) {</b>
+<b class="nc">&nbsp;                Map.Entry entry = (Map.Entry) o;</b>
+<b class="nc">&nbsp;                copy.put(entry.getKey(), deepCopy(entry.getValue()));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return (T) copy;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return originalObject;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Statement&gt; getSpeed() {
+<b class="fc">&nbsp;        return speedStatements;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public CustomModel addToSpeed(Statement st) {
+<b class="fc">&nbsp;        getSpeed().add(st);</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Statement&gt; getPriority() {
+<b class="fc">&nbsp;        return priorityStatements;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public CustomModel addToPriority(Statement st) {
+<b class="fc">&nbsp;        getPriority().add(st);</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonDeserialize(using = CustomModelAreasDeserializer.class)
+&nbsp;    public CustomModel setAreas(JsonFeatureCollection areas) {
+<b class="fc">&nbsp;        this.areas = areas;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public JsonFeatureCollection getAreas() {
+<b class="fc">&nbsp;        return areas;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public CustomModel setDistanceInfluence(Double distanceFactor) {
+<b class="fc">&nbsp;        this.distanceInfluence = distanceFactor;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Double getDistanceInfluence() {
+<b class="fc">&nbsp;        return distanceInfluence;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public CustomModel setHeadingPenalty(double headingPenalty) {
+<b class="fc">&nbsp;        this.headingPenalty = headingPenalty;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Double getHeadingPenalty() {
+<b class="fc">&nbsp;        return headingPenalty;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return createContentString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String createContentString() {
+&nbsp;        // used to check against stored custom models, see #2026
+<b class="fc">&nbsp;        return &quot;distanceInfluence=&quot; + distanceInfluence + &quot;|headingPenalty=&quot; + headingPenalty</b>
+&nbsp;                + &quot;|speedStatements=&quot; + speedStatements + &quot;|priorityStatements=&quot; + priorityStatements
+&nbsp;                + &quot;|areas=&quot; + areas;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * A new CustomModel is created from the baseModel merged with the specified queryModel. Returns the baseModel if
+&nbsp;     * queryModel is null.
+&nbsp;     */
+&nbsp;    public static CustomModel merge(CustomModel baseModel, CustomModel queryModel) {
+&nbsp;        // avoid changing the specified CustomModel via deep copy otherwise the server-side CustomModel would be
+&nbsp;        // modified (same problem if queryModel would be used as target)
+<b class="fc">&nbsp;        CustomModel mergedCM = new CustomModel(baseModel);</b>
+<b class="fc">&nbsp;        if (queryModel == null) return mergedCM;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (queryModel.getDistanceInfluence() != null)</b>
+<b class="fc">&nbsp;            mergedCM.distanceInfluence = queryModel.distanceInfluence;</b>
+<b class="pc">&nbsp;        if (queryModel.getHeadingPenalty() != null)</b>
+<b class="nc">&nbsp;            mergedCM.headingPenalty = queryModel.headingPenalty;</b>
+<b class="fc">&nbsp;        mergedCM.speedStatements.addAll(queryModel.getSpeed());</b>
+<b class="fc">&nbsp;        mergedCM.priorityStatements.addAll(queryModel.getPriority());</b>
+&nbsp;
+<b class="fc">&nbsp;        mergedCM.addAreas(queryModel.getAreas());</b>
+<b class="fc">&nbsp;        return mergedCM;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

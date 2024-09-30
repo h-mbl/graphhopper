@@ -1,0 +1,269 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > JaroWinkler</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.debatty.java.stringsimilarity</a>
+</div>
+
+<h1>Coverage Summary for Class: JaroWinkler (com.graphhopper.debatty.java.stringsimilarity)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">JaroWinkler</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (4/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.7%
+  </span>
+  <span class="absValue">
+    (29/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (48/52)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp;Copyright 2015 Thibault Debatty.
+&nbsp;
+&nbsp;Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+&nbsp;documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the
+&nbsp;rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+&nbsp;persons to whom the Software is furnished to do so, subject to the following conditions:
+&nbsp;
+&nbsp;The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+&nbsp;Software.
+&nbsp;
+&nbsp;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+&nbsp;WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+&nbsp;COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+&nbsp;OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+&nbsp; */
+&nbsp;package com.graphhopper.debatty.java.stringsimilarity;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class is copied from: https://github.com/tdebatty/java-string-similarity/blob/master/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java
+&nbsp; * and slightly modified. *
+&nbsp; *
+&nbsp; * The Jaro–Winkler distance metric is designed and best suited for short
+&nbsp; * strings such as person names, and to detect typos; it is (roughly) a
+&nbsp; * variation of Damerau-Levenshtein, where the substitution of 2 close
+&nbsp; * characters is considered less important then the substitution of 2 characters
+&nbsp; * that a far from each other.
+&nbsp; * Jaro-Winkler was developed in the area of record linkage (duplicate
+&nbsp; * detection) (Winkler, 1990). It returns a value in the interval [0.0, 1.0].
+&nbsp; * The distance is computed as 1 - Jaro-Winkler similarity.
+&nbsp; * @author Thibault Debatty
+&nbsp; */
+&nbsp;public class JaroWinkler {
+&nbsp;
+&nbsp;    private static final double DEFAULT_THRESHOLD = 0.7;
+&nbsp;    private static final int THREE = 3;
+&nbsp;    private static final double JW_COEF = 0.1;
+&nbsp;    private final double threshold;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Instantiate with default threshold (0.7).
+&nbsp;     *
+&nbsp;     */
+<b class="fc">&nbsp;    public JaroWinkler() {</b>
+<b class="fc">&nbsp;        this.threshold = DEFAULT_THRESHOLD;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Instantiate with given threshold to determine when Winkler bonus should
+&nbsp;     * be used.
+&nbsp;     * Set threshold to a negative value to get the Jaro distance.
+&nbsp;     */
+<b class="nc">&nbsp;    public JaroWinkler(final double threshold) {</b>
+<b class="nc">&nbsp;        this.threshold = threshold;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the current value of the threshold used for adding the Winkler
+&nbsp;     * bonus. The default value is 0.7.
+&nbsp;     *
+&nbsp;     * @return the current value of the threshold
+&nbsp;     */
+&nbsp;    public final double getThreshold() {
+<b class="fc">&nbsp;        return threshold;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Compute JW similarity.
+&nbsp;     */
+&nbsp;    public final double similarity(final String s1, final String s2) {
+<b class="fc">&nbsp;        int[] mtp = matches(s1, s2);</b>
+<b class="fc">&nbsp;        float m = mtp[0];</b>
+<b class="pc">&nbsp;        if (m == 0) {</b>
+<b class="nc">&nbsp;            return 0f;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        double j = ((m / s1.length() + m / s2.length() + (m - mtp[1]) / m))</b>
+&nbsp;                / THREE;
+<b class="fc">&nbsp;        double jw = j;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (j &gt; getThreshold()) {</b>
+<b class="fc">&nbsp;            jw = j + Math.min(JW_COEF, 1.0 / mtp[THREE]) * mtp[2] * (1 - j);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return jw;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Return 1 - similarity.
+&nbsp;     */
+&nbsp;    public final double distance(final String s1, final String s2) {
+<b class="nc">&nbsp;        return 1.0 - similarity(s1, s2);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int[] matches(final String s1, final String s2) {
+&nbsp;        String max, min;
+<b class="fc">&nbsp;        if (s1.length() &gt; s2.length()) {</b>
+<b class="fc">&nbsp;            max = s1;</b>
+<b class="fc">&nbsp;            min = s2;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            max = s2;</b>
+<b class="fc">&nbsp;            min = s1;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int range = Math.max(max.length() / 2 - 1, 0);</b>
+<b class="fc">&nbsp;        int[] matchIndexes = new int[min.length()];</b>
+<b class="fc">&nbsp;        Arrays.fill(matchIndexes, -1);</b>
+<b class="fc">&nbsp;        boolean[] matchFlags = new boolean[max.length()];</b>
+<b class="fc">&nbsp;        int matches = 0;</b>
+<b class="fc">&nbsp;        for (int mi = 0; mi &lt; min.length(); mi++) {</b>
+<b class="fc">&nbsp;            char c1 = min.charAt(mi);</b>
+<b class="fc">&nbsp;            for (int xi = Math.max(mi - range, 0),</b>
+<b class="fc">&nbsp;                 xn = Math.min(mi + range + 1, max.length()); xi &lt; xn; xi++) {</b>
+<b class="fc">&nbsp;                if (!matchFlags[xi] &amp;&amp; c1 == max.charAt(xi)) {</b>
+<b class="fc">&nbsp;                    matchIndexes[mi] = xi;</b>
+<b class="fc">&nbsp;                    matchFlags[xi] = true;</b>
+<b class="fc">&nbsp;                    matches++;</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        char[] ms1 = new char[matches];</b>
+<b class="fc">&nbsp;        char[] ms2 = new char[matches];</b>
+<b class="fc">&nbsp;        for (int i = 0, si = 0; i &lt; min.length(); i++) {</b>
+<b class="fc">&nbsp;            if (matchIndexes[i] != -1) {</b>
+<b class="fc">&nbsp;                ms1[si] = min.charAt(i);</b>
+<b class="fc">&nbsp;                si++;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        for (int i = 0, si = 0; i &lt; max.length(); i++) {</b>
+<b class="fc">&nbsp;            if (matchFlags[i]) {</b>
+<b class="fc">&nbsp;                ms2[si] = max.charAt(i);</b>
+<b class="fc">&nbsp;                si++;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        int transpositions = 0;</b>
+<b class="fc">&nbsp;        for (int mi = 0; mi &lt; ms1.length; mi++) {</b>
+<b class="fc">&nbsp;            if (ms1[mi] != ms2[mi]) {</b>
+<b class="fc">&nbsp;                transpositions++;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        int prefix = 0;</b>
+<b class="fc">&nbsp;        for (int mi = 0; mi &lt; min.length(); mi++) {</b>
+<b class="fc">&nbsp;            if (s1.charAt(mi) == s2.charAt(mi)) {</b>
+<b class="fc">&nbsp;                prefix++;</b>
+&nbsp;            } else {
+&nbsp;                break;
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        return new int[]{matches, transpositions / 2, prefix, max.length()};</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

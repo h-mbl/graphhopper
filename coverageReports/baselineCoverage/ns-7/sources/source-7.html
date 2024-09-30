@@ -1,0 +1,551 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GraphHopperWeb</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.api</a>
+</div>
+
+<h1>Coverage Summary for Class: GraphHopperWeb (com.graphhopper.api)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GraphHopperWeb</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/80)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/208)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.api;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.core.JsonProcessingException;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.fasterxml.jackson.databind.node.ArrayNode;
+&nbsp;import com.fasterxml.jackson.databind.node.ObjectNode;
+&nbsp;import com.graphhopper.GHRequest;
+&nbsp;import com.graphhopper.GHResponse;
+&nbsp;import com.graphhopper.ResponsePath;
+&nbsp;import com.graphhopper.jackson.Jackson;
+&nbsp;import com.graphhopper.jackson.ResponsePathDeserializerHelper;
+&nbsp;import com.graphhopper.util.CustomModel;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.PMap;
+&nbsp;import com.graphhopper.util.Parameters;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import okhttp3.*;
+&nbsp;
+&nbsp;import java.net.URLEncoder;
+&nbsp;import java.nio.charset.StandardCharsets;
+&nbsp;import java.util.*;
+&nbsp;import java.util.concurrent.TimeUnit;
+&nbsp;
+&nbsp;import static com.graphhopper.api.GraphHopperMatrixWeb.*;
+&nbsp;import static com.graphhopper.api.Version.GH_VERSION_FROM_MAVEN;
+&nbsp;import static com.graphhopper.util.Helper.round6;
+&nbsp;import static com.graphhopper.util.Helper.toLowerCase;
+&nbsp;import static com.graphhopper.util.Parameters.Routing.CALC_POINTS;
+&nbsp;import static com.graphhopper.util.Parameters.Routing.INSTRUCTIONS;
+&nbsp;
+&nbsp;/**
+&nbsp; * Main wrapper of the GraphHopper Directions API for a simple and efficient
+&nbsp; * usage.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class GraphHopperWeb {
+&nbsp;
+&nbsp;    public static final String X_GH_CLIENT_VERSION = &quot;X-GH-Client-Version&quot;;
+&nbsp;    private final ObjectMapper objectMapper;
+&nbsp;    private final String routeServiceUrl;
+&nbsp;    private OkHttpClient downloader;
+<b class="nc">&nbsp;    private String key = &quot;&quot;;</b>
+<b class="nc">&nbsp;    private boolean instructions = true;</b>
+<b class="nc">&nbsp;    private boolean calcPoints = true;</b>
+<b class="nc">&nbsp;    private boolean elevation = false;</b>
+<b class="nc">&nbsp;    private String optimize = &quot;false&quot;;</b>
+<b class="nc">&nbsp;    private boolean postRequest = true;</b>
+<b class="nc">&nbsp;    private int maxUnzippedLength = 1000;</b>
+&nbsp;    private final Set&lt;String&gt; ignoreSetForGet;
+&nbsp;    private final Set&lt;String&gt; ignoreSetForPost;
+&nbsp;
+&nbsp;    public static final String TIMEOUT = &quot;timeout&quot;;
+<b class="nc">&nbsp;    private final long DEFAULT_TIMEOUT = 5000;</b>
+&nbsp;
+&nbsp;    public GraphHopperWeb() {
+<b class="nc">&nbsp;        this(&quot;https://graphhopper.com/api/1/route&quot;);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public GraphHopperWeb(String serviceUrl) {</b>
+<b class="nc">&nbsp;        this.routeServiceUrl = serviceUrl;</b>
+<b class="nc">&nbsp;        downloader = new OkHttpClient.Builder().</b>
+<b class="nc">&nbsp;                connectTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS).</b>
+<b class="nc">&nbsp;                readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS).</b>
+<b class="nc">&nbsp;                addInterceptor(new GzipRequestInterceptor()).</b>
+<b class="nc">&nbsp;                build();</b>
+&nbsp;        // some parameters are supported directly via Java API so ignore them when writing the getHints map
+<b class="nc">&nbsp;        ignoreSetForPost = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(KEY);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(SERVICE_URL);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(CALC_POINTS);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(INSTRUCTIONS);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(&quot;elevation&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(&quot;optimize&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(&quot;points_encoded&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForPost.add(&quot;points_encoded_multiplier&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        ignoreSetForGet = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(KEY);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(CALC_POINTS);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;calcpoints&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(INSTRUCTIONS);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;elevation&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;optimize&quot;);</b>
+&nbsp;
+&nbsp;        // some parameters are in the request:
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;algorithm&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;locale&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;point&quot;);</b>
+&nbsp;
+&nbsp;        // some are special and need to be avoided
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;points_encoded&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;pointsencoded&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;points_encoded_multiplier&quot;);</b>
+<b class="nc">&nbsp;        ignoreSetForGet.add(&quot;type&quot;);</b>
+<b class="nc">&nbsp;        objectMapper = Jackson.newObjectMapper();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopperWeb setMaxUnzippedLength(int maxUnzippedLength) {
+<b class="nc">&nbsp;        this.maxUnzippedLength = maxUnzippedLength;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopperWeb setDownloader(OkHttpClient downloader) {
+<b class="nc">&nbsp;        this.downloader = downloader;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OkHttpClient getDownloader() {
+<b class="nc">&nbsp;        return downloader;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopperWeb setKey(String key) {
+<b class="nc">&nbsp;        Objects.requireNonNull(key, &quot;Key must not be null&quot;);</b>
+<b class="nc">&nbsp;        if (key.isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Key must not be empty&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        this.key = key;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * If false it will use the &#39;GET /route&#39; endpoint instead of the default &#39;POST /route&#39;.
+&nbsp;     */
+&nbsp;    public GraphHopperWeb setPostRequest(boolean postRequest) {
+<b class="nc">&nbsp;        this.postRequest = postRequest;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Enable or disable calculating points for the way. The default is true.
+&nbsp;     */
+&nbsp;    public GraphHopperWeb setCalcPoints(boolean calcPoints) {
+<b class="nc">&nbsp;        this.calcPoints = calcPoints;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Enable or disable calculating and returning turn instructions. The
+&nbsp;     * default is true.
+&nbsp;     */
+&nbsp;    public GraphHopperWeb setInstructions(boolean b) {
+<b class="nc">&nbsp;        instructions = b;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Enable or disable elevation. The default is false.
+&nbsp;     */
+&nbsp;    public GraphHopperWeb setElevation(boolean withElevation) {
+<b class="nc">&nbsp;        this.elevation = withElevation;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param optimize &quot;false&quot; if the order of the locations should be left
+&nbsp;     *                 unchanged, this is the default. Or if &quot;true&quot; then the order of the
+&nbsp;     *                 location is optimized according to the overall best route and returned
+&nbsp;     *                 this way i.e. the traveling salesman problem is solved under the hood.
+&nbsp;     *                 Note that in this case the request takes longer and costs more credits.
+&nbsp;     */
+&nbsp;    public GraphHopperWeb setOptimize(String optimize) {
+<b class="nc">&nbsp;        this.optimize = optimize;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHResponse route(GHRequest ghRequest) {
+<b class="nc">&nbsp;        ResponseBody rspBody = null;</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            boolean tmpElevation = ghRequest.getHints().getBool(&quot;elevation&quot;, elevation);</b>
+<b class="nc">&nbsp;            boolean tmpTurnDescription = ghRequest.getHints().getBool(&quot;turn_description&quot;, true);</b>
+<b class="nc">&nbsp;            ghRequest.getHints().remove(&quot;turn_description&quot;); // do not include in request</b>
+&nbsp;
+<b class="nc">&nbsp;            Request okRequest = postRequest ? createPostRequest(ghRequest) : createGetRequest(ghRequest);</b>
+<b class="nc">&nbsp;            Response rsp = getClientForRequest(ghRequest).newCall(okRequest).execute();</b>
+<b class="nc">&nbsp;            rspBody = rsp.body();</b>
+<b class="nc">&nbsp;            JsonNode json = objectMapper.reader().readTree(rspBody.byteStream());</b>
+&nbsp;
+<b class="nc">&nbsp;            GHResponse res = new GHResponse();</b>
+<b class="nc">&nbsp;            res.addErrors(ResponsePathDeserializerHelper.readErrors(objectMapper, json));</b>
+<b class="nc">&nbsp;            if (res.hasErrors())</b>
+<b class="nc">&nbsp;                return res;</b>
+&nbsp;
+<b class="nc">&nbsp;            JsonNode paths = json.get(&quot;paths&quot;);</b>
+<b class="nc">&nbsp;            for (JsonNode path : paths) {</b>
+<b class="nc">&nbsp;                ResponsePath altRsp = ResponsePathDeserializerHelper.createResponsePath(objectMapper, path, tmpElevation, tmpTurnDescription);</b>
+<b class="nc">&nbsp;                res.add(altRsp);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            for (Map.Entry&lt;String, List&lt;String&gt;&gt; entry : rsp.headers().toMultimap().entrySet()) {</b>
+<b class="nc">&nbsp;                res.getHints().putObject(entry.getKey(), entry.getValue());</b>
+&nbsp;            }
+<b class="nc">&nbsp;            JsonNode b = json.get(&quot;hints&quot;);</b>
+<b class="nc">&nbsp;            b.fields().forEachRemaining(f -&gt; res.getHints().putObject(f.getKey(), Helper.toObject(f.getValue().asText())));</b>
+&nbsp;
+<b class="nc">&nbsp;            return res;</b>
+&nbsp;
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Problem while fetching path &quot; + ghRequest.getPoints() + &quot;: &quot; + ex.getMessage(), ex);</b>
+&nbsp;        } finally {
+<b class="nc">&nbsp;            Helper.close(rspBody);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    OkHttpClient getClientForRequest(GHRequest request) {
+<b class="nc">&nbsp;        OkHttpClient client = this.downloader;</b>
+<b class="nc">&nbsp;        if (request.getHints().has(TIMEOUT)) {</b>
+<b class="nc">&nbsp;            long timeout = request.getHints().getLong(TIMEOUT, DEFAULT_TIMEOUT);</b>
+<b class="nc">&nbsp;            client = client.newBuilder()</b>
+<b class="nc">&nbsp;                    .connectTimeout(timeout, TimeUnit.MILLISECONDS)</b>
+<b class="nc">&nbsp;                    .readTimeout(timeout, TimeUnit.MILLISECONDS)</b>
+<b class="nc">&nbsp;                    .build();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return client;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    Request createPostRequest(GHRequest ghRequest) {
+<b class="nc">&nbsp;        String tmpServiceURL = ghRequest.getHints().getString(SERVICE_URL, routeServiceUrl);</b>
+<b class="nc">&nbsp;        String url = tmpServiceURL + &quot;?&quot;;</b>
+<b class="nc">&nbsp;        if (!Helper.isEmpty(key))</b>
+<b class="nc">&nbsp;            url += &quot;key=&quot; + encodeURL(key);</b>
+&nbsp;
+<b class="nc">&nbsp;        ObjectNode requestJson = requestToJson(ghRequest);</b>
+&nbsp;        String body;
+&nbsp;        try {
+<b class="nc">&nbsp;            body = objectMapper.writeValueAsString(requestJson);</b>
+<b class="nc">&nbsp;        } catch (JsonProcessingException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not write request body&quot;, e);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        Request.Builder builder = new Request.Builder().url(url).post(RequestBody.create(MT_JSON, body));</b>
+<b class="nc">&nbsp;        builder.header(X_GH_CLIENT_VERSION, GH_VERSION_FROM_MAVEN);</b>
+&nbsp;        // force avoiding our GzipRequestInterceptor for smaller requests ~30 locations
+<b class="nc">&nbsp;        if (body.length() &lt; maxUnzippedLength)</b>
+<b class="nc">&nbsp;            builder.header(&quot;Content-Encoding&quot;, &quot;identity&quot;);</b>
+<b class="nc">&nbsp;        return builder.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    ObjectNode requestToJson(GHRequest ghRequest) {
+<b class="nc">&nbsp;        ObjectNode requestJson = objectMapper.createObjectNode();</b>
+<b class="nc">&nbsp;        requestJson.putArray(&quot;points&quot;).addAll(createPointList(ghRequest.getPoints()));</b>
+<b class="nc">&nbsp;        if (!ghRequest.getPointHints().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.putArray(&quot;point_hints&quot;).addAll(createStringList(ghRequest.getPointHints()));</b>
+<b class="nc">&nbsp;        if (!ghRequest.getHeadings().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.putArray(&quot;headings&quot;).addAll(createDoubleList(ghRequest.getHeadings()));</b>
+<b class="nc">&nbsp;        if (!ghRequest.getCurbsides().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.putArray(&quot;curbsides&quot;).addAll(createStringList(ghRequest.getCurbsides()));</b>
+<b class="nc">&nbsp;        if (!ghRequest.getSnapPreventions().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.putArray(&quot;snap_preventions&quot;).addAll(createStringList(ghRequest.getSnapPreventions()));</b>
+<b class="nc">&nbsp;        if (!ghRequest.getPathDetails().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.putArray(&quot;details&quot;).addAll(createStringList(ghRequest.getPathDetails()));</b>
+&nbsp;
+<b class="nc">&nbsp;        requestJson.put(&quot;locale&quot;, ghRequest.getLocale().toString());</b>
+<b class="nc">&nbsp;        if (!ghRequest.getProfile().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.put(&quot;profile&quot;, ghRequest.getProfile());</b>
+<b class="nc">&nbsp;        if (!ghRequest.getAlgorithm().isEmpty())</b>
+<b class="nc">&nbsp;            requestJson.put(&quot;algorithm&quot;, ghRequest.getAlgorithm());</b>
+&nbsp;
+<b class="nc">&nbsp;        requestJson.put(&quot;points_encoded&quot;, true);</b>
+<b class="nc">&nbsp;        requestJson.put(&quot;points_encoded_multiplier&quot;, 1e6);</b>
+<b class="nc">&nbsp;        requestJson.put(INSTRUCTIONS, ghRequest.getHints().getBool(INSTRUCTIONS, instructions));</b>
+<b class="nc">&nbsp;        requestJson.put(CALC_POINTS, ghRequest.getHints().getBool(CALC_POINTS, calcPoints));</b>
+<b class="nc">&nbsp;        requestJson.put(&quot;elevation&quot;, ghRequest.getHints().getBool(&quot;elevation&quot;, elevation));</b>
+<b class="nc">&nbsp;        requestJson.put(&quot;optimize&quot;, ghRequest.getHints().getString(&quot;optimize&quot;, optimize));</b>
+<b class="nc">&nbsp;        if (ghRequest.getCustomModel() != null)</b>
+<b class="nc">&nbsp;            requestJson.putPOJO(CustomModel.KEY, ghRequest.getCustomModel());</b>
+&nbsp;
+<b class="nc">&nbsp;        Map&lt;String, Object&gt; hintsMap = ghRequest.getHints().toMap();</b>
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, Object&gt; entry : hintsMap.entrySet()) {</b>
+<b class="nc">&nbsp;            String hintKey = entry.getKey();</b>
+<b class="nc">&nbsp;            if (ignoreSetForPost.contains(hintKey))</b>
+&nbsp;                continue;
+&nbsp;
+&nbsp;            // special case for String required, see testPutPOJO
+<b class="nc">&nbsp;            if (entry.getValue() instanceof String)</b>
+<b class="nc">&nbsp;                requestJson.put(hintKey, (String) entry.getValue());</b>
+&nbsp;            else
+<b class="nc">&nbsp;                requestJson.putPOJO(hintKey, entry.getValue());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return requestJson;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    Request createGetRequest(GHRequest ghRequest) {
+<b class="nc">&nbsp;        if (ghRequest.getCustomModel() != null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Custom models cannot be used for GET requests. Use setPostRequest(true)&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean tmpInstructions = ghRequest.getHints().getBool(INSTRUCTIONS, instructions);</b>
+<b class="nc">&nbsp;        boolean tmpCalcPoints = ghRequest.getHints().getBool(CALC_POINTS, calcPoints);</b>
+<b class="nc">&nbsp;        String tmpOptimize = ghRequest.getHints().getString(&quot;optimize&quot;, optimize);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (tmpInstructions &amp;&amp; !tmpCalcPoints) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot calculate instructions without points (only points without instructions). &quot;</b>
+&nbsp;                    + &quot;Use calc_points=false and instructions=false to disable point and instruction calculation&quot;);
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        boolean tmpElevation = ghRequest.getHints().getBool(&quot;elevation&quot;, elevation);</b>
+&nbsp;
+<b class="nc">&nbsp;        String places = &quot;&quot;;</b>
+<b class="nc">&nbsp;        for (GHPoint p : ghRequest.getPoints()) {</b>
+<b class="nc">&nbsp;            places += &quot;&amp;point=&quot; + round6(p.lat) + &quot;,&quot; + round6(p.lon);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        String type = ghRequest.getHints().getString(&quot;type&quot;, &quot;json&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        String url = routeServiceUrl</b>
+&nbsp;                + &quot;?&quot;
+<b class="nc">&nbsp;                + &quot;profile=&quot; + ghRequest.getProfile()</b>
+&nbsp;                + places
+&nbsp;                + &quot;&amp;type=&quot; + type
+&nbsp;                + &quot;&amp;instructions=&quot; + tmpInstructions
+&nbsp;                + &quot;&amp;points_encoded=true&quot;
+&nbsp;                + &quot;&amp;points_encoded_multiplier=1000000&quot;
+&nbsp;                + &quot;&amp;calc_points=&quot; + tmpCalcPoints
+<b class="nc">&nbsp;                + &quot;&amp;algorithm=&quot; + ghRequest.getAlgorithm()</b>
+<b class="nc">&nbsp;                + &quot;&amp;locale=&quot; + ghRequest.getLocale().toString()</b>
+&nbsp;                + &quot;&amp;elevation=&quot; + tmpElevation
+&nbsp;                + &quot;&amp;optimize=&quot; + tmpOptimize;
+&nbsp;
+<b class="nc">&nbsp;        for (String details : ghRequest.getPathDetails()) {</b>
+<b class="nc">&nbsp;            url += &quot;&amp;&quot; + Parameters.Details.PATH_DETAILS + &quot;=&quot; + encodeURL(details);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // append *all* point hints if at least one is not empty
+<b class="nc">&nbsp;        if (ghRequest.getPointHints().stream().anyMatch(h -&gt; !h.isEmpty()))</b>
+<b class="nc">&nbsp;            for (String hint : ghRequest.getPointHints())</b>
+<b class="nc">&nbsp;                url += &quot;&amp;&quot; + Parameters.Routing.POINT_HINT + &quot;=&quot; + encodeURL(hint);</b>
+&nbsp;
+&nbsp;
+&nbsp;        // append *all* curbsides if at least one is not empty
+<b class="nc">&nbsp;        if (ghRequest.getCurbsides().stream().anyMatch(c -&gt; !c.isEmpty()))</b>
+<b class="nc">&nbsp;            for (String curbside : ghRequest.getCurbsides())</b>
+<b class="nc">&nbsp;                url += &quot;&amp;&quot; + Parameters.Routing.CURBSIDE + &quot;=&quot; + encodeURL(curbside);</b>
+&nbsp;
+&nbsp;        // append *all* headings only if at least *one* is not NaN
+<b class="nc">&nbsp;        if (ghRequest.getHeadings().stream().anyMatch(h -&gt; !Double.isNaN(h)))</b>
+<b class="nc">&nbsp;            for (Double heading : ghRequest.getHeadings())</b>
+<b class="nc">&nbsp;                url += &quot;&amp;heading=&quot; + heading;</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;        for (String snapPrevention : ghRequest.getSnapPreventions()) {</b>
+<b class="nc">&nbsp;            url += &quot;&amp;&quot; + Parameters.Routing.SNAP_PREVENTION + &quot;=&quot; + encodeURL(snapPrevention);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!key.isEmpty()) {</b>
+<b class="nc">&nbsp;            url += &quot;&amp;key=&quot; + encodeURL(key);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, Object&gt; entry : ghRequest.getHints().toMap().entrySet()) {</b>
+<b class="nc">&nbsp;            String urlKey = entry.getKey();</b>
+<b class="nc">&nbsp;            String urlValue = entry.getValue().toString();</b>
+&nbsp;
+&nbsp;            // use lower case conversion for check only!
+<b class="nc">&nbsp;            if (ignoreSetForGet.contains(toLowerCase(urlKey))) {</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (urlValue != null &amp;&amp; !urlValue.isEmpty()) {</b>
+<b class="nc">&nbsp;                url += &quot;&amp;&quot; + encodeURL(urlKey) + &quot;=&quot; + encodeURL(urlValue);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return new Request.Builder().url(url)</b>
+<b class="nc">&nbsp;                .header(X_GH_CLIENT_VERSION, GH_VERSION_FROM_MAVEN)</b>
+<b class="nc">&nbsp;                .build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String export(GHRequest ghRequest) {
+<b class="nc">&nbsp;        String str = &quot;Creating request failed&quot;;</b>
+<b class="nc">&nbsp;        ResponseBody body = null;</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            if (postRequest)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;GPX export only works for GET requests, make sure to use `setPostRequest(false)`&quot;);</b>
+<b class="nc">&nbsp;            Request okRequest = createGetRequest(ghRequest);</b>
+<b class="nc">&nbsp;            body = getClientForRequest(ghRequest).newCall(okRequest).execute().body();</b>
+<b class="nc">&nbsp;            str = body.string();</b>
+&nbsp;
+<b class="nc">&nbsp;            return str;</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Problem while fetching export &quot; + ghRequest.getPoints()</b>
+<b class="nc">&nbsp;                    + &quot;, error: &quot; + ex.getMessage() + &quot; response: &quot; + str, ex);</b>
+&nbsp;        } finally {
+<b class="nc">&nbsp;            Helper.close(body);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private ArrayNode createStringList(List&lt;String&gt; list) {
+<b class="nc">&nbsp;        ArrayNode outList = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;        for (String str : list) {</b>
+<b class="nc">&nbsp;            outList.add(str);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return outList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private ArrayNode createDoubleList(List&lt;Double&gt; list) {
+<b class="nc">&nbsp;        ArrayNode outList = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;        for (Double d : list) {</b>
+<b class="nc">&nbsp;            outList.add(d);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return outList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private ArrayNode createPointList(List&lt;GHPoint&gt; list) {
+<b class="nc">&nbsp;        ArrayNode outList = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;        for (GHPoint p : list) {</b>
+<b class="nc">&nbsp;            ArrayNode entry = objectMapper.createArrayNode();</b>
+<b class="nc">&nbsp;            entry.add(p.lon);</b>
+<b class="nc">&nbsp;            entry.add(p.lat);</b>
+<b class="nc">&nbsp;            outList.add(entry);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return outList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String encodeURL(String str) {
+<b class="nc">&nbsp;        return URLEncoder.encode(str, StandardCharsets.UTF_8);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

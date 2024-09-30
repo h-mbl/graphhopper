@@ -1,0 +1,234 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Transfer</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Transfer (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Transfer</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Transfer$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;
+<b class="nc">&nbsp;public class Transfer extends Entity {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = -4944512120812641063L;
+&nbsp;    public String from_stop_id;
+&nbsp;    public String to_stop_id;
+&nbsp;    public int  transfer_type;
+&nbsp;    public int  min_transfer_time;
+&nbsp;    public String from_route_id;
+&nbsp;    public String to_route_id;
+&nbsp;    public String from_trip_id;
+&nbsp;    public String to_trip_id;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return &quot;Transfer{&quot; +</b>
+&nbsp;                &quot;from_stop_id=&#39;&quot; + from_stop_id + &#39;\&#39;&#39; +
+&nbsp;                &quot;, to_stop_id=&#39;&quot; + to_stop_id + &#39;\&#39;&#39; +
+&nbsp;                &quot;, transfer_type=&quot; + transfer_type +
+&nbsp;                &quot;, min_transfer_time=&quot; + min_transfer_time +
+&nbsp;                &quot;, from_route_id=&#39;&quot; + from_route_id + &#39;\&#39;&#39; +
+&nbsp;                &quot;, to_route_id=&#39;&quot; + to_route_id + &#39;\&#39;&#39; +
+&nbsp;                &quot;, from_trip_id=&#39;&quot; + from_trip_id + &#39;\&#39;&#39; +
+&nbsp;                &quot;, to_trip_id=&#39;&quot; + to_trip_id + &#39;\&#39;&#39; +
+&nbsp;                &#39;}&#39;;
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;Transfer&gt; {
+&nbsp;
+&nbsp;        public Loader(GTFSFeed feed) {
+<b class="nc">&nbsp;            super(feed, &quot;transfers&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+<b class="nc">&nbsp;            Transfer tr = new Transfer();</b>
+<b class="nc">&nbsp;            tr.sourceFileLine    = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;            tr.from_stop_id      = getStringField(&quot;from_stop_id&quot;, true);</b>
+<b class="nc">&nbsp;            tr.to_stop_id        = getStringField(&quot;to_stop_id&quot;, true);</b>
+<b class="nc">&nbsp;            tr.transfer_type     = getIntField(&quot;transfer_type&quot;, true, 0, 3);</b>
+<b class="nc">&nbsp;            tr.min_transfer_time = getIntField(&quot;min_transfer_time&quot;, false, 0, Integer.MAX_VALUE);</b>
+<b class="nc">&nbsp;            tr.from_route_id     = getStringField(&quot;from_route_id&quot;, false);</b>
+<b class="nc">&nbsp;            tr.to_route_id       = getStringField(&quot;to_route_id&quot;, false);</b>
+<b class="nc">&nbsp;            tr.from_trip_id      = getStringField(&quot;from_trip_id&quot;, false);</b>
+<b class="nc">&nbsp;            tr.to_trip_id        = getStringField(&quot;to_trip_id&quot;, false);</b>
+&nbsp;
+<b class="nc">&nbsp;            getRefField(&quot;from_stop_id&quot;, true, feed.stops);</b>
+<b class="nc">&nbsp;            getRefField(&quot;to_stop_id&quot;, true, feed.stops);</b>
+<b class="nc">&nbsp;            getRefField(&quot;from_route_id&quot;, false, feed.routes);</b>
+<b class="nc">&nbsp;            getRefField(&quot;to_route_id&quot;, false, feed.routes);</b>
+<b class="nc">&nbsp;            getRefField(&quot;from_trip_id&quot;, false, feed.trips);</b>
+<b class="nc">&nbsp;            getRefField(&quot;to_trip_id&quot;, false, feed.trips);</b>
+&nbsp;
+<b class="nc">&nbsp;            tr.feed = feed;</b>
+<b class="nc">&nbsp;            feed.transfers.put(Long.toString(row), tr);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Transfer clone() {
+&nbsp;        try {
+<b class="nc">&nbsp;            return (Transfer) super.clone();</b>
+<b class="nc">&nbsp;        } catch (CloneNotSupportedException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

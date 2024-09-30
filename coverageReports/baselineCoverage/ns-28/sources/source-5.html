@@ -1,0 +1,277 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BikeCommonAccessParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: BikeCommonAccessParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BikeCommonAccessParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.6%
+  </span>
+  <span class="absValue">
+    (106/112)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (85/85)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.util.FerrySpeedCalculator;
+&nbsp;import com.graphhopper.routing.util.TransportationMode;
+&nbsp;import com.graphhopper.routing.util.WayAccess;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.util.parsers.OSMTemporalAccessParser.hasTemporalRestriction;
+&nbsp;
+&nbsp;public abstract class BikeCommonAccessParser extends AbstractAccessParser implements TagParser {
+&nbsp;
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; OPP_LANES = new HashSet&lt;&gt;(Arrays.asList(&quot;opposite&quot;, &quot;opposite_lane&quot;, &quot;opposite_track&quot;));</b>
+<b class="fc">&nbsp;    private final Set&lt;String&gt; allowedHighways = new HashSet&lt;&gt;();</b>
+&nbsp;    private final BooleanEncodedValue roundaboutEnc;
+&nbsp;
+&nbsp;    protected BikeCommonAccessParser(BooleanEncodedValue accessEnc, BooleanEncodedValue roundaboutEnc) {
+<b class="fc">&nbsp;        super(accessEnc, TransportationMode.BIKE);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.roundaboutEnc = roundaboutEnc;</b>
+&nbsp;
+<b class="fc">&nbsp;        restrictedValues.add(&quot;agricultural&quot;);</b>
+<b class="fc">&nbsp;        restrictedValues.add(&quot;forestry&quot;);</b>
+<b class="fc">&nbsp;        restrictedValues.add(&quot;delivery&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        barriers.add(&quot;fence&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        allowedHighways.addAll(Arrays.asList(&quot;living_street&quot;, &quot;steps&quot;, &quot;cycleway&quot;, &quot;path&quot;, &quot;footway&quot;, &quot;platform&quot;,</b>
+&nbsp;                &quot;pedestrian&quot;, &quot;track&quot;, &quot;service&quot;, &quot;residential&quot;, &quot;unclassified&quot;, &quot;road&quot;, &quot;bridleway&quot;,
+&nbsp;                &quot;motorway&quot;, &quot;motorway_link&quot;, &quot;trunk&quot;, &quot;trunk_link&quot;,
+&nbsp;                &quot;primary&quot;, &quot;primary_link&quot;, &quot;secondary&quot;, &quot;secondary_link&quot;, &quot;tertiary&quot;, &quot;tertiary_link&quot;));
+&nbsp;    }
+&nbsp;
+&nbsp;    public WayAccess getAccess(ReaderWay way) {
+<b class="fc">&nbsp;        String highwayValue = way.getTag(&quot;highway&quot;);</b>
+<b class="fc">&nbsp;        if (highwayValue == null) {</b>
+<b class="fc">&nbsp;            WayAccess access = WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;            if (FerrySpeedCalculator.isFerry(way)) {</b>
+&nbsp;                // if bike is NOT explicitly tagged allow bike but only if foot is not specified either
+<b class="fc">&nbsp;                String bikeTag = way.getTag(&quot;bicycle&quot;);</b>
+<b class="fc">&nbsp;                if (bikeTag == null &amp;&amp; !way.hasTag(&quot;foot&quot;) || intendedValues.contains(bikeTag))</b>
+<b class="fc">&nbsp;                    access = WayAccess.FERRY;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // special case not for all acceptedRailways, only platform
+<b class="fc">&nbsp;            if (way.hasTag(&quot;railway&quot;, &quot;platform&quot;))</b>
+<b class="fc">&nbsp;                access = WayAccess.WAY;</b>
+&nbsp;
+<b class="fc">&nbsp;            if (way.hasTag(&quot;man_made&quot;, &quot;pier&quot;))</b>
+<b class="fc">&nbsp;                access = WayAccess.WAY;</b>
+&nbsp;
+<b class="fc">&nbsp;            if (!access.canSkip()) {</b>
+<b class="fc">&nbsp;                if (way.hasTag(restrictionKeys, restrictedValues))</b>
+<b class="fc">&nbsp;                    return WayAccess.CAN_SKIP;</b>
+<b class="fc">&nbsp;                return access;</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (!allowedHighways.contains(highwayValue))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;        String sacScale = way.getTag(&quot;sac_scale&quot;);</b>
+<b class="fc">&nbsp;        if (sacScale != null) {</b>
+<b class="fc">&nbsp;            if (!isSacScaleAllowed(sacScale))</b>
+<b class="fc">&nbsp;                return WayAccess.CAN_SKIP;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // use the way for pushing
+<b class="fc">&nbsp;        if (way.hasTag(&quot;bicycle&quot;, &quot;dismount&quot;))</b>
+<b class="fc">&nbsp;            return WayAccess.WAY;</b>
+&nbsp;
+<b class="fc">&nbsp;        int firstIndex = way.getFirstIndex(restrictionKeys);</b>
+<b class="fc">&nbsp;        if (firstIndex &gt;= 0) {</b>
+<b class="fc">&nbsp;            String firstValue = way.getTag(restrictionKeys.get(firstIndex), &quot;&quot;);</b>
+<b class="fc">&nbsp;            String[] restrict = firstValue.split(&quot;;&quot;);</b>
+<b class="fc">&nbsp;            for (String value : restrict) {</b>
+<b class="fc">&nbsp;                if (restrictedValues.contains(value) &amp;&amp; !hasTemporalRestriction(way, firstIndex, restrictionKeys))</b>
+<b class="fc">&nbsp;                    return WayAccess.CAN_SKIP;</b>
+<b class="fc">&nbsp;                if (intendedValues.contains(value))</b>
+<b class="fc">&nbsp;                    return WayAccess.WAY;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // accept only if explicitly tagged for bike usage
+<b class="fc">&nbsp;        if (&quot;motorway&quot;.equals(highwayValue) || &quot;motorway_link&quot;.equals(highwayValue) || &quot;bridleway&quot;.equals(highwayValue))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (way.hasTag(&quot;motorroad&quot;, &quot;yes&quot;))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="pc">&nbsp;        if (isBlockFords() &amp;&amp; (&quot;ford&quot;.equals(highwayValue) || way.hasTag(&quot;ford&quot;)))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;        return WayAccess.WAY;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean isSacScaleAllowed(String sacScale) {
+&nbsp;        // other scales are nearly impossible by an ordinary bike, see http://wiki.openstreetmap.org/wiki/Key:sac_scale
+<b class="fc">&nbsp;        return &quot;hiking&quot;.equals(sacScale);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way) {
+<b class="fc">&nbsp;        WayAccess access = getAccess(way);</b>
+<b class="fc">&nbsp;        if (access.canSkip())</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        if (access.isFerry()) {</b>
+<b class="fc">&nbsp;            accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;            accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            handleAccess(edgeId, edgeIntAccess, way);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (way.hasTag(&quot;gh:barrier_edge&quot;)) {</b>
+<b class="fc">&nbsp;            List&lt;Map&lt;String, Object&gt;&gt; nodeTags = way.getTag(&quot;node_tags&quot;, Collections.emptyList());</b>
+<b class="fc">&nbsp;            handleBarrierEdge(edgeId, edgeIntAccess, nodeTags.get(0));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void handleAccess(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way) {
+&nbsp;        // handle oneways. The value -1 means it is a oneway but for reverse direction of stored geometry.
+&nbsp;        // The tagging oneway:bicycle=no or cycleway:right:oneway=no or cycleway:left:oneway=no lifts the generic oneway restriction of the way for bike
+<b class="fc">&nbsp;        boolean isOneway = way.hasTag(&quot;oneway&quot;, ONEWAYS) &amp;&amp; !way.hasTag(&quot;oneway&quot;, &quot;-1&quot;) &amp;&amp; !way.hasTag(&quot;bicycle:backward&quot;, intendedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;oneway&quot;, &quot;-1&quot;) &amp;&amp; !way.hasTag(&quot;bicycle:forward&quot;, intendedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;oneway:bicycle&quot;, ONEWAYS)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;cycleway:left:oneway&quot;, ONEWAYS)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;cycleway:right:oneway&quot;, ONEWAYS)</b>
+<b class="pc">&nbsp;                || way.hasTag(&quot;vehicle:backward&quot;, restrictedValues) &amp;&amp; !way.hasTag(&quot;bicycle:forward&quot;, intendedValues)</b>
+<b class="pc">&nbsp;                || way.hasTag(&quot;vehicle:forward&quot;, restrictedValues) &amp;&amp; !way.hasTag(&quot;bicycle:backward&quot;, intendedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;bicycle:forward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;bicycle:backward&quot;, restrictedValues);</b>
+&nbsp;
+<b class="fc">&nbsp;        if ((isOneway || roundaboutEnc.getBool(false, edgeId, edgeIntAccess))</b>
+<b class="fc">&nbsp;                &amp;&amp; !way.hasTag(&quot;oneway:bicycle&quot;, &quot;no&quot;)</b>
+<b class="fc">&nbsp;                &amp;&amp; !(way.hasTag(&quot;cycleway:both&quot;) &amp;&amp; !way.hasTag(&quot;cycleway:both&quot;, &quot;no&quot;))</b>
+<b class="fc">&nbsp;                &amp;&amp; !way.hasTag(&quot;cycleway&quot;, OPP_LANES)</b>
+<b class="fc">&nbsp;                &amp;&amp; !way.hasTag(&quot;cycleway:left&quot;, OPP_LANES)</b>
+<b class="pc">&nbsp;                &amp;&amp; !way.hasTag(&quot;cycleway:right&quot;, OPP_LANES)</b>
+<b class="pc">&nbsp;                &amp;&amp; !way.hasTag(&quot;cycleway:left:oneway&quot;, &quot;no&quot;)</b>
+<b class="fc">&nbsp;                &amp;&amp; !way.hasTag(&quot;cycleway:right:oneway&quot;, &quot;no&quot;)) {</b>
+<b class="fc">&nbsp;            boolean isBackward = way.hasTag(&quot;oneway&quot;, &quot;-1&quot;)</b>
+<b class="fc">&nbsp;                    || way.hasTag(&quot;oneway:bicycle&quot;, &quot;-1&quot;)</b>
+<b class="pc">&nbsp;                    || way.hasTag(&quot;cycleway:left:oneway&quot;, &quot;-1&quot;)</b>
+<b class="fc">&nbsp;                    || way.hasTag(&quot;cycleway:right:oneway&quot;, &quot;-1&quot;)</b>
+<b class="fc">&nbsp;                    || way.hasTag(&quot;vehicle:forward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                    || way.hasTag(&quot;bicycle:forward&quot;, restrictedValues);</b>
+<b class="fc">&nbsp;            accessEnc.setBool(isBackward, edgeId, edgeIntAccess, true);</b>
+&nbsp;
+&nbsp;        } else {
+<b class="fc">&nbsp;            accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;            accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,335 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OSMValueExtractor</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers.helpers</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMValueExtractor (com.graphhopper.routing.util.parsers.helpers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMValueExtractor</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75.6%
+  </span>
+  <span class="absValue">
+    (68/90)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.5%
+  </span>
+  <span class="absValue">
+    (105/116)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers.helpers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.ev.MaxSpeed;
+&nbsp;import com.graphhopper.util.DistanceCalcEarth;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.toLowerCase;
+&nbsp;
+&nbsp;public class OSMValueExtractor {
+&nbsp;
+<b class="fc">&nbsp;    private static final Pattern TON_PATTERN = Pattern.compile(&quot;tons?&quot;);</b>
+<b class="fc">&nbsp;    private static final Pattern MGW_PATTERN = Pattern.compile(&quot;mgw&quot;);</b>
+<b class="fc">&nbsp;    private static final Pattern WSPACE_PATTERN = Pattern.compile(&quot;\\s&quot;);</b>
+<b class="fc">&nbsp;    private static final Pattern METER_PATTERN = Pattern.compile(&quot;meters?|mtrs?|mt|m\\.&quot;);</b>
+<b class="fc">&nbsp;    private static final Pattern INCH_PATTERN = Pattern.compile(&quot;\&quot;|\&#39;\&#39;&quot;);</b>
+<b class="fc">&nbsp;    private static final Pattern FEET_PATTERN = Pattern.compile(&quot;\&#39;|feet&quot;);</b>
+<b class="fc">&nbsp;    private static final Pattern APPROX_PATTERN = Pattern.compile(&quot;~|approx&quot;);</b>
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(OSMValueExtractor.class);</b>
+&nbsp;
+&nbsp;    private OSMValueExtractor() {
+&nbsp;        // utility class
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void extractTons(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, DecimalEncodedValue valueEncoder, List&lt;String&gt; keys) {
+<b class="fc">&nbsp;        final String rawValue = way.getFirstValue(keys);</b>
+<b class="fc">&nbsp;        double value = stringToTons(rawValue);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (Double.isNaN(value)) value = Double.POSITIVE_INFINITY;</b>
+&nbsp;
+<b class="fc">&nbsp;        valueEncoder.setDecimal(false, edgeId, edgeIntAccess, value);</b>
+&nbsp;        // too many
+&nbsp;//        if (value - valueEncoder.getDecimal(false, edgeFlags) &gt; 2)
+&nbsp;//            logger.warn(&quot;Value &quot; + value + &quot; for &quot; + valueEncoder.getName() + &quot; was too large and truncated to &quot; + valueEncoder.getDecimal(false, edgeFlags));
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This parses the weight for a conditional value like &quot;delivery @ (weight &gt; 7.5)&quot;
+&nbsp;     */
+&nbsp;    public static double conditionalWeightToTons(String value) {
+&nbsp;        try {
+<b class="fc">&nbsp;            int index = value.indexOf(&quot;weight&gt;&quot;); // maxweight or weight</b>
+<b class="fc">&nbsp;            if (index &lt; 0) {</b>
+<b class="fc">&nbsp;                index = value.indexOf(&quot;weight &gt;&quot;);</b>
+<b class="pc">&nbsp;                if (index &gt; 0) index += &quot;weight &gt;&quot;.length();</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                index += &quot;weight&gt;&quot;.length();</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (index &gt; 0) {</b>
+<b class="fc">&nbsp;                int lastIndex = value.indexOf(&#39;)&#39;, index); // (value) or value</b>
+<b class="pc">&nbsp;                if (lastIndex &lt; 0) lastIndex = value.length() - 1;</b>
+<b class="pc">&nbsp;                if (lastIndex &gt; index)</b>
+<b class="fc">&nbsp;                    return OSMValueExtractor.stringToTons(value.substring(index, lastIndex));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return Double.NaN;</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;value &quot; + value, ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static double stringToTons(String value) {
+<b class="fc">&nbsp;        value = TON_PATTERN.matcher(toLowerCase(value)).replaceAll(&quot;t&quot;);</b>
+<b class="fc">&nbsp;        value = MGW_PATTERN.matcher(value).replaceAll(&quot;&quot;).trim();</b>
+<b class="fc">&nbsp;        if (isInvalidValue(value))</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;
+<b class="fc">&nbsp;        double factor = 1;</b>
+<b class="fc">&nbsp;        if (value.endsWith(&quot;st&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 2);</b>
+<b class="fc">&nbsp;            factor = 0.907194048807;</b>
+<b class="fc">&nbsp;        } else if (value.endsWith(&quot;t&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 1);</b>
+<b class="fc">&nbsp;        } else if (value.endsWith(&quot;lbs&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 3);</b>
+<b class="fc">&nbsp;            factor = 0.00045359237;</b>
+<b class="fc">&nbsp;        } else if (value.endsWith(&quot;kg&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 2);</b>
+<b class="fc">&nbsp;            factor = 0.001;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            return Double.parseDouble(value) * factor;</b>
+<b class="fc">&nbsp;        } catch (NumberFormatException e) {</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void extractMeter(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, DecimalEncodedValue valueEncoder, List&lt;String&gt; keys) {
+<b class="nc">&nbsp;        final String rawValue = way.getFirstValue(keys);</b>
+<b class="nc">&nbsp;        double value = stringToMeter(rawValue);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (Double.isNaN(value)) value = Double.POSITIVE_INFINITY;</b>
+&nbsp;
+<b class="nc">&nbsp;        valueEncoder.setDecimal(false, edgeId, edgeIntAccess, value);</b>
+&nbsp;        // too many
+&nbsp;//        if (value - valueEncoder.getDecimal(false, edgeFlags) &gt; 2)
+&nbsp;//            logger.warn(&quot;Value &quot; + value + &quot; for &quot; + valueEncoder.getName() + &quot; was too large and truncated to &quot; + valueEncoder.getDecimal(false, edgeFlags));
+&nbsp;    }
+&nbsp;
+&nbsp;    public static double stringToMeter(String value) {
+<b class="fc">&nbsp;        value = WSPACE_PATTERN.matcher(toLowerCase(value)).replaceAll(&quot;&quot;);</b>
+<b class="fc">&nbsp;        value = METER_PATTERN.matcher(value).replaceAll(&quot;m&quot;);</b>
+<b class="fc">&nbsp;        value = INCH_PATTERN.matcher(value).replaceAll(&quot;in&quot;);</b>
+<b class="fc">&nbsp;        value = FEET_PATTERN.matcher(value).replaceAll(&quot;ft&quot;);</b>
+<b class="fc">&nbsp;        if (isInvalidValue(value))</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+<b class="fc">&nbsp;        double factor = 1;</b>
+<b class="fc">&nbsp;        double offset = 0;</b>
+<b class="fc">&nbsp;        if (value.startsWith(&quot;~&quot;) || value.contains(&quot;approx&quot;)) {</b>
+<b class="fc">&nbsp;            value = APPROX_PATTERN.matcher(value).replaceAll(&quot;&quot;).trim();</b>
+<b class="fc">&nbsp;            factor = 0.8;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (value.endsWith(&quot;in&quot;)) {</b>
+<b class="fc">&nbsp;            int startIndex = value.indexOf(&quot;ft&quot;);</b>
+&nbsp;            String inchValue;
+<b class="pc">&nbsp;            if (startIndex &lt; 0) {</b>
+<b class="nc">&nbsp;                startIndex = 0;</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                startIndex += 2;</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            inchValue = value.substring(startIndex, value.length() - 2);</b>
+<b class="fc">&nbsp;            value = value.substring(0, startIndex);</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                offset = Double.parseDouble(inchValue) * 0.0254;</b>
+<b class="nc">&nbsp;            } catch (NumberFormatException e) {</b>
+<b class="nc">&nbsp;                return Double.NaN;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (value.endsWith(&quot;ft&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 2);</b>
+<b class="fc">&nbsp;            factor *= 0.3048;</b>
+<b class="fc">&nbsp;        } else if (value.endsWith(&quot;cm&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 2);</b>
+<b class="fc">&nbsp;            factor *= 0.01;</b>
+<b class="fc">&nbsp;        } else if (value.endsWith(&quot;m&quot;)) {</b>
+<b class="fc">&nbsp;            value = value.substring(0, value.length() - 1);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (value.isEmpty()) {</b>
+<b class="nc">&nbsp;            return offset;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            return Double.parseDouble(value) * factor + offset;</b>
+<b class="fc">&nbsp;        } catch (NumberFormatException e) {</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean isInvalidValue(String value) {
+<b class="fc">&nbsp;        value = toLowerCase(value);</b>
+<b class="pc">&nbsp;        return value.isEmpty() || value.startsWith(&quot;default&quot;) || value.equals(&quot;none&quot;) || value.equals(&quot;unknown&quot;)</b>
+<b class="pc">&nbsp;                || value.contains(&quot;unrestricted&quot;) || value.startsWith(&quot;〜&quot;)</b>
+<b class="pc">&nbsp;                || value.contains(&quot;narrow&quot;) || value.equals(&quot;unsigned&quot;) || value.equals(&quot;fixme&quot;) || value.equals(&quot;small&quot;)</b>
+<b class="pc">&nbsp;                || value.contains(&quot;;&quot;) || value.contains(&quot;:&quot;) || value.contains(&quot;(&quot;)</b>
+<b class="pc">&nbsp;                || value.contains(&quot;&gt;&quot;) || value.contains(&quot;&lt;&quot;) || value.contains(&quot;-&quot;)</b>
+&nbsp;                // only support &#39;.&#39; and no German decimals
+<b class="fc">&nbsp;                || value.contains(&quot;,&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the speed in km/h
+&nbsp;     */
+&nbsp;    public static double stringToKmh(String str) {
+<b class="fc">&nbsp;        if (Helper.isEmpty(str))</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (&quot;walk&quot;.equals(str))</b>
+<b class="fc">&nbsp;            return 6;</b>
+&nbsp;
+&nbsp;        // on some German autobahns and a very few other places
+<b class="fc">&nbsp;        if (&quot;none&quot;.equals(str))</b>
+<b class="fc">&nbsp;            return MaxSpeed.UNLIMITED_SIGN_SPEED;</b>
+&nbsp;
+<b class="fc">&nbsp;        int mpInteger = str.indexOf(&quot;mp&quot;);</b>
+<b class="fc">&nbsp;        int knotInteger = str.indexOf(&quot;knots&quot;);</b>
+<b class="fc">&nbsp;        int kmInteger = str.indexOf(&quot;km&quot;);</b>
+<b class="fc">&nbsp;        int kphInteger = str.indexOf(&quot;kph&quot;);</b>
+&nbsp;
+&nbsp;        double factor;
+<b class="fc">&nbsp;        if (mpInteger &gt; 0) {</b>
+<b class="fc">&nbsp;            str = str.substring(0, mpInteger).trim();</b>
+<b class="fc">&nbsp;            factor = DistanceCalcEarth.KM_MILE;</b>
+<b class="fc">&nbsp;        } else if (knotInteger &gt; 0) {</b>
+<b class="fc">&nbsp;            str = str.substring(0, knotInteger).trim();</b>
+<b class="fc">&nbsp;            factor = 1.852; // see https://en.wikipedia.org/wiki/Knot_%28unit%29#Definitions</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            if (kmInteger &gt; 0) {</b>
+<b class="fc">&nbsp;                str = str.substring(0, kmInteger).trim();</b>
+<b class="fc">&nbsp;            } else if (kphInteger &gt; 0) {</b>
+<b class="fc">&nbsp;                str = str.substring(0, kphInteger).trim();</b>
+&nbsp;            }
+<b class="fc">&nbsp;            factor = 1;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        double value;
+&nbsp;        try {
+<b class="fc">&nbsp;            value = Integer.parseInt(str) * factor;</b>
+<b class="fc">&nbsp;        } catch (Exception ex) {</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (value &lt;= 0) {</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return value;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

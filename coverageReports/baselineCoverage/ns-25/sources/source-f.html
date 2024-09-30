@@ -1,0 +1,234 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > RoadDensityCalculator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: RoadDensityCalculator (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RoadDensityCalculator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayDeque;
+&nbsp;import com.carrotsearch.hppc.IntScatterSet;
+&nbsp;import com.carrotsearch.hppc.IntSet;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.storage.NodeAccess;
+&nbsp;import com.graphhopper.util.EdgeExplorer;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;import java.util.concurrent.Callable;
+&nbsp;import java.util.function.BiConsumer;
+&nbsp;import java.util.function.ToDoubleFunction;
+&nbsp;import java.util.stream.IntStream;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;import static com.graphhopper.util.DistancePlaneProjection.DIST_PLANE;
+&nbsp;
+&nbsp;public class RoadDensityCalculator {
+&nbsp;    private final Graph graph;
+&nbsp;    private final EdgeExplorer edgeExplorer;
+&nbsp;    private final IntSet visited;
+&nbsp;    private final IntArrayDeque deque;
+&nbsp;
+<b class="nc">&nbsp;    public RoadDensityCalculator(Graph graph) {</b>
+<b class="nc">&nbsp;        this.graph = graph;</b>
+<b class="nc">&nbsp;        this.edgeExplorer = graph.createEdgeExplorer();</b>
+<b class="nc">&nbsp;        visited = new IntScatterSet();</b>
+<b class="nc">&nbsp;        deque = new IntArrayDeque(100);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Loops over all edges of the graph and calls the given edgeHandler for each edge. This is done in parallel using
+&nbsp;     * the given number of threads. For every call we can calculate the road density using the provided thread local
+&nbsp;     * road density calculator.
+&nbsp;     */
+&nbsp;    public static void calcRoadDensities(Graph graph, BiConsumer&lt;RoadDensityCalculator, EdgeIteratorState&gt; edgeHandler, int threads) {
+<b class="nc">&nbsp;        ThreadLocal&lt;RoadDensityCalculator&gt; calculator = ThreadLocal.withInitial(() -&gt; new RoadDensityCalculator(graph));</b>
+<b class="nc">&nbsp;        Stream&lt;Runnable&gt; roadDensityWorkers = IntStream.range(0, graph.getEdges())</b>
+<b class="nc">&nbsp;                .mapToObj(i -&gt; () -&gt; {</b>
+<b class="nc">&nbsp;                    EdgeIteratorState edge = graph.getEdgeIteratorState(i, Integer.MIN_VALUE);</b>
+<b class="nc">&nbsp;                    edgeHandler.accept(calculator.get(), edge);</b>
+&nbsp;                });
+<b class="nc">&nbsp;        GHUtility.runConcurrently(roadDensityWorkers, threads);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param radius         in meters
+&nbsp;     * @param calcRoadFactor weighting function. use this to define how different kinds of roads shall contribute to the calculated road density
+&nbsp;     * @return the road density in the vicinity of the given edge, i.e. the weighted road length divided by the squared radius
+&nbsp;     */
+&nbsp;    public double calcRoadDensity(EdgeIteratorState edge, double radius, ToDoubleFunction&lt;EdgeIteratorState&gt; calcRoadFactor) {
+<b class="nc">&nbsp;        visited.clear();</b>
+<b class="nc">&nbsp;        deque.head = deque.tail = 0;</b>
+<b class="nc">&nbsp;        double totalRoadWeight = 0;</b>
+<b class="nc">&nbsp;        NodeAccess na = graph.getNodeAccess();</b>
+<b class="nc">&nbsp;        int baseNode = edge.getBaseNode();</b>
+<b class="nc">&nbsp;        int adjNode = edge.getAdjNode();</b>
+<b class="nc">&nbsp;        GHPoint center = new GHPoint(getLat(na, baseNode, adjNode), getLon(na, baseNode, adjNode));</b>
+<b class="nc">&nbsp;        deque.addLast(baseNode);</b>
+<b class="nc">&nbsp;        deque.addLast(adjNode);</b>
+<b class="nc">&nbsp;        visited.add(baseNode);</b>
+<b class="nc">&nbsp;        visited.add(adjNode);</b>
+&nbsp;        // we just do a BFS search and sum up all the road lengths
+<b class="nc">&nbsp;        final double radiusNormalized = DIST_PLANE.calcNormalizedDist(radius);</b>
+&nbsp;        // for long tunnels or motorway sections where the distance between the exit points and the
+&nbsp;        // center is larger than the radius it is important to continue the search even outside the radius
+<b class="nc">&nbsp;        final int minPolls = (int) (radius / 2);</b>
+<b class="nc">&nbsp;        int polls = 0;</b>
+<b class="nc">&nbsp;        while (!deque.isEmpty()) {</b>
+<b class="nc">&nbsp;            int node = deque.removeFirst();</b>
+<b class="nc">&nbsp;            polls++;</b>
+<b class="nc">&nbsp;            double distance = DIST_PLANE.calcNormalizedDist(center.lat, center.lon, na.getLat(node), na.getLon(node));</b>
+<b class="nc">&nbsp;            if (polls &gt; minPolls &amp;&amp; distance &gt; radiusNormalized)</b>
+&nbsp;                continue;
+<b class="nc">&nbsp;            EdgeIterator iter = edgeExplorer.setBaseNode(node);</b>
+<b class="nc">&nbsp;            while (iter.next()) {</b>
+<b class="nc">&nbsp;                if (visited.contains(iter.getAdjNode()))</b>
+&nbsp;                    continue;
+<b class="nc">&nbsp;                visited.add(iter.getAdjNode());</b>
+<b class="nc">&nbsp;                if (distance &lt;= radiusNormalized)</b>
+<b class="nc">&nbsp;                    totalRoadWeight += calcRoadFactor.applyAsDouble(iter);</b>
+<b class="nc">&nbsp;                deque.addLast(iter.getAdjNode());</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return totalRoadWeight / radius / radius;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static double getLat(NodeAccess na, int baseNode, int adjNode) {
+<b class="nc">&nbsp;        return (na.getLat(baseNode) + na.getLat(adjNode)) / 2;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static double getLon(NodeAccess na, int baseNode, int adjNode) {
+<b class="nc">&nbsp;        return (na.getLon(baseNode) + na.getLon(adjNode)) / 2;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

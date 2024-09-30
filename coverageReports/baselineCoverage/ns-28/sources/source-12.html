@@ -1,0 +1,227 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ModeAccessParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: ModeAccessParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ModeAccessParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    57.8%
+  </span>
+  <span class="absValue">
+    (37/64)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.1%
+  </span>
+  <span class="absValue">
+    (40/47)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.util.FerrySpeedCalculator;
+&nbsp;import com.graphhopper.routing.util.TransportationMode;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.util.parsers.OSMTemporalAccessParser.hasTemporalRestriction;
+&nbsp;
+&nbsp;public class ModeAccessParser implements TagParser {
+&nbsp;
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; CAR_BARRIERS = Set.of(&quot;kissing_gate&quot;, &quot;fence&quot;,</b>
+&nbsp;            &quot;bollard&quot;, &quot;stile&quot;, &quot;turnstile&quot;, &quot;cycle_barrier&quot;, &quot;motorcycle_barrier&quot;, &quot;block&quot;,
+&nbsp;            &quot;bus_trap&quot;, &quot;sump_buster&quot;, &quot;jersey_barrier&quot;);
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; INTENDED = Set.of(&quot;yes&quot;, &quot;designated&quot;, &quot;official&quot;, &quot;permissive&quot;, &quot;private&quot;, &quot;permit&quot;);</b>
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; ONEWAYS_FW = Set.of(&quot;yes&quot;, &quot;true&quot;, &quot;1&quot;);</b>
+&nbsp;    private final Set&lt;String&gt; restrictedValues;
+&nbsp;    private final List&lt;String&gt; restrictionKeys;
+&nbsp;    private final List&lt;String&gt; vehicleForward;
+&nbsp;    private final List&lt;String&gt; vehicleBackward;
+&nbsp;    private final List&lt;String&gt; ignoreOnewayKeys;
+&nbsp;    private final BooleanEncodedValue accessEnc;
+&nbsp;    private final BooleanEncodedValue roundaboutEnc;
+&nbsp;    private final boolean skipEmergency;
+&nbsp;    private final Set&lt;String&gt; barriers;
+&nbsp;
+&nbsp;    public ModeAccessParser(TransportationMode mode, BooleanEncodedValue accessEnc,
+&nbsp;                            boolean skipEmergency, BooleanEncodedValue roundaboutEnc,
+<b class="fc">&nbsp;                            Set&lt;String&gt; restrictions, Set&lt;String&gt; barriers) {</b>
+<b class="fc">&nbsp;        this.accessEnc = accessEnc;</b>
+<b class="fc">&nbsp;        this.roundaboutEnc = roundaboutEnc;</b>
+<b class="fc">&nbsp;        restrictionKeys = OSMRoadAccessParser.toOSMRestrictions(mode);</b>
+<b class="fc">&nbsp;        vehicleForward = restrictionKeys.stream().map(r -&gt; r + &quot;:forward&quot;).toList();</b>
+<b class="fc">&nbsp;        vehicleBackward = restrictionKeys.stream().map(r -&gt; r + &quot;:backward&quot;).toList();</b>
+<b class="fc">&nbsp;        ignoreOnewayKeys = restrictionKeys.stream().map(r -&gt; &quot;oneway:&quot; + r).toList();</b>
+<b class="pc">&nbsp;        restrictedValues = restrictions.isEmpty() ? Set.of(&quot;no&quot;, &quot;restricted&quot;, &quot;military&quot;, &quot;emergency&quot;) : restrictions;</b>
+<b class="fc">&nbsp;        this.barriers = barriers.isEmpty() ? CAR_BARRIERS : barriers;</b>
+<b class="pc">&nbsp;        if (restrictedValues.contains(&quot;&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;restriction values cannot contain empty string&quot;);</b>
+<b class="fc">&nbsp;        this.skipEmergency = skipEmergency;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+<b class="fc">&nbsp;        String highwayValue = way.getTag(&quot;highway&quot;);</b>
+<b class="pc">&nbsp;        if (skipEmergency &amp;&amp; &quot;service&quot;.equals(highwayValue) &amp;&amp; &quot;emergency_access&quot;.equals(way.getTag(&quot;service&quot;)))</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        int firstIndex = way.getFirstIndex(restrictionKeys);</b>
+<b class="fc">&nbsp;        String firstValue = firstIndex &lt; 0 ? &quot;&quot; : way.getTag(restrictionKeys.get(firstIndex), &quot;&quot;);</b>
+<b class="fc">&nbsp;        if (restrictedValues.contains(firstValue) &amp;&amp; !hasTemporalRestriction(way, firstIndex, restrictionKeys))</b>
+&nbsp;            return;
+&nbsp;
+<b class="pc">&nbsp;        if (way.hasTag(&quot;gh:barrier_edge&quot;) &amp;&amp; way.hasTag(&quot;node_tags&quot;)) {</b>
+<b class="fc">&nbsp;            List&lt;Map&lt;String, Object&gt;&gt; nodeTags = way.getTag(&quot;node_tags&quot;, null);</b>
+<b class="fc">&nbsp;            Map&lt;String, Object&gt; firstNodeTags = nodeTags.get(0);</b>
+&nbsp;            // a barrier edge has the restriction in both nodes and the tags are the same -&gt; get(0)
+<b class="fc">&nbsp;            firstValue = getFirstPriorityNodeTag(firstNodeTags, restrictionKeys);</b>
+<b class="fc">&nbsp;            String barrierValue = firstNodeTags.containsKey(&quot;barrier&quot;) ? (String) firstNodeTags.get(&quot;barrier&quot;) : &quot;&quot;;</b>
+<b class="fc">&nbsp;            if (restrictedValues.contains(firstValue) || barriers.contains(barrierValue)</b>
+<b class="pc">&nbsp;                    || &quot;yes&quot;.equals(firstNodeTags.get(&quot;locked&quot;)) &amp;&amp; !INTENDED.contains(firstValue))</b>
+&nbsp;                return;
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (FerrySpeedCalculator.isFerry(way)) {</b>
+<b class="nc">&nbsp;            boolean isCar = restrictionKeys.contains(&quot;motorcar&quot;);</b>
+<b class="nc">&nbsp;            if (INTENDED.contains(firstValue)</b>
+&nbsp;                    // implied default is allowed only if foot and bicycle is not specified:
+<b class="nc">&nbsp;                    || isCar &amp;&amp; firstValue.isEmpty() &amp;&amp; !way.hasTag(&quot;foot&quot;) &amp;&amp; !way.hasTag(&quot;bicycle&quot;)</b>
+&nbsp;                    // if hgv is allowed then smaller trucks and cars are allowed too even if not specified
+<b class="nc">&nbsp;                    || isCar &amp;&amp; way.hasTag(&quot;hgv&quot;, &quot;yes&quot;)) {</b>
+<b class="nc">&nbsp;                accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="nc">&nbsp;                accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="fc">&nbsp;            boolean isRoundabout = roundaboutEnc.getBool(false, edgeId, edgeIntAccess);</b>
+<b class="fc">&nbsp;            boolean ignoreOneway = &quot;no&quot;.equals(way.getFirstValue(ignoreOnewayKeys));</b>
+<b class="fc">&nbsp;            boolean isBwd = isBackwardOneway(way);</b>
+<b class="pc">&nbsp;            if (!ignoreOneway &amp;&amp; (isBwd || isRoundabout || isForwardOneway(way))) {</b>
+<b class="fc">&nbsp;                accessEnc.setBool(isBwd, edgeId, edgeIntAccess, true);</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;                accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String getFirstPriorityNodeTag(Map&lt;String, Object&gt; nodeTags, List&lt;String&gt; restrictionKeys) {
+<b class="fc">&nbsp;        for (String key : restrictionKeys) {</b>
+<b class="fc">&nbsp;            String val = (String) nodeTags.get(key);</b>
+<b class="fc">&nbsp;            if (val != null) return val;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return &quot;&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isBackwardOneway(ReaderWay way) {
+&nbsp;        // vehicle:forward=no is like oneway=-1
+<b class="pc">&nbsp;        return way.hasTag(&quot;oneway&quot;, &quot;-1&quot;) || &quot;no&quot;.equals(way.getFirstValue(vehicleForward));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isForwardOneway(ReaderWay way) {
+&nbsp;        // vehicle:backward=no is like oneway=yes
+<b class="fc">&nbsp;        return way.hasTag(&quot;oneway&quot;, ONEWAYS_FW) || &quot;no&quot;.equals(way.getFirstValue(vehicleBackward));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

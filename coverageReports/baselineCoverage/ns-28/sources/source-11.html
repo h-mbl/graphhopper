@@ -1,0 +1,175 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MaxWeightExceptParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: MaxWeightExceptParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MaxWeightExceptParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (18/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (23/23)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.ev.EnumEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.MaxWeightExcept;
+&nbsp;import com.graphhopper.routing.util.TransportationMode;
+&nbsp;import com.graphhopper.routing.util.parsers.helpers.OSMValueExtractor;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.util.parsers.helpers.OSMValueExtractor.stringToTons;
+&nbsp;
+&nbsp;public class MaxWeightExceptParser implements TagParser {
+&nbsp;    private final EnumEncodedValue&lt;MaxWeightExcept&gt; mweEnc;
+<b class="fc">&nbsp;    private static final List&lt;String&gt; HGV_RESTRICTIONS = OSMRoadAccessParser.toOSMRestrictions(TransportationMode.HGV).stream()</b>
+<b class="fc">&nbsp;            .map(e -&gt; e + &quot;:conditional&quot;).collect(Collectors.toList());</b>
+&nbsp;
+<b class="fc">&nbsp;    public MaxWeightExceptParser(EnumEncodedValue&lt;MaxWeightExcept&gt; mweEnc) {</b>
+<b class="fc">&nbsp;        this.mweEnc = mweEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+&nbsp;        // tagging like maxweight:conditional=no/none @ destination/delivery/forestry/service
+<b class="fc">&nbsp;        String condValue = way.getTag(&quot;maxweight:conditional&quot;, &quot;&quot;);</b>
+<b class="fc">&nbsp;        if (!condValue.isEmpty()) {</b>
+<b class="fc">&nbsp;            String[] values = condValue.split(&quot;@&quot;);</b>
+<b class="pc">&nbsp;            if (values.length == 2) {</b>
+<b class="fc">&nbsp;                String key = values[0].trim();</b>
+<b class="fc">&nbsp;                String value = values[1].trim();</b>
+<b class="pc">&nbsp;                if (&quot;no&quot;.equals(key) || &quot;none&quot;.equals(key)) {</b>
+<b class="pc">&nbsp;                    if (value.startsWith(&quot;(&quot;) &amp;&amp; value.endsWith(&quot;)&quot;)) value = value.substring(1, value.length() - 1);</b>
+<b class="fc">&nbsp;                    mweEnc.setEnum(false, edgeId, edgeIntAccess, MaxWeightExcept.find(value));</b>
+&nbsp;                    return;
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // For tagging like vehicle:conditional=destination @ (weight&gt;3.5) AND maxweight=3.5
+&nbsp;        // For vehicle:conditional=no @ (weight&gt;3.5) =&gt; NONE is used, which is consistent with max_weight being set to 3.5 in this case
+<b class="fc">&nbsp;        for (String restriction : HGV_RESTRICTIONS) {</b>
+<b class="fc">&nbsp;            String value = way.getTag(restriction, &quot;&quot;);</b>
+<b class="fc">&nbsp;            int atIndex = value.indexOf(&quot;@&quot;);</b>
+<b class="fc">&nbsp;            if (atIndex &gt; 0) {</b>
+<b class="fc">&nbsp;                double dec = OSMValueExtractor.conditionalWeightToTons(value);</b>
+&nbsp;                // set it only if the weight value is the same as in max_weight
+<b class="pc">&nbsp;                if (!Double.isNaN(dec)</b>
+<b class="fc">&nbsp;                        &amp;&amp; (stringToTons(way.getTag(&quot;maxweight&quot;, &quot;&quot;)) == dec</b>
+<b class="pc">&nbsp;                        || stringToTons(way.getTag(&quot;maxweightrating:hgv&quot;, &quot;&quot;)) == dec</b>
+<b class="pc">&nbsp;                        || stringToTons(way.getTag(&quot;maxgcweight&quot;, &quot;&quot;)) == dec)) {</b>
+<b class="fc">&nbsp;                    mweEnc.setEnum(false, edgeId, edgeIntAccess, MaxWeightExcept.find(value.substring(0, atIndex).trim()));</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

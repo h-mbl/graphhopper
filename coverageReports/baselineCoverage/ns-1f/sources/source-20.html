@@ -1,0 +1,275 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OSMReaderConfig</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMReaderConfig (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMReaderConfig</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.7%
+  </span>
+  <span class="absValue">
+    (22/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.5%
+  </span>
+  <span class="absValue">
+    (42/44)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;public class OSMReaderConfig {</b>
+<b class="fc">&nbsp;    private List&lt;String&gt; ignoredHighways = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private boolean parseWayNames = true;</b>
+<b class="fc">&nbsp;    private String preferredLanguage = &quot;&quot;;</b>
+<b class="fc">&nbsp;    private double maxWayPointDistance = 0.5;</b>
+<b class="fc">&nbsp;    private double elevationMaxWayPointDistance = Double.MAX_VALUE;</b>
+<b class="fc">&nbsp;    private String smoothElevation = &quot;&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;    private double smoothElevationAverageWindowSize = 150.0;</b>
+<b class="fc">&nbsp;    private int ramerElevationSmoothingMax = 5;</b>
+<b class="fc">&nbsp;    private double longEdgeSamplingDistance = Double.MAX_VALUE;</b>
+<b class="fc">&nbsp;    private int workerThreads = 2;</b>
+<b class="fc">&nbsp;    private double defaultElevation = 0;</b>
+&nbsp;
+&nbsp;    public List&lt;String&gt; getIgnoredHighways() {
+<b class="fc">&nbsp;        return ignoredHighways;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the values of the highway tag that shall be ignored when we read the OSM file. This can be used to speed up
+&nbsp;     * the import and reduce the size of the resulting routing graph. For example if one is only interested in routing
+&nbsp;     * for motorized vehicles the routing graph size can be reduced by excluding footways, cycleways, paths and/or
+&nbsp;     * tracks. This can be quite significant depending on your area. Not only are there fewer ways to be processed, but
+&nbsp;     * there are also fewer junctions, which means fewer nodes and edges. Another reason to exclude footways etc. for
+&nbsp;     * motorized vehicle routing could be preventing undesired u-turns (#1858). Similarly, one could exclude motorway,
+&nbsp;     * trunk or even primary highways for bicycle or pedestrian routing.
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setIgnoredHighways(List&lt;String&gt; ignoredHighways) {
+<b class="fc">&nbsp;        this.ignoredHighways = ignoredHighways;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getPreferredLanguage() {
+<b class="fc">&nbsp;        return preferredLanguage;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the language used to parse way names. For example if this is set to &#39;en&#39; we will use the &#39;name:en&#39; tag
+&nbsp;     * rather than the &#39;name&#39; tag if it is present. The language code should be given as defined in ISO 639-1 or ISO 639-2.
+&nbsp;     * This setting becomes irrelevant if parseWayNames is set to false.
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setPreferredLanguage(String preferredLanguage) {
+<b class="fc">&nbsp;        this.preferredLanguage = preferredLanguage;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isParseWayNames() {
+<b class="fc">&nbsp;        return parseWayNames;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Enables/disables the parsing of the name and ref tags to set the name of the graph edges
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setParseWayNames(boolean parseWayNames) {
+<b class="fc">&nbsp;        this.parseWayNames = parseWayNames;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getMaxWayPointDistance() {
+<b class="fc">&nbsp;        return maxWayPointDistance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This parameter affects the routine used to simplify the edge geometries (Ramer-Douglas-Peucker). Higher values mean
+&nbsp;     * more details are preserved. The default is 1 (meter). Simplification can be disabled by setting it to 0.
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setMaxWayPointDistance(double maxWayPointDistance) {
+<b class="fc">&nbsp;        this.maxWayPointDistance = maxWayPointDistance;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getElevationMaxWayPointDistance() {
+<b class="fc">&nbsp;        return elevationMaxWayPointDistance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the max elevation discrepancy between way points and the simplified polyline in meters
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setElevationMaxWayPointDistance(double elevationMaxWayPointDistance) {
+<b class="fc">&nbsp;        this.elevationMaxWayPointDistance = elevationMaxWayPointDistance;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getElevationSmoothing() {
+<b class="fc">&nbsp;        return smoothElevation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Enables/disables elevation smoothing
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setElevationSmoothing(String smoothElevation) {
+<b class="fc">&nbsp;        this.smoothElevation = smoothElevation;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getElevationSmoothingRamerMax() {
+<b class="fc">&nbsp;        return ramerElevationSmoothingMax;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OSMReaderConfig setElevationSmoothingRamerMax(int max) {
+<b class="fc">&nbsp;        this.ramerElevationSmoothingMax = max;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getSmoothElevationAverageWindowSize() {
+<b class="fc">&nbsp;        return smoothElevationAverageWindowSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setSmoothElevationAverageWindowSize(double smoothElevationAverageWindowSize) {
+<b class="fc">&nbsp;        this.smoothElevationAverageWindowSize = smoothElevationAverageWindowSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getLongEdgeSamplingDistance() {
+<b class="fc">&nbsp;        return longEdgeSamplingDistance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the distance between elevation samples on long edges
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setLongEdgeSamplingDistance(double longEdgeSamplingDistance) {
+<b class="fc">&nbsp;        this.longEdgeSamplingDistance = longEdgeSamplingDistance;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getWorkerThreads() {
+<b class="fc">&nbsp;        return workerThreads;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the number of threads used for the OSM import
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setWorkerThreads(int workerThreads) {
+<b class="fc">&nbsp;        this.workerThreads = workerThreads;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getDefaultElevation() {
+<b class="fc">&nbsp;        return defaultElevation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the elevation in meters that shall be used if the elevation data source is missing a value
+&nbsp;     */
+&nbsp;    public OSMReaderConfig setDefaultElevation(double defaultElevation) {
+<b class="nc">&nbsp;        this.defaultElevation = defaultElevation;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > HungaryCountryRule</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.countryrules.europe</a>
+</div>
+
+<h1>Coverage Summary for Class: HungaryCountryRule (com.graphhopper.routing.util.countryrules.europe)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">HungaryCountryRule</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86.7%
+  </span>
+  <span class="absValue">
+    (13/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (16/16)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">HungaryCountryRule$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86.7%
+  </span>
+  <span class="absValue">
+    (13/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (17/17)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.util.countryrules.europe;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.RoadAccess;
+&nbsp;import com.graphhopper.routing.ev.RoadClass;
+&nbsp;import com.graphhopper.routing.ev.Toll;
+&nbsp;import com.graphhopper.routing.util.TransportationMode;
+&nbsp;import com.graphhopper.routing.util.countryrules.CountryRule;
+&nbsp;
+&nbsp;/**
+&nbsp; * Defines the default rules for Hungarian roads
+&nbsp; *
+&nbsp; * @author Thomas Butz
+&nbsp; */
+<b class="fc">&nbsp;public class HungaryCountryRule implements CountryRule {</b>
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public RoadAccess getAccess(ReaderWay readerWay, TransportationMode transportationMode, RoadAccess currentRoadAccess) {
+&nbsp;        // Pedestrian traffic and bicycles are not restricted
+<b class="pc">&nbsp;		if (transportationMode == TransportationMode.FOOT || transportationMode == TransportationMode.BIKE) {</b>
+<b class="fc">&nbsp;            return currentRoadAccess;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Override only bogus &quot;yes&quot; and missing/other
+<b class="pc">&nbsp;        if (currentRoadAccess != RoadAccess.YES &amp;&amp; currentRoadAccess != RoadAccess.OTHER) {</b>
+<b class="fc">&nbsp;            return currentRoadAccess;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        RoadClass roadClass = RoadClass.find(readerWay.getTag(&quot;highway&quot;, &quot;&quot;));</b>
+<b class="fc">&nbsp;        if (roadClass == RoadClass.LIVING_STREET) {</b>
+<b class="fc">&nbsp;            return RoadAccess.DESTINATION;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return currentRoadAccess;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Toll getToll(ReaderWay readerWay, Toll currentToll) {
+<b class="fc">&nbsp;        if (currentToll != Toll.MISSING) {</b>
+<b class="fc">&nbsp;            return currentToll;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        RoadClass roadClass = RoadClass.find(readerWay.getTag(&quot;highway&quot;, &quot;&quot;));</b>
+<b class="fc">&nbsp;        switch (roadClass) {</b>
+&nbsp;            case MOTORWAY:
+<b class="fc">&nbsp;                return Toll.ALL;</b>
+&nbsp;            case TRUNK:
+&nbsp;            case PRIMARY:
+<b class="fc">&nbsp;                return Toll.HGV;</b>
+&nbsp;            default:
+<b class="fc">&nbsp;                return currentToll;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,584 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BaseGraphNodesAndEdges</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: BaseGraphNodesAndEdges (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BaseGraphNodesAndEdges</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.3%
+  </span>
+  <span class="absValue">
+    (52/54)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.3%
+  </span>
+  <span class="absValue">
+    (68/94)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84%
+  </span>
+  <span class="absValue">
+    (179/213)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;
+&nbsp;import java.util.Locale;
+&nbsp;
+&nbsp;import static com.graphhopper.util.EdgeIterator.NO_EDGE;
+&nbsp;import static com.graphhopper.util.Helper.nf;
+&nbsp;
+&nbsp;/**
+&nbsp; * Underlying storage for nodes and edges of {@link BaseGraph}. Nodes and edges are stored using two {@link DataAccess}
+&nbsp; * instances. Nodes and edges are simply stored sequentially, see the memory layout in the constructor.
+&nbsp; */
+<b class="fc">&nbsp;class BaseGraphNodesAndEdges implements EdgeIntAccess {</b>
+&nbsp;    // Currently distances are stored as 4 byte integers. using a conversion factor of 1000 the minimum distance
+&nbsp;    // that is not considered zero is 0.0005m (=0.5mm) and the maximum distance per edge is about 2.147.483m=2147km.
+&nbsp;    // See OSMReader.addEdge and #1871.
+&nbsp;    private static final double INT_DIST_FACTOR = 1000d;
+<b class="fc">&nbsp;    static double MAX_DIST = Integer.MAX_VALUE / INT_DIST_FACTOR;</b>
+&nbsp;
+&nbsp;    // nodes
+&nbsp;    private final DataAccess nodes;
+&nbsp;    private final int N_EDGE_REF, N_LAT, N_LON, N_ELE, N_TC;
+&nbsp;    private int nodeEntryBytes;
+&nbsp;    private int nodeCount;
+&nbsp;
+&nbsp;    // edges
+&nbsp;    private final DataAccess edges;
+&nbsp;    private final int E_NODEA, E_NODEB, E_LINKA, E_LINKB, E_DIST, E_KV, E_FLAGS, E_GEO;
+&nbsp;    private final int bytesForFlags;
+&nbsp;    private int edgeEntryBytes;
+&nbsp;    private int edgeCount;
+&nbsp;
+&nbsp;    private final boolean withTurnCosts;
+&nbsp;    private final boolean withElevation;
+&nbsp;
+&nbsp;    // we do not write the bounding box directly to storage, but rather to this bbox object. we only write to storage
+&nbsp;    // when flushing. why? just because we did it like this in the past, and otherwise we run into rounding errors,
+&nbsp;    // because of: #2393
+&nbsp;    public final BBox bounds;
+&nbsp;    private boolean frozen;
+&nbsp;
+<b class="fc">&nbsp;    public BaseGraphNodesAndEdges(Directory dir, boolean withElevation, boolean withTurnCosts, int segmentSize, int bytesForFlags) {</b>
+<b class="fc">&nbsp;        nodes = dir.create(&quot;nodes&quot;, dir.getDefaultType(&quot;nodes&quot;, true), segmentSize);</b>
+<b class="fc">&nbsp;        edges = dir.create(&quot;edges&quot;, dir.getDefaultType(&quot;edges&quot;, false), segmentSize);</b>
+<b class="fc">&nbsp;        this.bytesForFlags = bytesForFlags;</b>
+<b class="fc">&nbsp;        this.withTurnCosts = withTurnCosts;</b>
+<b class="fc">&nbsp;        this.withElevation = withElevation;</b>
+<b class="fc">&nbsp;        bounds = BBox.createInverse(withElevation);</b>
+&nbsp;
+&nbsp;        // memory layout for nodes
+<b class="fc">&nbsp;        N_EDGE_REF = 0;</b>
+<b class="fc">&nbsp;        N_LAT = 4;</b>
+<b class="fc">&nbsp;        N_LON = 8;</b>
+<b class="fc">&nbsp;        N_ELE = N_LON + (withElevation ? 4 : 0);</b>
+<b class="fc">&nbsp;        N_TC = N_ELE + (withTurnCosts ? 4 : 0);</b>
+<b class="fc">&nbsp;        nodeEntryBytes = N_TC + 4;</b>
+&nbsp;
+&nbsp;        // memory layout for edges
+<b class="fc">&nbsp;        E_NODEA = 0;</b>
+<b class="fc">&nbsp;        E_NODEB = 4;</b>
+<b class="fc">&nbsp;        E_LINKA = 8;</b>
+<b class="fc">&nbsp;        E_LINKB = 12;</b>
+<b class="fc">&nbsp;        E_DIST = 16;</b>
+<b class="fc">&nbsp;        E_KV = 20;</b>
+<b class="fc">&nbsp;        E_FLAGS = 24;</b>
+<b class="fc">&nbsp;        E_GEO = E_FLAGS + bytesForFlags;</b>
+<b class="fc">&nbsp;        edgeEntryBytes = E_GEO + 5;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void create(long initSize) {
+<b class="fc">&nbsp;        nodes.create(initSize);</b>
+<b class="fc">&nbsp;        edges.create(initSize);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean loadExisting() {
+<b class="pc">&nbsp;        if (!nodes.loadExisting() || !edges.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+&nbsp;        // now load some properties from stored data
+<b class="fc">&nbsp;        final int nodesVersion = nodes.getHeader(0 * 4);</b>
+<b class="fc">&nbsp;        GHUtility.checkDAVersion(&quot;nodes&quot;, Constants.VERSION_NODE, nodesVersion);</b>
+<b class="fc">&nbsp;        nodeEntryBytes = nodes.getHeader(1 * 4);</b>
+<b class="fc">&nbsp;        nodeCount = nodes.getHeader(2 * 4);</b>
+<b class="fc">&nbsp;        bounds.minLon = Helper.intToDegree(nodes.getHeader(3 * 4));</b>
+<b class="fc">&nbsp;        bounds.maxLon = Helper.intToDegree(nodes.getHeader(4 * 4));</b>
+<b class="fc">&nbsp;        bounds.minLat = Helper.intToDegree(nodes.getHeader(5 * 4));</b>
+<b class="fc">&nbsp;        bounds.maxLat = Helper.intToDegree(nodes.getHeader(6 * 4));</b>
+<b class="fc">&nbsp;        boolean hasElevation = nodes.getHeader(7 * 4) == 1;</b>
+<b class="fc">&nbsp;        if (hasElevation != withElevation)</b>
+&nbsp;            // :( we should load data from disk to create objects, not the other way around!
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Configured dimension elevation=&quot; + withElevation + &quot; is not equal &quot;</b>
+&nbsp;                    + &quot;to dimension of loaded graph elevation =&quot; + hasElevation);
+<b class="fc">&nbsp;        if (withElevation) {</b>
+<b class="fc">&nbsp;            bounds.minEle = Helper.uIntToEle(nodes.getHeader(8 * 4));</b>
+<b class="fc">&nbsp;            bounds.maxEle = Helper.uIntToEle(nodes.getHeader(9 * 4));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        frozen = nodes.getHeader(10 * 4) == 1;</b>
+&nbsp;
+<b class="fc">&nbsp;        final int edgesVersion = edges.getHeader(0 * 4);</b>
+<b class="fc">&nbsp;        GHUtility.checkDAVersion(&quot;edges&quot;, Constants.VERSION_EDGE, edgesVersion);</b>
+<b class="fc">&nbsp;        edgeEntryBytes = edges.getHeader(1 * 4);</b>
+<b class="fc">&nbsp;        edgeCount = edges.getHeader(2 * 4);</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void flush() {
+<b class="fc">&nbsp;        nodes.setHeader(0 * 4, Constants.VERSION_NODE);</b>
+<b class="fc">&nbsp;        nodes.setHeader(1 * 4, nodeEntryBytes);</b>
+<b class="fc">&nbsp;        nodes.setHeader(2 * 4, nodeCount);</b>
+<b class="fc">&nbsp;        nodes.setHeader(3 * 4, Helper.degreeToInt(bounds.minLon));</b>
+<b class="fc">&nbsp;        nodes.setHeader(4 * 4, Helper.degreeToInt(bounds.maxLon));</b>
+<b class="fc">&nbsp;        nodes.setHeader(5 * 4, Helper.degreeToInt(bounds.minLat));</b>
+<b class="fc">&nbsp;        nodes.setHeader(6 * 4, Helper.degreeToInt(bounds.maxLat));</b>
+<b class="fc">&nbsp;        nodes.setHeader(7 * 4, withElevation ? 1 : 0);</b>
+<b class="fc">&nbsp;        if (withElevation) {</b>
+<b class="fc">&nbsp;            nodes.setHeader(8 * 4, Helper.eleToUInt(bounds.minEle));</b>
+<b class="fc">&nbsp;            nodes.setHeader(9 * 4, Helper.eleToUInt(bounds.maxEle));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        nodes.setHeader(10 * 4, frozen ? 1 : 0);</b>
+&nbsp;
+<b class="fc">&nbsp;        edges.setHeader(0 * 4, Constants.VERSION_EDGE);</b>
+<b class="fc">&nbsp;        edges.setHeader(1 * 4, edgeEntryBytes);</b>
+<b class="fc">&nbsp;        edges.setHeader(2 * 4, edgeCount);</b>
+&nbsp;
+<b class="fc">&nbsp;        edges.flush();</b>
+<b class="fc">&nbsp;        nodes.flush();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close() {
+<b class="fc">&nbsp;        edges.close();</b>
+<b class="fc">&nbsp;        nodes.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNodes() {
+<b class="fc">&nbsp;        return nodeCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEdges() {
+<b class="fc">&nbsp;        return edgeCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    IntsRef createEdgeFlags() {
+<b class="fc">&nbsp;        return new IntsRef((int) Math.ceil((double) getBytesForFlags() / 4));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getBytesForFlags() {
+<b class="fc">&nbsp;        return bytesForFlags;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean withElevation() {
+<b class="fc">&nbsp;        return withElevation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean withTurnCosts() {
+<b class="fc">&nbsp;        return withTurnCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BBox getBounds() {
+<b class="fc">&nbsp;        return bounds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getCapacity() {
+<b class="nc">&nbsp;        return nodes.getCapacity() + edges.getCapacity();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isClosed() {
+<b class="pc">&nbsp;        assert nodes.isClosed() == edges.isClosed();</b>
+<b class="fc">&nbsp;        return nodes.isClosed();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int edge(int nodeA, int nodeB) {
+<b class="pc">&nbsp;        if (edgeCount == Integer.MAX_VALUE)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Maximum edge count exceeded: &quot; + edgeCount);</b>
+<b class="pc">&nbsp;        if (nodeA == nodeB)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Loop edges are not supported, got: &quot; + nodeA + &quot; - &quot; + nodeB);</b>
+<b class="fc">&nbsp;        ensureNodeCapacity(Math.max(nodeA, nodeB));</b>
+<b class="fc">&nbsp;        final int edge = edgeCount;</b>
+<b class="fc">&nbsp;        final long edgePointer = (long) edgeCount * edgeEntryBytes;</b>
+<b class="fc">&nbsp;        edgeCount++;</b>
+<b class="fc">&nbsp;        edges.ensureCapacity((long) edgeCount * edgeEntryBytes);</b>
+&nbsp;
+<b class="fc">&nbsp;        setNodeA(edgePointer, nodeA);</b>
+<b class="fc">&nbsp;        setNodeB(edgePointer, nodeB);</b>
+&nbsp;        // we keep a linked list of edges at each node. here we prepend the new edge at the already existing linked
+&nbsp;        // list of edges.
+<b class="fc">&nbsp;        long nodePointerA = toNodePointer(nodeA);</b>
+<b class="fc">&nbsp;        int edgeRefA = getEdgeRef(nodePointerA);</b>
+<b class="fc">&nbsp;        setLinkA(edgePointer, EdgeIterator.Edge.isValid(edgeRefA) ? edgeRefA : NO_EDGE);</b>
+<b class="fc">&nbsp;        setEdgeRef(nodePointerA, edge);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (nodeA != nodeB) {</b>
+<b class="fc">&nbsp;            long nodePointerB = toNodePointer(nodeB);</b>
+<b class="fc">&nbsp;            int edgeRefB = getEdgeRef(nodePointerB);</b>
+<b class="fc">&nbsp;            setLinkB(edgePointer, EdgeIterator.Edge.isValid(edgeRefB) ? edgeRefB : NO_EDGE);</b>
+<b class="fc">&nbsp;            setEdgeRef(nodePointerB, edge);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void ensureNodeCapacity(int node) {
+<b class="fc">&nbsp;        if (node &lt; nodeCount)</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        int oldNodes = nodeCount;</b>
+<b class="fc">&nbsp;        nodeCount = node + 1;</b>
+<b class="fc">&nbsp;        nodes.ensureCapacity((long) nodeCount * nodeEntryBytes);</b>
+<b class="fc">&nbsp;        for (int n = oldNodes; n &lt; nodeCount; ++n) {</b>
+<b class="fc">&nbsp;            setEdgeRef(toNodePointer(n), NO_EDGE);</b>
+<b class="fc">&nbsp;            if (withTurnCosts)</b>
+<b class="fc">&nbsp;                setTurnCostRef(toNodePointer(n), TurnCostStorage.NO_TURN_ENTRY);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public long toNodePointer(int node) {
+<b class="pc">&nbsp;        if (node &lt; 0 || node &gt;= nodeCount)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;node: &quot; + node + &quot; out of bounds [0,&quot; + nodeCount + &quot;[&quot;);</b>
+<b class="fc">&nbsp;        return (long) node * nodeEntryBytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long toEdgePointer(int edge) {
+<b class="pc">&nbsp;        if (edge &lt; 0 || edge &gt;= edgeCount)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;edge: &quot; + edge + &quot; out of bounds [0,&quot; + edgeCount + &quot;[&quot;);</b>
+<b class="fc">&nbsp;        return (long) edge * edgeEntryBytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void readFlags(long edgePointer, IntsRef edgeFlags) {
+<b class="fc">&nbsp;        int size = edgeFlags.ints.length;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; size; ++i)</b>
+<b class="fc">&nbsp;            edgeFlags.ints[i] = getFlagInt(edgePointer, i * 4);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void writeFlags(long edgePointer, IntsRef edgeFlags) {
+<b class="fc">&nbsp;        int size = edgeFlags.ints.length;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; size; ++i)</b>
+<b class="fc">&nbsp;            setFlagInt(edgePointer, i * 4, edgeFlags.ints[i]);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getFlagInt(long edgePointer, int byteOffset) {
+<b class="pc">&nbsp;        if (byteOffset &gt;= bytesForFlags)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;too large byteOffset &quot; + byteOffset + &quot; vs &quot; + bytesForFlags);</b>
+<b class="fc">&nbsp;        edgePointer += byteOffset;</b>
+<b class="fc">&nbsp;        if (byteOffset + 3 == bytesForFlags) {</b>
+<b class="fc">&nbsp;            return (edges.getShort(edgePointer + E_FLAGS) &lt;&lt; 8) &amp; 0x00FF_FFFF | edges.getByte(edgePointer + E_FLAGS + 2) &amp; 0xFF;</b>
+<b class="fc">&nbsp;        } else if (byteOffset + 2 == bytesForFlags) {</b>
+<b class="fc">&nbsp;            return edges.getShort(edgePointer + E_FLAGS) &amp; 0xFFFF;</b>
+<b class="fc">&nbsp;        } else if (byteOffset + 1 == bytesForFlags) {</b>
+<b class="fc">&nbsp;            return edges.getByte(edgePointer + E_FLAGS) &amp; 0xFF;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return edges.getInt(edgePointer + E_FLAGS);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setFlagInt(long edgePointer, int byteOffset, int value) {
+<b class="pc">&nbsp;        if (byteOffset &gt;= bytesForFlags)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;too large byteOffset &quot; + byteOffset + &quot; vs &quot; + bytesForFlags);</b>
+<b class="fc">&nbsp;        edgePointer += byteOffset;</b>
+<b class="fc">&nbsp;        if (byteOffset + 3 == bytesForFlags) {</b>
+<b class="pc">&nbsp;            if ((value &amp; 0xFF00_0000) != 0)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;value at byteOffset &quot; + byteOffset + &quot; must not have the highest byte set but was &quot; + value);</b>
+<b class="fc">&nbsp;            edges.setShort(edgePointer + E_FLAGS, (short) (value &gt;&gt; 8));</b>
+<b class="fc">&nbsp;            edges.setByte(edgePointer + E_FLAGS + 2, (byte) value);</b>
+<b class="fc">&nbsp;        } else if (byteOffset + 2 == bytesForFlags) {</b>
+<b class="pc">&nbsp;            if ((value &amp; 0xFFFF_0000) != 0)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;value at byteOffset &quot; + byteOffset + &quot; must not have the 2 highest bytes set but was &quot; + value);</b>
+<b class="fc">&nbsp;            edges.setShort(edgePointer + E_FLAGS, (short) value);</b>
+<b class="fc">&nbsp;        } else if (byteOffset + 1 == bytesForFlags) {</b>
+<b class="pc">&nbsp;            if ((value &amp; 0xFFFF_FF00) != 0)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;value at byteOffset &quot; + byteOffset + &quot; must not have the 3 highest bytes set but was &quot; + value);</b>
+<b class="fc">&nbsp;            edges.setByte(edgePointer + E_FLAGS, (byte) value);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            edges.setInt(edgePointer + E_FLAGS, value);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getInt(int edgeId, int index) {
+<b class="fc">&nbsp;        return getFlagInt(toEdgePointer(edgeId), index * 4);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setInt(int edgeId, int index, int value) {
+<b class="fc">&nbsp;        setFlagInt(toEdgePointer(edgeId), index * 4, value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setNodeA(long edgePointer, int nodeA) {
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_NODEA, nodeA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setNodeB(long edgePointer, int nodeB) {
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_NODEB, nodeB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLinkA(long edgePointer, int linkA) {
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_LINKA, linkA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLinkB(long edgePointer, int linkB) {
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_LINKB, linkB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setDist(long edgePointer, double distance) {
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_DIST, distToInt(distance));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setGeoRef(long edgePointer, long geoRef) {
+<b class="fc">&nbsp;        int highest25Bits = (int) (geoRef &gt;&gt;&gt; 39);</b>
+&nbsp;        // Only two cases are allowed for highest bits. If geoRef is positive then all high bits are 0. If negative then all are 1.
+<b class="fc">&nbsp;        if (highest25Bits != 0 &amp;&amp; highest25Bits != 0x1_FF_FFFF)</b>
+<b class="pc">&nbsp;            throw new IllegalArgumentException(&quot;geoRef is too &quot; + (geoRef &gt; 0 ? &quot;large &quot; : &quot;small &quot;) + geoRef + &quot;, &quot; + Long.toBinaryString(geoRef));</b>
+&nbsp;
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_GEO, (int) (geoRef));</b>
+<b class="fc">&nbsp;        edges.setByte(edgePointer + E_GEO + 4, (byte) (geoRef &gt;&gt; 32));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setKeyValuesRef(long edgePointer, int nameRef) {
+<b class="fc">&nbsp;        edges.setInt(edgePointer + E_KV, nameRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNodeA(long edgePointer) {
+<b class="fc">&nbsp;        return edges.getInt(edgePointer + E_NODEA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNodeB(long edgePointer) {
+<b class="fc">&nbsp;        return edges.getInt(edgePointer + E_NODEB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getLinkA(long edgePointer) {
+<b class="fc">&nbsp;        return edges.getInt(edgePointer + E_LINKA);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getLinkB(long edgePointer) {
+<b class="fc">&nbsp;        return edges.getInt(edgePointer + E_LINKB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getDist(long pointer) {
+<b class="fc">&nbsp;        int val = edges.getInt(pointer + E_DIST);</b>
+&nbsp;        // do never return infinity even if INT MAX, see #435
+<b class="fc">&nbsp;        return val / INT_DIST_FACTOR;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getGeoRef(long edgePointer) {
+<b class="fc">&nbsp;        return BitUtil.LITTLE.toLong(</b>
+<b class="fc">&nbsp;                edges.getInt(edgePointer + E_GEO),</b>
+&nbsp;                // to support negative georefs (#2985) do not mask byte with 0xFF:
+<b class="fc">&nbsp;                edges.getByte(edgePointer + E_GEO + 4));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getKeyValuesRef(long edgePointer) {
+<b class="fc">&nbsp;        return edges.getInt(edgePointer + E_KV);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setEdgeRef(long nodePointer, int edgeRef) {
+<b class="fc">&nbsp;        nodes.setInt(nodePointer + N_EDGE_REF, edgeRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLat(long nodePointer, double lat) {
+<b class="fc">&nbsp;        nodes.setInt(nodePointer + N_LAT, Helper.degreeToInt(lat));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLon(long nodePointer, double lon) {
+<b class="fc">&nbsp;        nodes.setInt(nodePointer + N_LON, Helper.degreeToInt(lon));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setEle(long elePointer, double ele) {
+<b class="fc">&nbsp;        nodes.setInt(elePointer + N_ELE, Helper.eleToUInt(ele));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setTurnCostRef(long nodePointer, int tcRef) {
+<b class="fc">&nbsp;        nodes.setInt(nodePointer + N_TC, tcRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEdgeRef(long nodePointer) {
+<b class="fc">&nbsp;        return nodes.getInt(nodePointer + N_EDGE_REF);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getLat(long nodePointer) {
+<b class="fc">&nbsp;        return Helper.intToDegree(nodes.getInt(nodePointer + N_LAT));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getLon(long nodePointer) {
+<b class="fc">&nbsp;        return Helper.intToDegree(nodes.getInt(nodePointer + N_LON));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getEle(long nodePointer) {
+<b class="fc">&nbsp;        return Helper.uIntToEle(nodes.getInt(nodePointer + N_ELE));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getTurnCostRef(long nodePointer) {
+<b class="fc">&nbsp;        return nodes.getInt(nodePointer + N_TC);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setFrozen(boolean frozen) {
+<b class="fc">&nbsp;        this.frozen = frozen;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean getFrozen() {
+<b class="fc">&nbsp;        return frozen;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void debugPrint() {
+<b class="nc">&nbsp;        final int printMax = 100;</b>
+<b class="nc">&nbsp;        System.out.println(&quot;nodes:&quot;);</b>
+<b class="nc">&nbsp;        String formatNodes = &quot;%12s | %12s | %12s | %12s \n&quot;;</b>
+<b class="nc">&nbsp;        System.out.format(Locale.ROOT, formatNodes, &quot;#&quot;, &quot;N_EDGE_REF&quot;, &quot;N_LAT&quot;, &quot;N_LON&quot;);</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; Math.min(nodeCount, printMax); ++i) {</b>
+<b class="nc">&nbsp;            long nodePointer = toNodePointer(i);</b>
+<b class="nc">&nbsp;            System.out.format(Locale.ROOT, formatNodes, i, getEdgeRef(nodePointer), getLat(nodePointer), getLon(nodePointer));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (nodeCount &gt; printMax) {</b>
+<b class="nc">&nbsp;            System.out.format(Locale.ROOT, &quot; ... %d more nodes\n&quot;, nodeCount - printMax);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        System.out.println(&quot;edges:&quot;);</b>
+<b class="nc">&nbsp;        String formatEdges = &quot;%12s | %12s | %12s | %12s | %12s | %12s | %12s \n&quot;;</b>
+<b class="nc">&nbsp;        System.out.format(Locale.ROOT, formatEdges, &quot;#&quot;, &quot;E_NODEA&quot;, &quot;E_NODEB&quot;, &quot;E_LINKA&quot;, &quot;E_LINKB&quot;, &quot;E_FLAGS&quot;, &quot;E_DIST&quot;);</b>
+<b class="nc">&nbsp;        IntsRef edgeFlags = createEdgeFlags();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; Math.min(edgeCount, printMax); ++i) {</b>
+<b class="nc">&nbsp;            long edgePointer = toEdgePointer(i);</b>
+<b class="nc">&nbsp;            readFlags(edgePointer, edgeFlags);</b>
+<b class="nc">&nbsp;            System.out.format(Locale.ROOT, formatEdges, i,</b>
+<b class="nc">&nbsp;                    getNodeA(edgePointer),</b>
+<b class="nc">&nbsp;                    getNodeB(edgePointer),</b>
+<b class="nc">&nbsp;                    getLinkA(edgePointer),</b>
+<b class="nc">&nbsp;                    getLinkB(edgePointer),</b>
+&nbsp;                    edgeFlags,
+<b class="nc">&nbsp;                    getDist(edgePointer));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (edgeCount &gt; printMax) {</b>
+<b class="nc">&nbsp;            System.out.printf(Locale.ROOT, &quot; ... %d more edges&quot;, edgeCount - printMax);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private int distToInt(double distance) {
+<b class="fc">&nbsp;        if (distance &lt; 0)</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Distance cannot be negative: &quot; + distance);</b>
+<b class="fc">&nbsp;        if (distance &gt; MAX_DIST) {</b>
+<b class="fc">&nbsp;            distance = MAX_DIST;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int intDist = (int) Math.round(distance * INT_DIST_FACTOR);</b>
+<b class="pc">&nbsp;        assert intDist &gt;= 0 : &quot;distance out of range&quot;;</b>
+<b class="fc">&nbsp;        return intDist;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toDetailsString() {
+<b class="fc">&nbsp;        return &quot;edges: &quot; + nf(edgeCount) + &quot;(&quot; + edges.getCapacity() / Helper.MB + &quot;MB), &quot;</b>
+<b class="fc">&nbsp;                + &quot;nodes: &quot; + nf(nodeCount) + &quot;(&quot; + nodes.getCapacity() / Helper.MB + &quot;MB), &quot;</b>
+&nbsp;                + &quot;bounds: &quot; + bounds;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,226 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > RoutingCHGraphImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: RoutingCHGraphImpl (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RoutingCHGraphImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (15/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (6/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.8%
+  </span>
+  <span class="absValue">
+    (23/24)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;
+&nbsp;public class RoutingCHGraphImpl implements RoutingCHGraph {
+&nbsp;    private final BaseGraph baseGraph;
+&nbsp;    private final CHStorage chStorage;
+&nbsp;    private final Weighting weighting;
+&nbsp;
+&nbsp;    public static RoutingCHGraph fromGraph(BaseGraph baseGraph, CHStorage chStorage, CHConfig chConfig) {
+<b class="fc">&nbsp;        return new RoutingCHGraphImpl(baseGraph, chStorage, chConfig.getWeighting());</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public RoutingCHGraphImpl(BaseGraph baseGraph, CHStorage chStorage, Weighting weighting) {</b>
+<b class="pc">&nbsp;        if (weighting.hasTurnCosts() &amp;&amp; !chStorage.isEdgeBased())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Weighting has turn costs, but CHStorage is node-based&quot;);</b>
+<b class="fc">&nbsp;        this.baseGraph = baseGraph;</b>
+<b class="fc">&nbsp;        this.chStorage = chStorage;</b>
+<b class="fc">&nbsp;        this.weighting = weighting;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getNodes() {
+<b class="fc">&nbsp;        return baseGraph.getNodes();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getEdges() {
+<b class="fc">&nbsp;        return baseGraph.getEdges() + chStorage.getShortcuts();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getShortcuts() {
+<b class="fc">&nbsp;        return chStorage.getShortcuts();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public RoutingCHEdgeExplorer createInEdgeExplorer() {
+<b class="fc">&nbsp;        return RoutingCHEdgeIteratorImpl.inEdges(chStorage, baseGraph, weighting);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public RoutingCHEdgeExplorer createOutEdgeExplorer() {
+<b class="fc">&nbsp;        return RoutingCHEdgeIteratorImpl.outEdges(chStorage, baseGraph, weighting);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public RoutingCHEdgeIteratorState getEdgeIteratorState(int chEdge, int adjNode) {
+<b class="fc">&nbsp;        RoutingCHEdgeIteratorStateImpl edgeState =</b>
+&nbsp;                new RoutingCHEdgeIteratorStateImpl(chStorage, baseGraph, new BaseGraph.EdgeIteratorStateImpl(baseGraph), weighting);
+<b class="fc">&nbsp;        if (edgeState.init(chEdge, adjNode))</b>
+<b class="fc">&nbsp;            return edgeState;</b>
+&nbsp;        // if edgeId exists, but adjacent nodes do not match
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getLevel(int node) {
+<b class="fc">&nbsp;        return chStorage.getLevel(chStorage.toNodePointer(node));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Graph getBaseGraph() {
+<b class="fc">&nbsp;        return baseGraph;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Weighting getWeighting() {
+<b class="fc">&nbsp;        return weighting;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean hasTurnCosts() {
+<b class="fc">&nbsp;        return weighting.hasTurnCosts();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isEdgeBased() {
+<b class="fc">&nbsp;        return chStorage.isEdgeBased();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getTurnWeight(int edgeFrom, int nodeVia, int edgeTo) {
+<b class="fc">&nbsp;        return weighting.calcTurnWeight(edgeFrom, nodeVia, edgeTo);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void close() {
+<b class="pc">&nbsp;        if (!baseGraph.isClosed()) baseGraph.close();</b>
+<b class="fc">&nbsp;        chStorage.close();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

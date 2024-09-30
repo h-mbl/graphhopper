@@ -1,0 +1,199 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > EdgeElevationSmoothingRamer</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.dem</a>
+</div>
+
+<h1>Coverage Summary for Class: EdgeElevationSmoothingRamer (com.graphhopper.reader.dem)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EdgeElevationSmoothingRamer</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (2/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.9%
+  </span>
+  <span class="absValue">
+    (13/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.4%
+  </span>
+  <span class="absValue">
+    (37/38)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.reader.dem;
+&nbsp;
+&nbsp;import com.graphhopper.util.DistanceCalcEarth;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;
+&nbsp;/**
+&nbsp; * Elevation data is read from DEM tiles that have data points for rectangular tiles usually having an
+&nbsp; * edge length of 30 or 90 meter. Elevation in between the middle points of those tiles will be
+&nbsp; * interpolated and weighted by the distance from a node to adjacent tile centers.
+&nbsp; * &lt;p&gt;
+&nbsp; * Ways that go along cliffs or ridges are particularly affected by ups and downs that do not reflect
+&nbsp; * the actual elevation but may be artifacts originated from very accurately mapping when elevation has
+&nbsp; * a lower resolution.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="nc">&nbsp;public class EdgeElevationSmoothingRamer {</b>
+&nbsp;    /**
+&nbsp;     * This method removes elevation fluctuations up to maxElevationDelta. Compared to the smoothMovingAverage function
+&nbsp;     * this method has the advantage that the maximum slope of a PointList never increases (max(abs(slope_i))).
+&nbsp;     * The disadvantage is that the appearance might be still more spiky (at tower nodes) as a result when a bigger
+&nbsp;     * positive slope changes to a bigger negative slope.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * The underlying algorithm is an adapted Ramer-Douglas-Peucker algorithm (see #2634) with a maximum elevation change and:
+&nbsp;     * 1. only elevation changes are considered and any lat,lon difference is ignored
+&nbsp;     * 2. instead of removing the point the elevation will be calculated from the average slope of the first and last
+&nbsp;     * point of the specified pointList
+&nbsp;     */
+&nbsp;    public static void smooth(PointList pointList, double maxElevationDelta) {
+<b class="fc">&nbsp;        internSmooth(pointList, 0, pointList.size() - 1, maxElevationDelta);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static void internSmooth(PointList pointList, int fromIndex, int lastIndex, double maxElevationDelta) {
+<b class="fc">&nbsp;        if (lastIndex - fromIndex &lt; 2)</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        double prevLat = pointList.getLat(fromIndex);</b>
+<b class="fc">&nbsp;        double prevLon = pointList.getLon(fromIndex);</b>
+<b class="fc">&nbsp;        double dist2D = DistanceCalcEarth.DIST_EARTH.calcDist(prevLat, prevLon, pointList.getLat(lastIndex), pointList.getLon(lastIndex));</b>
+&nbsp;
+&nbsp;        // in rare cases the first point can be identical to the last for e.g. areas (or for things like man_made=pier which are not explicitly excluded from adding edges)
+<b class="fc">&nbsp;        double averageSlope = dist2D == 0 ? 0 : (pointList.getEle(lastIndex) - pointList.getEle(fromIndex)) / dist2D;</b>
+<b class="fc">&nbsp;        double prevAverageSlopeEle = pointList.getEle(fromIndex);</b>
+<b class="fc">&nbsp;        double maxEleDelta = -1;</b>
+<b class="fc">&nbsp;        int indexWithMaxDelta = -1;</b>
+<b class="fc">&nbsp;        for (int i = fromIndex + 1; i &lt; lastIndex; i++) {</b>
+<b class="fc">&nbsp;            double lat = pointList.getLat(i);</b>
+<b class="fc">&nbsp;            double lon = pointList.getLon(i);</b>
+<b class="fc">&nbsp;            double ele = pointList.getEle(i);</b>
+<b class="fc">&nbsp;            double tmpDist2D = DistanceCalcEarth.DIST_EARTH.calcDist(prevLat, prevLon, lat, lon);</b>
+<b class="fc">&nbsp;            double eleFromAverageSlope = averageSlope * tmpDist2D + prevAverageSlopeEle;</b>
+<b class="fc">&nbsp;            double tmpEleDelta = Math.abs(ele - eleFromAverageSlope);</b>
+<b class="fc">&nbsp;            if (maxEleDelta &lt; tmpEleDelta) {</b>
+<b class="fc">&nbsp;                indexWithMaxDelta = i;</b>
+<b class="fc">&nbsp;                maxEleDelta = tmpEleDelta;</b>
+&nbsp;            }
+<b class="fc">&nbsp;            prevAverageSlopeEle = eleFromAverageSlope;</b>
+<b class="fc">&nbsp;            prevLat = lat;</b>
+<b class="fc">&nbsp;            prevLon = lon;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // the maximum elevation change limit filters away especially the smaller high frequent elevation changes,
+&nbsp;        // which is likely the &quot;noise&quot; that we want to remove.
+<b class="pc">&nbsp;        if (indexWithMaxDelta &lt; 0 || maxElevationDelta &gt; maxEleDelta) {</b>
+<b class="fc">&nbsp;            prevLat = pointList.getLat(fromIndex);</b>
+<b class="fc">&nbsp;            prevLon = pointList.getLon(fromIndex);</b>
+<b class="fc">&nbsp;            prevAverageSlopeEle = pointList.getEle(fromIndex);</b>
+<b class="fc">&nbsp;            for (int i = fromIndex + 1; i &lt; lastIndex; i++) {</b>
+<b class="fc">&nbsp;                double lat = pointList.getLat(i);</b>
+<b class="fc">&nbsp;                double lon = pointList.getLon(i);</b>
+<b class="fc">&nbsp;                double tmpDist2D = DistanceCalcEarth.DIST_EARTH.calcDist(prevLat, prevLon, lat, lon);</b>
+<b class="fc">&nbsp;                double eleFromAverageSlope = averageSlope * tmpDist2D + prevAverageSlopeEle;</b>
+<b class="fc">&nbsp;                pointList.setElevation(i, eleFromAverageSlope);</b>
+<b class="fc">&nbsp;                prevAverageSlopeEle = eleFromAverageSlope;</b>
+<b class="fc">&nbsp;                prevLat = lat;</b>
+<b class="fc">&nbsp;                prevLon = lon;</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="fc">&nbsp;            internSmooth(pointList, fromIndex, indexWithMaxDelta, maxElevationDelta);</b>
+<b class="fc">&nbsp;            internSmooth(pointList, indexWithMaxDelta, lastIndex, maxElevationDelta);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

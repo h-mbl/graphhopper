@@ -1,0 +1,272 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Constants</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: Constants (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Constants</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (2/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    33.3%
+  </span>
+  <span class="absValue">
+    (8/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    63.2%
+  </span>
+  <span class="absValue">
+    (36/57)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.graphhopper.GraphHopper;
+&nbsp;
+&nbsp;import java.io.InputStreamReader;
+&nbsp;import java.util.List;
+&nbsp;import java.util.StringTokenizer;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * Defining several important constants for GraphHopper. Partially taken from Lucene.
+&nbsp; */
+<b class="nc">&nbsp;public class Constants {</b>
+&nbsp;    /**
+&nbsp;     * The value of &lt;code&gt;System.getProperty(&quot;java.version&quot;)&lt;/code&gt;. *
+&nbsp;     */
+<b class="fc">&nbsp;    public static final String JAVA_VERSION = System.getProperty(&quot;java.version&quot;);</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The value of &lt;code&gt;System.getProperty(&quot;os.name&quot;)&lt;/code&gt;. *
+&nbsp;     */
+<b class="fc">&nbsp;    public static final String OS_NAME = System.getProperty(&quot;os.name&quot;);</b>
+&nbsp;    /**
+&nbsp;     * True iff running on Linux.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final boolean LINUX = OS_NAME.startsWith(&quot;Linux&quot;);</b>
+&nbsp;    /**
+&nbsp;     * True iff running on Windows.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final boolean WINDOWS = OS_NAME.startsWith(&quot;Windows&quot;);</b>
+&nbsp;    /**
+&nbsp;     * True iff running on Mac OS X
+&nbsp;     */
+<b class="fc">&nbsp;    public static final boolean MAC_OS_X = OS_NAME.startsWith(&quot;Mac OS X&quot;);</b>
+<b class="fc">&nbsp;    public static final String OS_ARCH = System.getProperty(&quot;os.arch&quot;);</b>
+<b class="fc">&nbsp;    public static final String OS_VERSION = System.getProperty(&quot;os.version&quot;);</b>
+<b class="fc">&nbsp;    public static final String JAVA_VENDOR = System.getProperty(&quot;java.vendor&quot;);</b>
+<b class="fc">&nbsp;    public static final String JVM_SPEC_VERSION = System.getProperty(&quot;java.specification.version&quot;);</b>
+&nbsp;    public static final boolean JRE_IS_MINIMUM_JAVA9;
+&nbsp;    private static final int JVM_MAJOR_VERSION;
+&nbsp;    private static final int JVM_MINOR_VERSION;
+&nbsp;
+&nbsp;    public static final int VERSION_NODE = 9;
+&nbsp;    public static final int VERSION_EDGE = 23;
+&nbsp;    // this should be increased whenever the format of the serialized EncodingManager is changed
+&nbsp;    public static final int VERSION_EM = 4;
+&nbsp;    public static final int VERSION_SHORTCUT = 9;
+&nbsp;    public static final int VERSION_NODE_CH = 0;
+&nbsp;    public static final int VERSION_GEOMETRY = 7;
+&nbsp;    public static final int VERSION_TURN_COSTS = 0;
+&nbsp;    public static final int VERSION_LOCATION_IDX = 5;
+&nbsp;    public static final int VERSION_KV_STORAGE = 2;
+&nbsp;    /**
+&nbsp;     * The version without the snapshot string
+&nbsp;     */
+&nbsp;    public static final String VERSION;
+&nbsp;    public static final String BUILD_DATE;
+&nbsp;    /**
+&nbsp;     * Details about the git commit this artifact was built for, can be null (if not built using maven)
+&nbsp;     */
+&nbsp;    public static final GitInfo GIT_INFO;
+&nbsp;    public static final boolean SNAPSHOT;
+&nbsp;
+&nbsp;    static {
+<b class="fc">&nbsp;        final StringTokenizer st = new StringTokenizer(JVM_SPEC_VERSION, &quot;.&quot;);</b>
+<b class="fc">&nbsp;        JVM_MAJOR_VERSION = Integer.parseInt(st.nextToken());</b>
+<b class="pc">&nbsp;        if (st.hasMoreTokens()) {</b>
+<b class="nc">&nbsp;            JVM_MINOR_VERSION = Integer.parseInt(st.nextToken());</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            JVM_MINOR_VERSION = 0;</b>
+&nbsp;        }
+<b class="pc">&nbsp;        JRE_IS_MINIMUM_JAVA9 = JVM_MAJOR_VERSION &gt; 1 || (JVM_MAJOR_VERSION == 1 &amp;&amp; JVM_MINOR_VERSION &gt;= 9);</b>
+&nbsp;
+<b class="fc">&nbsp;        String version = &quot;0.0&quot;;</b>
+&nbsp;        try {
+&nbsp;            // see com/graphhopper/version file in resources which is modified in the maven packaging process
+&nbsp;            // to contain the current version
+<b class="fc">&nbsp;            List&lt;String&gt; v = readFile(new InputStreamReader(GraphHopper.class.getResourceAsStream(&quot;version&quot;), UTF_CS));</b>
+<b class="fc">&nbsp;            version = v.get(0);</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            System.err.println(&quot;GraphHopper Initialization ERROR: cannot read version!? &quot; + ex.getMessage());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int indexM = version.indexOf(&quot;-&quot;);</b>
+<b class="pc">&nbsp;        if (&quot;${project.version}&quot;.equals(version)) {</b>
+<b class="nc">&nbsp;            VERSION = &quot;0.0&quot;;</b>
+<b class="nc">&nbsp;            SNAPSHOT = true;</b>
+<b class="nc">&nbsp;            System.err.println(&quot;GraphHopper Initialization WARNING: maven did not preprocess the version file! Do not use the jar for a release!&quot;);</b>
+<b class="pc">&nbsp;        } else if (&quot;0.0&quot;.equals(version)) {</b>
+<b class="nc">&nbsp;            VERSION = &quot;0.0&quot;;</b>
+<b class="nc">&nbsp;            SNAPSHOT = true;</b>
+<b class="nc">&nbsp;            System.err.println(&quot;GraphHopper Initialization WARNING: cannot get version!?&quot;);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            String tmp = version;</b>
+&nbsp;            // throw away the &quot;-SNAPSHOT&quot;
+<b class="pc">&nbsp;            if (indexM &gt;= 0)</b>
+<b class="fc">&nbsp;                tmp = version.substring(0, indexM);</b>
+&nbsp;
+<b class="fc">&nbsp;            SNAPSHOT = toLowerCase(version).contains(&quot;-snapshot&quot;);</b>
+<b class="fc">&nbsp;            VERSION = tmp;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        String buildDate = &quot;&quot;;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            List&lt;String&gt; v = readFile(new InputStreamReader(GraphHopper.class.getResourceAsStream(&quot;builddate&quot;), UTF_CS));</b>
+<b class="fc">&nbsp;            buildDate = v.get(0);</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+&nbsp;        }
+<b class="fc">&nbsp;        BUILD_DATE = buildDate;</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;String&gt; gitInfos = null;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            gitInfos = readFile(new InputStreamReader(GraphHopper.class.getResourceAsStream(&quot;gitinfo&quot;), UTF_CS));</b>
+<b class="pc">&nbsp;            if (gitInfos.size() != 6) {</b>
+<b class="nc">&nbsp;                System.err.println(&quot;GraphHopper Initialization WARNING: unexpected git info: &quot; + gitInfos.toString());</b>
+<b class="nc">&nbsp;                gitInfos = null;</b>
+<b class="pc">&nbsp;            } else if (gitInfos.get(1).startsWith(&quot;$&quot;)) {</b>
+<b class="fc">&nbsp;                gitInfos = null;</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+&nbsp;        }
+<b class="pc">&nbsp;        GIT_INFO = gitInfos == null ? null : new GitInfo(gitInfos.get(1), gitInfos.get(2), gitInfos.get(3), gitInfos.get(4), Boolean.parseBoolean(gitInfos.get(5)));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String getVersions() {
+<b class="fc">&nbsp;        return VERSION_NODE + &quot;,&quot; + VERSION_EDGE + &quot;,&quot; + VERSION_GEOMETRY + &quot;,&quot; + VERSION_LOCATION_IDX</b>
+&nbsp;                + &quot;,&quot; + VERSION_KV_STORAGE + &quot;,&quot; + VERSION_SHORTCUT;
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String getMajorVersion() {
+<b class="nc">&nbsp;        int firstIdx = VERSION.indexOf(&quot;.&quot;);</b>
+<b class="nc">&nbsp;        if (firstIdx &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot extract major version from version &quot; + VERSION);</b>
+&nbsp;
+<b class="nc">&nbsp;        int sndIdx = VERSION.indexOf(&quot;.&quot;, firstIdx + 1);</b>
+<b class="nc">&nbsp;        if (sndIdx &lt; 0)</b>
+<b class="nc">&nbsp;            return VERSION;</b>
+<b class="nc">&nbsp;        return VERSION.substring(0, sndIdx);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

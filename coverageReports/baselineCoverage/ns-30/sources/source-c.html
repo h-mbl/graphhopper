@@ -1,0 +1,254 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Downloader</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: Downloader (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Downloader</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    18.2%
+  </span>
+  <span class="absValue">
+    (2/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    13.5%
+  </span>
+  <span class="absValue">
+    (7/52)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.net.HttpURLConnection;
+&nbsp;import java.net.URL;
+&nbsp;import java.util.function.LongConsumer;
+&nbsp;import java.util.zip.GZIPInputStream;
+&nbsp;import java.util.zip.Inflater;
+&nbsp;import java.util.zip.InflaterInputStream;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class Downloader {
+&nbsp;    private final String userAgent;
+<b class="fc">&nbsp;    private String referrer = &quot;http://graphhopper.com&quot;;</b>
+<b class="fc">&nbsp;    private String acceptEncoding = &quot;gzip, deflate&quot;;</b>
+<b class="fc">&nbsp;    private int timeout = 4000;</b>
+&nbsp;
+<b class="fc">&nbsp;    public Downloader(String userAgent) {</b>
+<b class="fc">&nbsp;        this.userAgent = userAgent;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void main(String[] args) throws IOException {
+<b class="nc">&nbsp;        new Downloader(&quot;GraphHopper Downloader&quot;).downloadAndUnzip(&quot;http://graphhopper.com/public/maps/0.1/europe_germany_berlin.ghz&quot;, &quot;somefolder&quot;,</b>
+<b class="nc">&nbsp;                val -&gt; System.out.println(&quot;progress:&quot; + val));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Downloader setTimeout(int timeout) {
+<b class="fc">&nbsp;        this.timeout = timeout;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Downloader setReferrer(String referrer) {
+<b class="nc">&nbsp;        this.referrer = referrer;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method initiates a connect call of the provided connection and returns the response
+&nbsp;     * stream. It only returns the error stream if it is available and readErrorStreamNoException is
+&nbsp;     * true otherwise it throws an IOException if an error happens. Furthermore it wraps the stream
+&nbsp;     * to decompress it if the connection content encoding is specified.
+&nbsp;     */
+&nbsp;    public InputStream fetch(HttpURLConnection connection, boolean readErrorStreamNoException) throws IOException {
+&nbsp;        // create connection but before reading get the correct inputstream based on the compression and if error
+<b class="nc">&nbsp;        connection.connect();</b>
+&nbsp;
+&nbsp;        InputStream is;
+<b class="nc">&nbsp;        if (readErrorStreamNoException &amp;&amp; connection.getResponseCode() &gt;= 400 &amp;&amp; connection.getErrorStream() != null)</b>
+<b class="nc">&nbsp;            is = connection.getErrorStream();</b>
+&nbsp;        else
+<b class="nc">&nbsp;            is = connection.getInputStream();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (is == null)</b>
+<b class="nc">&nbsp;            throw new IOException(&quot;Stream is null. Message:&quot; + connection.getResponseMessage());</b>
+&nbsp;
+&nbsp;        // wrap
+&nbsp;        try {
+<b class="nc">&nbsp;            String encoding = connection.getContentEncoding();</b>
+<b class="nc">&nbsp;            if (encoding != null &amp;&amp; encoding.equalsIgnoreCase(&quot;gzip&quot;))</b>
+<b class="nc">&nbsp;                is = new GZIPInputStream(is);</b>
+<b class="nc">&nbsp;            else if (encoding != null &amp;&amp; encoding.equalsIgnoreCase(&quot;deflate&quot;))</b>
+<b class="nc">&nbsp;                is = new InflaterInputStream(is, new Inflater(true));</b>
+<b class="nc">&nbsp;        } catch (IOException ex) {</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return is;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public InputStream fetch(String url) throws IOException {
+<b class="nc">&nbsp;        return fetch(createConnection(url), false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public HttpURLConnection createConnection(String urlStr) throws IOException {
+<b class="nc">&nbsp;        URL url = new URL(urlStr);</b>
+<b class="nc">&nbsp;        HttpURLConnection conn = (HttpURLConnection) url.openConnection();</b>
+&nbsp;        // Will yield in a POST request: conn.setDoOutput(true);
+<b class="nc">&nbsp;        conn.setDoInput(true);</b>
+<b class="nc">&nbsp;        conn.setUseCaches(true);</b>
+<b class="nc">&nbsp;        conn.setRequestProperty(&quot;Referrer&quot;, referrer);</b>
+<b class="nc">&nbsp;        conn.setRequestProperty(&quot;User-Agent&quot;, userAgent);</b>
+&nbsp;        // suggest respond to be gzipped or deflated (which is just another compression)
+&nbsp;        // http://stackoverflow.com/q/3932117
+<b class="nc">&nbsp;        conn.setRequestProperty(&quot;Accept-Encoding&quot;, acceptEncoding);</b>
+<b class="nc">&nbsp;        conn.setReadTimeout(timeout);</b>
+<b class="nc">&nbsp;        conn.setConnectTimeout(timeout);</b>
+<b class="nc">&nbsp;        return conn;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void downloadFile(String url, String toFile) throws IOException {
+<b class="nc">&nbsp;        HttpURLConnection conn = createConnection(url);</b>
+<b class="nc">&nbsp;        InputStream iStream = fetch(conn, false);</b>
+<b class="nc">&nbsp;        int size = 8 * 1024;</b>
+<b class="nc">&nbsp;        BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(toFile), size);</b>
+<b class="nc">&nbsp;        InputStream in = new BufferedInputStream(iStream, size);</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            byte[] buffer = new byte[size];</b>
+&nbsp;            int numRead;
+<b class="nc">&nbsp;            while ((numRead = in.read(buffer)) != -1) {</b>
+<b class="nc">&nbsp;                writer.write(buffer, 0, numRead);</b>
+&nbsp;            }
+&nbsp;        } finally {
+<b class="nc">&nbsp;            Helper.close(iStream);</b>
+<b class="nc">&nbsp;            Helper.close(writer);</b>
+<b class="nc">&nbsp;            Helper.close(in);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void downloadAndUnzip(String url, String toFolder, final LongConsumer progressListener) throws IOException {
+<b class="nc">&nbsp;        HttpURLConnection conn = createConnection(url);</b>
+<b class="nc">&nbsp;        final int length = conn.getContentLength();</b>
+<b class="nc">&nbsp;        InputStream iStream = fetch(conn, false);</b>
+&nbsp;
+<b class="nc">&nbsp;        new Unzipper().unzip(iStream, new File(toFolder), sumBytes -&gt; progressListener.accept((int) (100 * sumBytes / length)));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String downloadAsString(String url, boolean readErrorStreamNoException) throws IOException {
+<b class="nc">&nbsp;        return Helper.isToString(fetch(createConnection(url), readErrorStreamNoException));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

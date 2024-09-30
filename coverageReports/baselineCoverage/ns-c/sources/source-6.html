@@ -1,0 +1,203 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > RoutingExampleTC</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.example</a>
+</div>
+
+<h1>Coverage Summary for Class: RoutingExampleTC (com.graphhopper.example)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RoutingExampleTC</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/36)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.example;
+&nbsp;
+&nbsp;
+&nbsp;import com.graphhopper.GHRequest;
+&nbsp;import com.graphhopper.GHResponse;
+&nbsp;import com.graphhopper.GraphHopper;
+&nbsp;import com.graphhopper.ResponsePath;
+&nbsp;import com.graphhopper.config.CHProfile;
+&nbsp;import com.graphhopper.config.Profile;
+&nbsp;import com.graphhopper.util.TurnCostsConfig;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;import com.graphhopper.util.Parameters;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Parameters.Curbsides.CURBSIDE_ANY;
+&nbsp;import static com.graphhopper.util.Parameters.Curbsides.CURBSIDE_RIGHT;
+&nbsp;
+&nbsp;/**
+&nbsp; * Routing with turn costs. Also see {@link RoutingExample} for more details.
+&nbsp; */
+<b class="nc">&nbsp;public class RoutingExampleTC {</b>
+&nbsp;    public static void main(String[] args) {
+<b class="nc">&nbsp;        String relDir = args.length == 1 ? args[0] : &quot;&quot;;</b>
+<b class="nc">&nbsp;        GraphHopper hopper = createGraphHopperInstance(relDir + &quot;core/files/andorra.osm.pbf&quot;);</b>
+<b class="nc">&nbsp;        routeWithTurnCosts(hopper);</b>
+<b class="nc">&nbsp;        routeWithTurnCostsAndCurbsides(hopper);</b>
+<b class="nc">&nbsp;        routeWithTurnCostsAndCurbsidesAndOtherUTurnCosts(hopper);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void routeWithTurnCosts(GraphHopper hopper) {
+<b class="nc">&nbsp;        GHRequest req = new GHRequest(42.50822, 1.533966, 42.506899, 1.525372).</b>
+<b class="nc">&nbsp;                setProfile(&quot;car&quot;);</b>
+<b class="nc">&nbsp;        route(hopper, req, 1038, 63_000);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void routeWithTurnCostsAndCurbsides(GraphHopper hopper) {
+<b class="nc">&nbsp;        GHRequest req = new GHRequest(42.50822, 1.533966, 42.506899, 1.525372).</b>
+<b class="nc">&nbsp;                setCurbsides(Arrays.asList(CURBSIDE_ANY, CURBSIDE_RIGHT)).</b>
+<b class="nc">&nbsp;                setProfile(&quot;car&quot;);</b>
+<b class="nc">&nbsp;        route(hopper, req, 1370, 88_000);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void routeWithTurnCostsAndCurbsidesAndOtherUTurnCosts(GraphHopper hopper) {
+<b class="nc">&nbsp;        GHRequest req = new GHRequest(42.50822, 1.533966, 42.506899, 1.525372)</b>
+<b class="nc">&nbsp;                .setCurbsides(Arrays.asList(CURBSIDE_ANY, CURBSIDE_RIGHT))</b>
+&nbsp;                // to change u-turn costs per request we have to disable CH. otherwise the u-turn costs we set per request
+&nbsp;                // will be ignored and those set for our profile will be used.
+<b class="nc">&nbsp;                .putHint(Parameters.CH.DISABLE, true)</b>
+<b class="nc">&nbsp;                .setProfile(&quot;car&quot;);</b>
+<b class="nc">&nbsp;        route(hopper, req.putHint(Parameters.Routing.U_TURN_COSTS, 10), 1370, 88_000);</b>
+<b class="nc">&nbsp;        route(hopper, req.putHint(Parameters.Routing.U_TURN_COSTS, 100), 1635, 120_000);</b>
+<b class="nc">&nbsp;        route(hopper, req.putHint(Parameters.Routing.U_TURN_COSTS, 200), 1635, 120_000);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void route(GraphHopper hopper, GHRequest req, int expectedDistance, int expectedTime) {
+<b class="nc">&nbsp;        GHResponse rsp = hopper.route(req);</b>
+&nbsp;        // handle errors
+<b class="nc">&nbsp;        if (rsp.hasErrors())</b>
+&nbsp;            // if you get: Impossible curbside constraint: &#39;curbside=right&#39;
+&nbsp;            // you can specify &#39;curbside=any&#39; or Parameters.Routing.CURBSIDE_STRICTNESS=&quot;soft&quot; to avoid an error
+<b class="nc">&nbsp;            throw new RuntimeException(rsp.getErrors().toString());</b>
+<b class="nc">&nbsp;        ResponsePath path = rsp.getBest();</b>
+<b class="nc">&nbsp;        assert Math.abs(expectedDistance - path.getDistance()) &lt; 1 : &quot;unexpected distance : &quot; + path.getDistance() + &quot; vs. &quot; + expectedDistance;</b>
+<b class="nc">&nbsp;        assert Math.abs(expectedTime - path.getTime()) &lt; 1000 : &quot;unexpected time : &quot; + path.getTime() + &quot; vs. &quot; + expectedTime;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // see RoutingExample for more details
+&nbsp;    static GraphHopper createGraphHopperInstance(String ghLoc) {
+<b class="nc">&nbsp;        GraphHopper hopper = new GraphHopper();</b>
+<b class="nc">&nbsp;        hopper.setOSMFile(ghLoc);</b>
+<b class="nc">&nbsp;        hopper.setGraphHopperLocation(&quot;target/routing-tc-graph-cache&quot;);</b>
+&nbsp;        // add all encoded values that are used in the custom model, these are also available as path details or for client-side custom models
+<b class="nc">&nbsp;        hopper.setEncodedValuesString(&quot;car_access, car_average_speed&quot;);</b>
+<b class="nc">&nbsp;        Profile profile = new Profile(&quot;car&quot;).setCustomModel(GHUtility.loadCustomModelFromJar(&quot;car.json&quot;))</b>
+&nbsp;                // enabling turn costs means OSM turn restriction constraints like &#39;no_left_turn&#39; will be taken into account for the specified access restrictions
+&nbsp;                // we can also set u_turn_costs (in seconds). i.e. we will consider u-turns at all junctions with a 40s time penalty
+<b class="nc">&nbsp;                .setTurnCostsConfig(new TurnCostsConfig(List.of(&quot;motorcar&quot;, &quot;motor_vehicle&quot;), 40));</b>
+<b class="nc">&nbsp;        hopper.setProfiles(profile);</b>
+&nbsp;        // enable CH for our profile. since turn costs are enabled this will take more time and memory to prepare than
+&nbsp;        // without turn costs.
+<b class="nc">&nbsp;        hopper.getCHPreparationHandler().setCHProfiles(new CHProfile(profile.getName()));</b>
+<b class="nc">&nbsp;        hopper.importOrLoad();</b>
+<b class="nc">&nbsp;        return hopper;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,398 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BitUtil</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: BitUtil (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BitUtil</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.2%
+  </span>
+  <span class="absValue">
+    (34/39)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.4%
+  </span>
+  <span class="absValue">
+    (27/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.3%
+  </span>
+  <span class="absValue">
+    (99/105)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;
+&nbsp;/**
+&nbsp; * LITTLE endianness is default for GraphHopper and most microprocessors.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="fc">&nbsp;public class BitUtil {</b>
+<b class="fc">&nbsp;    public static final BitUtil LITTLE = new BitUtil();</b>
+&nbsp;
+&nbsp;    public final double toDouble(byte[] bytes) {
+<b class="fc">&nbsp;        return toDouble(bytes, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final double toDouble(byte[] bytes, int offset) {
+<b class="fc">&nbsp;        return Double.longBitsToDouble(toLong(bytes, offset));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final byte[] fromDouble(double value) {
+<b class="fc">&nbsp;        byte[] bytes = new byte[8];</b>
+<b class="fc">&nbsp;        fromDouble(bytes, value, 0);</b>
+<b class="fc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromDouble(byte[] bytes, double value) {
+<b class="nc">&nbsp;        fromDouble(bytes, value, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromDouble(byte[] bytes, double value, int offset) {
+<b class="fc">&nbsp;        fromLong(bytes, Double.doubleToRawLongBits(value), offset);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final float toFloat(byte[] bytes) {
+<b class="fc">&nbsp;        return toFloat(bytes, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final float toFloat(byte[] bytes, int offset) {
+<b class="fc">&nbsp;        return Float.intBitsToFloat(toInt(bytes, offset));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final byte[] fromFloat(float value) {
+<b class="fc">&nbsp;        byte[] bytes = new byte[4];</b>
+<b class="fc">&nbsp;        fromFloat(bytes, value, 0);</b>
+<b class="fc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromFloat(byte[] bytes, float value) {
+<b class="nc">&nbsp;        fromFloat(bytes, value, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromFloat(byte[] bytes, float value, int offset) {
+<b class="fc">&nbsp;        fromInt(bytes, Float.floatToRawIntBits(value), offset);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final short toShort(byte[] b) {
+<b class="fc">&nbsp;        return toShort(b, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final short toShort(byte[] b, int offset) {
+<b class="fc">&nbsp;        return (short) ((b[offset + 1] &amp; 0xFF) &lt;&lt; 8 | (b[offset] &amp; 0xFF));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final int toInt(byte[] b) {
+<b class="fc">&nbsp;        return toInt(b, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final int toInt(byte[] b, int offset) {
+<b class="fc">&nbsp;        return (b[offset + 3] &amp; 0xFF) &lt;&lt; 24 | (b[offset + 2] &amp; 0xFF) &lt;&lt; 16</b>
+&nbsp;                | (b[offset + 1] &amp; 0xFF) &lt;&lt; 8 | (b[offset] &amp; 0xFF);
+&nbsp;    }
+&nbsp;
+&nbsp;    public final int toUInt3(byte[] b, int offset) {
+<b class="fc">&nbsp;        return (b[offset + 2] &amp; 0xFF) &lt;&lt; 16 | (b[offset + 1] &amp; 0xFF) &lt;&lt; 8 | (b[offset] &amp; 0xFF);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final byte[] fromInt(int value) {
+<b class="fc">&nbsp;        byte[] bytes = new byte[4];</b>
+<b class="fc">&nbsp;        fromInt(bytes, value, 0);</b>
+<b class="fc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromInt(byte[] bytes, int value) {
+<b class="nc">&nbsp;        fromInt(bytes, value, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final byte[] fromShort(short value) {
+<b class="fc">&nbsp;        byte[] bytes = new byte[4];</b>
+<b class="fc">&nbsp;        fromShort(bytes, value, 0);</b>
+<b class="fc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromShort(byte[] bytes, short value) {
+<b class="nc">&nbsp;        fromShort(bytes, value, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void fromShort(byte[] bytes, short value, int offset) {
+<b class="fc">&nbsp;        bytes[offset + 1] = (byte) (value &gt;&gt;&gt; 8);</b>
+<b class="fc">&nbsp;        bytes[offset] = (byte) (value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromInt(byte[] bytes, int value, int offset) {
+<b class="fc">&nbsp;        bytes[offset + 3] = (byte) (value &gt;&gt;&gt; 24);</b>
+<b class="fc">&nbsp;        bytes[offset + 2] = (byte) (value &gt;&gt;&gt; 16);</b>
+<b class="fc">&nbsp;        bytes[offset + 1] = (byte) (value &gt;&gt;&gt; 8);</b>
+<b class="fc">&nbsp;        bytes[offset] = (byte) (value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Note, currently value with higher bits set (like for a negative value) won&#39;t throw an exception at this level.
+&nbsp;     */
+&nbsp;    public final void fromUInt3(byte[] bytes, int value, int offset) {
+<b class="fc">&nbsp;        bytes[offset + 2] = (byte) (value &gt;&gt;&gt; 16);</b>
+<b class="fc">&nbsp;        bytes[offset + 1] = (byte) (value &gt;&gt;&gt; 8);</b>
+<b class="fc">&nbsp;        bytes[offset] = (byte) (value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * See the counterpart {@link #fromLong(long)}
+&nbsp;     */
+&nbsp;    public final long toLong(byte[] b) {
+<b class="fc">&nbsp;        return toLong(b, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final long toLong(int intLow, int intHigh) {
+<b class="fc">&nbsp;        return ((long) intHigh &lt;&lt; 32) | (intLow &amp; 0xFFFF_FFFFL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final long toLong(byte[] b, int offset) {
+<b class="fc">&nbsp;        return ((long) toInt(b, offset + 4) &lt;&lt; 32) | (toInt(b, offset) &amp; 0xFFFF_FFFFL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final byte[] fromLong(long value) {
+<b class="fc">&nbsp;        byte[] bytes = new byte[8];</b>
+<b class="fc">&nbsp;        fromLong(bytes, value, 0);</b>
+<b class="fc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromLong(byte[] bytes, long value) {
+<b class="nc">&nbsp;        fromLong(bytes, value, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final void fromLong(byte[] bytes, long value, int offset) {
+<b class="fc">&nbsp;        bytes[offset + 7] = (byte) (value &gt;&gt; 56);</b>
+<b class="fc">&nbsp;        bytes[offset + 6] = (byte) (value &gt;&gt; 48);</b>
+<b class="fc">&nbsp;        bytes[offset + 5] = (byte) (value &gt;&gt; 40);</b>
+<b class="fc">&nbsp;        bytes[offset + 4] = (byte) (value &gt;&gt; 32);</b>
+<b class="fc">&nbsp;        bytes[offset + 3] = (byte) (value &gt;&gt; 24);</b>
+<b class="fc">&nbsp;        bytes[offset + 2] = (byte) (value &gt;&gt; 16);</b>
+<b class="fc">&nbsp;        bytes[offset + 1] = (byte) (value &gt;&gt; 8);</b>
+<b class="fc">&nbsp;        bytes[offset] = (byte) (value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public byte[] fromBitString(String str) {
+&nbsp;        // no need for performance or memory tuning ...
+<b class="fc">&nbsp;        int strLen = str.length();</b>
+<b class="fc">&nbsp;        int bLen = str.length() / 8;</b>
+<b class="fc">&nbsp;        if (strLen % 8 != 0)</b>
+<b class="fc">&nbsp;            bLen++;</b>
+&nbsp;
+<b class="fc">&nbsp;        byte[] bytes = new byte[bLen];</b>
+<b class="fc">&nbsp;        int charI = 0;</b>
+<b class="fc">&nbsp;        for (int b = bLen - 1; b &gt;= 0; b--) {</b>
+<b class="fc">&nbsp;            byte res = 0;</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; 8; i++) {</b>
+<b class="fc">&nbsp;                res &lt;&lt;= 1;</b>
+<b class="fc">&nbsp;                if (charI &lt; strLen &amp;&amp; str.charAt(charI) != &#39;0&#39;)</b>
+<b class="fc">&nbsp;                    res |= 1;</b>
+&nbsp;
+<b class="fc">&nbsp;                charI++;</b>
+&nbsp;            }
+<b class="fc">&nbsp;            bytes[b] = res;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Similar to Long.toBinaryString
+&nbsp;     */
+&nbsp;    public final String toBitString(long value) {
+<b class="fc">&nbsp;        return toBitString(value, 64);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toLastBitString(long value, int bits) {
+<b class="fc">&nbsp;        StringBuilder sb = new StringBuilder(bits);</b>
+<b class="fc">&nbsp;        long lastBit = 1L &lt;&lt; bits - 1;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; bits; i++) {</b>
+<b class="fc">&nbsp;            if ((value &amp; lastBit) == 0)</b>
+<b class="fc">&nbsp;                sb.append(&#39;0&#39;);</b>
+&nbsp;            else
+<b class="fc">&nbsp;                sb.append(&#39;1&#39;);</b>
+&nbsp;
+<b class="fc">&nbsp;            value &lt;&lt;= 1;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return sb.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Higher order bits comes first in the returned string.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param bits how many bits should be returned.
+&nbsp;     */
+&nbsp;    public String toBitString(long value, int bits) {
+<b class="fc">&nbsp;        StringBuilder sb = new StringBuilder(bits);</b>
+<b class="fc">&nbsp;        long lastBit = 1L &lt;&lt; 63;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; bits; i++) {</b>
+<b class="fc">&nbsp;            if ((value &amp; lastBit) == 0)</b>
+<b class="fc">&nbsp;                sb.append(&#39;0&#39;);</b>
+&nbsp;            else
+<b class="fc">&nbsp;                sb.append(&#39;1&#39;);</b>
+&nbsp;
+<b class="fc">&nbsp;            value &lt;&lt;= 1;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return sb.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Higher order bits comes first in the returned string.
+&nbsp;     */
+&nbsp;    public String toBitString(byte[] bytes) {
+<b class="fc">&nbsp;        StringBuilder sb = new StringBuilder(bytes.length * 8);</b>
+<b class="fc">&nbsp;        byte lastBit = (byte) (1 &lt;&lt; 7);</b>
+<b class="fc">&nbsp;        for (int bIndex = bytes.length - 1; bIndex &gt;= 0; bIndex--) {</b>
+<b class="fc">&nbsp;            byte b = bytes[bIndex];</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; 8; i++) {</b>
+<b class="fc">&nbsp;                if ((b &amp; lastBit) == 0)</b>
+<b class="fc">&nbsp;                    sb.append(&#39;0&#39;);</b>
+&nbsp;                else
+<b class="fc">&nbsp;                    sb.append(&#39;1&#39;);</b>
+&nbsp;
+<b class="fc">&nbsp;                b &lt;&lt;= 1;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        return sb.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final int getIntLow(long longValue) {
+<b class="fc">&nbsp;        return (int) (longValue &amp; 0xFFFF_FFFFL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public final int getIntHigh(long longValue) {
+<b class="fc">&nbsp;        return (int) (longValue &gt;&gt; 32);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static int countBitValue(int maxTurnCosts) {
+<b class="pc">&nbsp;        if (maxTurnCosts &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;maxTurnCosts cannot be negative &quot; + maxTurnCosts);</b>
+&nbsp;
+<b class="fc">&nbsp;        int counter = 0;</b>
+<b class="fc">&nbsp;        while (maxTurnCosts &gt; 0) {</b>
+<b class="fc">&nbsp;            maxTurnCosts &gt;&gt;= 1;</b>
+<b class="fc">&nbsp;            counter++;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return counter;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Converts the specified long into a signed int (&#39;reverse&#39; method for Integer.toUnsignedLong).
+&nbsp;     */
+&nbsp;    public static int toSignedInt(long x) {
+<b class="fc">&nbsp;        return (int) x;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

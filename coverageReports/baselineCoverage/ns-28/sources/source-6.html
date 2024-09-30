@@ -1,0 +1,316 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BikeCommonAverageSpeedParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: BikeCommonAverageSpeedParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BikeCommonAverageSpeedParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.3%
+  </span>
+  <span class="absValue">
+    (52/54)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.4%
+  </span>
+  <span class="absValue">
+    (123/125)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.ev.EnumEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.Smoothness;
+&nbsp;import com.graphhopper.routing.util.FerrySpeedCalculator;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.util.parsers.AbstractAccessParser.INTENDED;
+&nbsp;
+&nbsp;public abstract class BikeCommonAverageSpeedParser extends AbstractAverageSpeedParser implements TagParser {
+&nbsp;
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; CYCLEWAY_KEYS = Set.of(&quot;cycleway&quot;, &quot;cycleway:left&quot;, &quot;cycleway:both&quot;, &quot;cycleway:right&quot;);</b>
+&nbsp;    protected static final int PUSHING_SECTION_SPEED = 4;
+&nbsp;    protected static final int MIN_SPEED = 2;
+&nbsp;    // Pushing section highways are parts where you need to get off your bike and push it (German: Schiebestrecke)
+<b class="fc">&nbsp;    protected final HashSet&lt;String&gt; pushingSectionsHighways = new HashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final Map&lt;String, Integer&gt; trackTypeSpeeds = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final Map&lt;String, Integer&gt; surfaceSpeeds = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final Map&lt;Smoothness, Double&gt; smoothnessFactor = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final Map&lt;String, Integer&gt; highwaySpeeds = new HashMap&lt;&gt;();</b>
+&nbsp;    private final EnumEncodedValue&lt;Smoothness&gt; smoothnessEnc;
+<b class="fc">&nbsp;    private final Set&lt;String&gt; restrictedValues = Set.of(&quot;no&quot;, &quot;agricultural&quot;, &quot;forestry&quot;, &quot;restricted&quot;, &quot;military&quot;, &quot;emergency&quot;, &quot;private&quot;, &quot;permit&quot;);</b>
+&nbsp;
+&nbsp;    protected BikeCommonAverageSpeedParser(DecimalEncodedValue speedEnc, EnumEncodedValue&lt;Smoothness&gt; smoothnessEnc, DecimalEncodedValue ferrySpeedEnc) {
+<b class="fc">&nbsp;        super(speedEnc, ferrySpeedEnc);</b>
+<b class="fc">&nbsp;        this.smoothnessEnc = smoothnessEnc;</b>
+&nbsp;
+&nbsp;        // duplicate code as also in BikeCommonPriorityParser
+<b class="fc">&nbsp;        addPushingSection(&quot;footway&quot;);</b>
+<b class="fc">&nbsp;        addPushingSection(&quot;pedestrian&quot;);</b>
+<b class="fc">&nbsp;        addPushingSection(&quot;steps&quot;);</b>
+<b class="fc">&nbsp;        addPushingSection(&quot;platform&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade1&quot;, 18); // paved</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade2&quot;, 12); // now unpaved ...</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade3&quot;, 8);</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade4&quot;, 6);</b>
+<b class="fc">&nbsp;        setTrackTypeSpeed(&quot;grade5&quot;, 4); // like sand/grass</b>
+&nbsp;
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;paved&quot;, 18);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;asphalt&quot;, 18);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;cobblestone&quot;, 8);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;cobblestone:flattened&quot;, 10);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;sett&quot;, 10);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;concrete&quot;, 18);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;concrete:lanes&quot;, 16);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;concrete:plates&quot;, 16);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;paving_stones&quot;, 16);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;paving_stones:30&quot;, 16);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;unpaved&quot;, 12);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;compacted&quot;, 14);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;dirt&quot;, 10);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;earth&quot;, 12);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;fine_gravel&quot;, 14); // should not be faster than compacted</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;grass&quot;, 8);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;grass_paver&quot;, 8);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;gravel&quot;, 12);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;ground&quot;, 12);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;ice&quot;, MIN_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;metal&quot;, 10);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;mud&quot;, 10);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;pebblestone&quot;, 14);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;salt&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;sand&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setSurfaceSpeed(&quot;wood&quot;, PUSHING_SECTION_SPEED);</b>
+&nbsp;
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;living_street&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;steps&quot;, MIN_SPEED);</b>
+&nbsp;
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;cycleway&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;path&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;footway&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;platform&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;pedestrian&quot;, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;track&quot;, 12);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;service&quot;, 12);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;residential&quot;, 18);</b>
+&nbsp;        // no other highway applies:
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;unclassified&quot;, 16);</b>
+&nbsp;        // unknown road:
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;road&quot;, 12);</b>
+&nbsp;
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;trunk&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;trunk_link&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;primary&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;primary_link&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;secondary&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;secondary_link&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;tertiary&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;tertiary_link&quot;, 18);</b>
+&nbsp;
+&nbsp;        // special case see tests and #191
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;motorway&quot;, 18);</b>
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;motorway_link&quot;, 18);</b>
+&nbsp;
+<b class="fc">&nbsp;        setHighwaySpeed(&quot;bridleway&quot;, PUSHING_SECTION_SPEED);</b>
+&nbsp;
+&nbsp;        // note that this factor reduces the speed but only until MIN_SPEED
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.MISSING, 1.0d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.OTHER, 0.7d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.EXCELLENT, 1.1d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.GOOD, 1.0d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.INTERMEDIATE, 0.9d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.BAD, 0.7d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.VERY_BAD, 0.4d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.HORRIBLE, 0.3d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.VERY_HORRIBLE, 0.1d);</b>
+<b class="fc">&nbsp;        setSmoothnessSpeedFactor(Smoothness.IMPASSABLE, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param way   needed to retrieve tags
+&nbsp;     * @param speed speed guessed e.g. from the road type or other tags
+&nbsp;     * @return The assumed average speed.
+&nbsp;     */
+&nbsp;    double applyMaxSpeed(ReaderWay way, double speed, boolean bwd) {
+<b class="fc">&nbsp;        double maxSpeed = getMaxSpeed(way, bwd);</b>
+&nbsp;        // We strictly obey speed limits, see #600
+<b class="fc">&nbsp;        return isValidSpeed(maxSpeed) &amp;&amp; speed &gt; maxSpeed ? maxSpeed : speed;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way) {
+<b class="fc">&nbsp;        String highwayValue = way.getTag(&quot;highway&quot;);</b>
+<b class="fc">&nbsp;        if (highwayValue == null) {</b>
+<b class="fc">&nbsp;            if (FerrySpeedCalculator.isFerry(way)) {</b>
+<b class="fc">&nbsp;                double ferrySpeed = FerrySpeedCalculator.minmax(ferrySpeedEnc.getDecimal(false, edgeId, edgeIntAccess), avgSpeedEnc);</b>
+<b class="fc">&nbsp;                setSpeed(false, edgeId, edgeIntAccess, ferrySpeed);</b>
+<b class="pc">&nbsp;                if (avgSpeedEnc.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                    setSpeed(true, edgeId, edgeIntAccess, ferrySpeed);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            if (!way.hasTag(&quot;railway&quot;, &quot;platform&quot;) &amp;&amp; !way.hasTag(&quot;man_made&quot;, &quot;pier&quot;))</b>
+&nbsp;                return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        double speed = highwaySpeeds.getOrDefault(highwayValue, PUSHING_SECTION_SPEED);</b>
+<b class="fc">&nbsp;        String surfaceValue = way.getTag(&quot;surface&quot;);</b>
+<b class="fc">&nbsp;        String trackTypeValue = way.getTag(&quot;tracktype&quot;);</b>
+<b class="fc">&nbsp;        boolean pushingRestriction = Arrays.stream(way.getTag(&quot;vehicle&quot;, &quot;&quot;).split(&quot;;&quot;)).anyMatch(restrictedValues::contains);</b>
+<b class="fc">&nbsp;        if (&quot;steps&quot;.equals(highwayValue)) {</b>
+&nbsp;            // ignore
+<b class="fc">&nbsp;        } else if (way.hasTag(&quot;bicycle&quot;, &quot;dismount&quot;)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;railway&quot;, &quot;platform&quot;)</b>
+<b class="fc">&nbsp;                || pushingRestriction &amp;&amp; !way.hasTag(&quot;bicycle&quot;, INTENDED)) {</b>
+<b class="fc">&nbsp;            speed = PUSHING_SECTION_SPEED;</b>
+<b class="fc">&nbsp;        } else if (pushingSectionsHighways.contains(highwayValue)) {</b>
+<b class="fc">&nbsp;            if (way.hasTag(&quot;bicycle&quot;, &quot;designated&quot;) || way.hasTag(&quot;bicycle&quot;, &quot;official&quot;) || way.hasTag(&quot;segregated&quot;, &quot;yes&quot;)</b>
+<b class="fc">&nbsp;                    || CYCLEWAY_KEYS.stream().anyMatch(k -&gt; way.getTag(k, &quot;&quot;).equals(&quot;track&quot;))) {</b>
+<b class="fc">&nbsp;speed = trackTypeSpeeds.getOrDefault(trackTypeValue, highwaySpeeds.get(&quot;cycleway&quot;));</b>
+&nbsp;            }
+<b class="fc">&nbsp;            else if (way.hasTag(&quot;bicycle&quot;, &quot;yes&quot;))</b>
+<b class="fc">&nbsp;                speed = 12;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Integer surfaceSpeed = surfaceSpeeds.get(surfaceValue);</b>
+<b class="fc">&nbsp;        if (way.hasTag(&quot;surface&quot;) &amp;&amp; surfaceSpeed == null) {</b>
+<b class="fc">&nbsp;            speed = PUSHING_SECTION_SPEED; // unknown surface</b>
+<b class="fc">&nbsp;        } else if (way.hasTag(&quot;service&quot;)) {</b>
+<b class="fc">&nbsp;            speed = highwaySpeeds.get(&quot;living_street&quot;);</b>
+<b class="fc">&nbsp;        } else if (&quot;track&quot;.equals(highwayValue) ||</b>
+<b class="fc">&nbsp;                   &quot;bridleway&quot;.equals(highwayValue) ) {</b>
+<b class="fc">&nbsp;            if (surfaceSpeed != null)</b>
+<b class="fc">&nbsp;                speed = surfaceSpeed;</b>
+<b class="fc">&nbsp;            else if (trackTypeSpeeds.containsKey(trackTypeValue))</b>
+<b class="fc">&nbsp;                speed = trackTypeSpeeds.get(trackTypeValue);</b>
+<b class="fc">&nbsp;        } else if (surfaceSpeed != null) {</b>
+<b class="fc">&nbsp;            speed = Math.min(surfaceSpeed, speed);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Smoothness smoothness = smoothnessEnc.getEnum(false, edgeId, edgeIntAccess);</b>
+<b class="fc">&nbsp;        speed = Math.max(MIN_SPEED, smoothnessFactor.get(smoothness) * speed);</b>
+<b class="fc">&nbsp;        setSpeed(false, edgeId, edgeIntAccess, applyMaxSpeed(way, speed, false));</b>
+<b class="pc">&nbsp;        if (avgSpeedEnc.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;            setSpeed(true, edgeId, edgeIntAccess, applyMaxSpeed(way, speed, true));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setHighwaySpeed(String highway, int speed) {
+<b class="fc">&nbsp;        highwaySpeeds.put(highway, speed);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void addPushingSection(String highway) {
+<b class="fc">&nbsp;        pushingSectionsHighways.add(highway);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setTrackTypeSpeed(String tracktype, int speed) {
+<b class="fc">&nbsp;        trackTypeSpeeds.put(tracktype, speed);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setSurfaceSpeed(String surface, int speed) {
+<b class="fc">&nbsp;        surfaceSpeeds.put(surface, speed);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setSmoothnessSpeedFactor(Smoothness smoothness, double speedfactor) {
+<b class="fc">&nbsp;        smoothnessFactor.put(smoothness, speedfactor);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

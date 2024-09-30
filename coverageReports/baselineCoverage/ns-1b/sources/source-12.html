@@ -1,0 +1,816 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > WaySegmentParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm</a>
+</div>
+
+<h1>Coverage Summary for Class: WaySegmentParser (com.graphhopper.reader.osm)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">WaySegmentParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    60%
+  </span>
+  <span class="absValue">
+    (6/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (5/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.1%
+  </span>
+  <span class="absValue">
+    (37/44)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">WaySegmentParser$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (19/19)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$CoordinateSupplier</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$EdgeHandler</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$NodeTagSupplier</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$Pass1Handler</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (21/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86.7%
+  </span>
+  <span class="absValue">
+    (26/30)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$Pass2Handler</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86.6%
+  </span>
+  <span class="absValue">
+    (71/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.3%
+  </span>
+  <span class="absValue">
+    (115/126)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$ReaderElementHandler</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (3/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    63.6%
+  </span>
+  <span class="absValue">
+    (7/11)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$RelationProcessor</td>
+  </tr>
+  <tr>
+    <td class="name">WaySegmentParser$WayPreprocessor</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    83.7%
+  </span>
+  <span class="absValue">
+    (36/43)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.2%
+  </span>
+  <span class="absValue">
+    (101/120)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.7%
+  </span>
+  <span class="absValue">
+    (205/231)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.reader.osm;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.cursors.LongCursor;
+&nbsp;import com.graphhopper.reader.ReaderElement;
+&nbsp;import com.graphhopper.reader.ReaderNode;
+&nbsp;import com.graphhopper.reader.ReaderRelation;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.storage.Directory;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.PointAccess;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;import com.graphhopper.util.StopWatch;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.xml.stream.XMLStreamException;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.text.ParseException;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.*;
+&nbsp;
+&nbsp;import static com.graphhopper.reader.osm.OSMNodeData.*;
+&nbsp;import static com.graphhopper.util.Helper.nf;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class parses a given OSM file and splits OSM ways into &#39;segments&#39; at all intersections (or &#39;junctions&#39;).
+&nbsp; * Intersections can be either crossings of different OSM ways or duplicate appearances of the same node within one
+&nbsp; * way (when the way contains a loop). Furthermore, this class creates artificial segments at certain nodes. It
+&nbsp; * also provides several hooks/callbacks to customize the processing of nodes, ways and relations.
+&nbsp; * &lt;p&gt;
+&nbsp; * The OSM file is read twice. The first time we ignore OSM nodes and only determine the OSM node IDs at which accepted
+&nbsp; * ways are intersecting. During the second pass we split the OSM ways at intersections, introduce the artificial
+&nbsp; * segments and pass the way information along with the corresponding nodes to a given callback.
+&nbsp; * &lt;p&gt;
+&nbsp; * We assume a strict order of the OSM file: nodes, ways, then relations.
+&nbsp; * &lt;p&gt;
+&nbsp; * The main difficulty is that the OSM ID range is very large (64bit integers) and to be able to provide the full
+&nbsp; * node information for each segment we have to efficiently store the node data temporarily. This is addressed by
+&nbsp; * {@link OSMNodeData}.
+&nbsp; */
+&nbsp;public class WaySegmentParser {
+<b class="fc">&nbsp;    private static final Logger LOGGER = LoggerFactory.getLogger(WaySegmentParser.class);</b>
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; INCLUDE_IF_NODE_TAGS = new HashSet&lt;&gt;(Arrays.asList(&quot;barrier&quot;, &quot;highway&quot;, &quot;railway&quot;, &quot;crossing&quot;, &quot;ford&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;    private ToDoubleFunction&lt;ReaderNode&gt; elevationProvider = node -&gt; 0d;</b>
+<b class="fc">&nbsp;    private Predicate&lt;ReaderWay&gt; wayFilter = way -&gt; true;</b>
+<b class="fc">&nbsp;    private Predicate&lt;ReaderNode&gt; splitNodeFilter = node -&gt; false;</b>
+<b class="fc">&nbsp;    private WayPreprocessor wayPreprocessor = (way, coordinateSupplier, nodeTagSupplier) -&gt; {</b>
+<b class="nc">&nbsp;    };</b>
+<b class="fc">&nbsp;    private Consumer&lt;ReaderRelation&gt; relationPreprocessor = relation -&gt; {</b>
+<b class="nc">&nbsp;    };</b>
+<b class="fc">&nbsp;    private RelationProcessor relationProcessor = (relation, map) -&gt; {</b>
+<b class="nc">&nbsp;    };</b>
+<b class="fc">&nbsp;    private EdgeHandler edgeHandler = (from, to, pointList, way, nodeTags) -&gt;</b>
+<b class="nc">&nbsp;            System.out.println(&quot;edge &quot; + from + &quot;-&gt;&quot; + to + &quot; (&quot; + pointList.size() + &quot; points)&quot;);</b>
+<b class="fc">&nbsp;    private int workerThreads = 2;</b>
+&nbsp;
+&nbsp;    private final OSMNodeData nodeData;
+&nbsp;    private Date timestamp;
+&nbsp;
+<b class="fc">&nbsp;    private WaySegmentParser(OSMNodeData nodeData) {</b>
+<b class="fc">&nbsp;        this.nodeData = nodeData;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param osmFile the OSM file to parse, supported formats include .osm.xml, .osm.gz and .xml.pbf
+&nbsp;     */
+&nbsp;    public void readOSM(File osmFile) {
+<b class="pc">&nbsp;        if (nodeData.getNodeCount() &gt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;You can only run way segment parser once&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        LOGGER.info(&quot;Start reading OSM file: &#39;&quot; + osmFile + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;        LOGGER.info(&quot;pass1 - start&quot;);</b>
+<b class="fc">&nbsp;        StopWatch sw1 = StopWatch.started();</b>
+<b class="fc">&nbsp;        readOSM(osmFile, new Pass1Handler(), new SkipOptions(true, false, false));</b>
+<b class="fc">&nbsp;        LOGGER.info(&quot;pass1 - finished, took: {}&quot;, sw1.stop().getTimeString());</b>
+&nbsp;
+<b class="fc">&nbsp;        long nodes = nodeData.getNodeCount();</b>
+&nbsp;
+<b class="fc">&nbsp;        LOGGER.info(&quot;Creating graph. Node count (pillar+tower): &quot; + nodes + &quot;, &quot; + Helper.getMemInfo());</b>
+&nbsp;
+<b class="fc">&nbsp;        LOGGER.info(&quot;pass2 - start&quot;);</b>
+<b class="fc">&nbsp;        StopWatch sw2 = new StopWatch().start();</b>
+<b class="fc">&nbsp;        readOSM(osmFile, new Pass2Handler(), SkipOptions.none());</b>
+<b class="fc">&nbsp;        LOGGER.info(&quot;pass2 - finished, took: {}&quot;, sw2.stop().getTimeString());</b>
+&nbsp;
+<b class="fc">&nbsp;        nodeData.release();</b>
+&nbsp;
+<b class="fc">&nbsp;        LOGGER.info(&quot;Finished reading OSM file.&quot; +</b>
+<b class="fc">&nbsp;                &quot; pass1: &quot; + (int) sw1.getSeconds() + &quot;s, &quot; +</b>
+<b class="fc">&nbsp;                &quot; pass2: &quot; + (int) sw2.getSeconds() + &quot;s, &quot; +</b>
+<b class="fc">&nbsp;                &quot; total: &quot; + (int) (sw1.getSeconds() + sw2.getSeconds()) + &quot;s&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the timestamp read from the OSM file, or null if nothing was read yet
+&nbsp;     */
+&nbsp;    public Date getTimestamp() {
+<b class="fc">&nbsp;        return timestamp;</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    private class Pass1Handler implements ReaderElementHandler {</b>
+&nbsp;        private boolean handledWays;
+&nbsp;        private boolean handledRelations;
+<b class="fc">&nbsp;        private long wayCounter = 0;</b>
+<b class="fc">&nbsp;        private long acceptedWays = 0;</b>
+<b class="fc">&nbsp;        private long relationsCounter = 0;</b>
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void handleWay(ReaderWay way) {
+<b class="fc">&nbsp;            if (!handledWays) {</b>
+<b class="fc">&nbsp;                LOGGER.info(&quot;pass1 - start reading OSM ways&quot;);</b>
+<b class="fc">&nbsp;                handledWays = true;</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (handledRelations)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;OSM way elements must be located before relation elements in OSM file&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (++wayCounter % 10_000_000 == 0)</b>
+<b class="nc">&nbsp;                LOGGER.info(&quot;pass1 - processed ways: &quot; + nf(wayCounter) + &quot;, accepted ways: &quot; + nf(acceptedWays) +</b>
+<b class="nc">&nbsp;                        &quot;, way nodes: &quot; + nf(nodeData.getNodeCount()) + &quot;, &quot; + Helper.getMemInfo());</b>
+&nbsp;
+<b class="fc">&nbsp;            if (!wayFilter.test(way))</b>
+&nbsp;                return;
+<b class="fc">&nbsp;            acceptedWays++;</b>
+&nbsp;
+<b class="fc">&nbsp;            for (LongCursor node : way.getNodes()) {</b>
+<b class="fc">&nbsp;                final boolean isEnd = node.index == 0 || node.index == way.getNodes().size() - 1;</b>
+<b class="fc">&nbsp;                final long osmId = node.value;</b>
+<b class="fc">&nbsp;                nodeData.setOrUpdateNodeType(osmId,</b>
+<b class="fc">&nbsp;                        isEnd ? END_NODE : INTERMEDIATE_NODE,</b>
+&nbsp;                        // connection nodes are those where (only) two OSM ways are connected at their ends
+<b class="fc">&nbsp;                        prev -&gt; prev == END_NODE &amp;&amp; isEnd ? CONNECTION_NODE : JUNCTION_NODE);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void handleRelation(ReaderRelation relation) {
+<b class="fc">&nbsp;            if (!handledRelations) {</b>
+<b class="fc">&nbsp;                LOGGER.info(&quot;pass1 - start reading OSM relations&quot;);</b>
+<b class="fc">&nbsp;                handledRelations = true;</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (++relationsCounter % 1_000_000 == 0)</b>
+<b class="nc">&nbsp;                LOGGER.info(&quot;pass1 - processed relations: &quot; + nf(relationsCounter) + &quot;, &quot; + Helper.getMemInfo());</b>
+&nbsp;
+<b class="fc">&nbsp;            relationPreprocessor.accept(relation);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void handleFileHeader(OSMFileHeader fileHeader) throws ParseException {
+<b class="fc">&nbsp;            timestamp = Helper.createFormatter().parse(fileHeader.getTag(&quot;timestamp&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void onFinish() {
+<b class="fc">&nbsp;            LOGGER.info(&quot;pass1 - finished, processed ways: &quot; + nf(wayCounter) + &quot;, accepted ways: &quot; +</b>
+<b class="fc">&nbsp;                    nf(acceptedWays) + &quot;, way nodes: &quot; + nf(nodeData.getNodeCount()) + &quot;, relations: &quot; +</b>
+<b class="fc">&nbsp;                    nf(relationsCounter) + &quot;, &quot; + Helper.getMemInfo());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    private class Pass2Handler implements ReaderElementHandler {</b>
+&nbsp;        private boolean handledNodes;
+&nbsp;        private boolean handledWays;
+&nbsp;        private boolean handledRelations;
+<b class="fc">&nbsp;        private long nodeCounter = 0;</b>
+<b class="fc">&nbsp;        private long acceptedNodes = 0;</b>
+<b class="fc">&nbsp;        private long ignoredSplitNodes = 0;</b>
+<b class="fc">&nbsp;        private long wayCounter = 0;</b>
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void handleNode(ReaderNode node) {
+<b class="fc">&nbsp;            if (!handledNodes) {</b>
+<b class="fc">&nbsp;                LOGGER.info(&quot;pass2 - start reading OSM nodes&quot;);</b>
+<b class="fc">&nbsp;                handledNodes = true;</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (handledWays)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;OSM node elements must be located before way elements in OSM file&quot;);</b>
+<b class="pc">&nbsp;            if (handledRelations)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;OSM node elements must be located before relation elements in OSM file&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (++nodeCounter % 10_000_000 == 0)</b>
+<b class="nc">&nbsp;                LOGGER.info(&quot;pass2 - processed nodes: &quot; + nf(nodeCounter) + &quot;, accepted nodes: &quot; + nf(acceptedNodes) +</b>
+<b class="nc">&nbsp;                        &quot;, &quot; + Helper.getMemInfo());</b>
+&nbsp;
+<b class="fc">&nbsp;            long nodeType = nodeData.addCoordinatesIfMapped(node.getId(), node.getLat(), node.getLon(), () -&gt; elevationProvider.applyAsDouble(node));</b>
+<b class="fc">&nbsp;            if (nodeType == EMPTY_NODE)</b>
+&nbsp;                return;
+&nbsp;
+<b class="fc">&nbsp;            acceptedNodes++;</b>
+&nbsp;
+&nbsp;            // remember which nodes we want to split
+<b class="fc">&nbsp;            if (splitNodeFilter.test(node)) {</b>
+<b class="fc">&nbsp;                if (nodeType == JUNCTION_NODE) {</b>
+<b class="fc">&nbsp;                    LOGGER.debug(&quot;OSM node {} at {},{} is a barrier node at a junction. The barrier will be ignored&quot;,</b>
+<b class="fc">&nbsp;                            node.getId(), Helper.round(node.getLat(), 7), Helper.round(node.getLon(), 7));</b>
+<b class="fc">&nbsp;                    ignoredSplitNodes++;</b>
+&nbsp;                } else
+<b class="fc">&nbsp;                    nodeData.setSplitNode(node.getId());</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // store node tags if at least one important tag is included and make this available for the edge handler
+<b class="fc">&nbsp;            for (Map.Entry&lt;String, Object&gt; e : node.getTags().entrySet()) {</b>
+<b class="fc">&nbsp;                if (INCLUDE_IF_NODE_TAGS.contains(e.getKey())) {</b>
+<b class="fc">&nbsp;                    node.removeTag(&quot;created_by&quot;);</b>
+<b class="fc">&nbsp;                    node.removeTag(&quot;source&quot;);</b>
+<b class="fc">&nbsp;                    node.removeTag(&quot;note&quot;);</b>
+<b class="fc">&nbsp;                    node.removeTag(&quot;fixme&quot;);</b>
+<b class="fc">&nbsp;                    nodeData.setTags(node);</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void handleWay(ReaderWay way) {
+<b class="fc">&nbsp;            if (!handledWays) {</b>
+<b class="fc">&nbsp;                LOGGER.info(&quot;pass2 - start reading OSM ways&quot;);</b>
+<b class="fc">&nbsp;                handledWays = true;</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (handledRelations)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;OSM way elements must be located before relation elements in OSM file&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (++wayCounter % 10_000_000 == 0)</b>
+<b class="nc">&nbsp;                LOGGER.info(&quot;pass2 - processed ways: &quot; + nf(wayCounter) + &quot;, &quot; + Helper.getMemInfo());</b>
+&nbsp;
+<b class="fc">&nbsp;            if (!wayFilter.test(way))</b>
+&nbsp;                return;
+<b class="fc">&nbsp;            List&lt;SegmentNode&gt; segment = new ArrayList&lt;&gt;(way.getNodes().size());</b>
+<b class="fc">&nbsp;            for (LongCursor node : way.getNodes())</b>
+<b class="fc">&nbsp;                segment.add(new SegmentNode(node.value, nodeData.getId(node.value), nodeData.getTags(node.value)));</b>
+<b class="fc">&nbsp;            wayPreprocessor.preprocessWay(way, osmNodeId -&gt; nodeData.getCoordinates(nodeData.getId(osmNodeId)), osmNodeId -&gt; nodeData.getTags(osmNodeId));</b>
+<b class="fc">&nbsp;            splitWayAtJunctionsAndEmptySections(segment, way);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private void splitWayAtJunctionsAndEmptySections(List&lt;SegmentNode&gt; fullSegment, ReaderWay way) {
+<b class="fc">&nbsp;            List&lt;SegmentNode&gt; segment = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;            for (SegmentNode node : fullSegment) {</b>
+<b class="fc">&nbsp;                if (!isNodeId(node.id)) {</b>
+&nbsp;                    // this node exists in ways, but not in nodes. we ignore it, but we split the way when we encounter
+&nbsp;                    // such a missing node. for example an OSM way might lead out of an area where nodes are available and
+&nbsp;                    // back into it. we do not want to connect the exit/entry points using a straight line. this usually
+&nbsp;                    // should only happen for OSM extracts
+<b class="fc">&nbsp;                    if (segment.size() &gt; 1) {</b>
+<b class="fc">&nbsp;                        splitLoopSegments(segment, way);</b>
+<b class="fc">&nbsp;                        segment = new ArrayList&lt;&gt;();</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                } else if (isTowerNode(node.id)) {</b>
+<b class="fc">&nbsp;                    if (!segment.isEmpty()) {</b>
+<b class="fc">&nbsp;                        segment.add(node);</b>
+<b class="fc">&nbsp;                        splitLoopSegments(segment, way);</b>
+<b class="fc">&nbsp;                        segment = new ArrayList&lt;&gt;();</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    segment.add(node);</b>
+&nbsp;                } else {
+<b class="fc">&nbsp;                    segment.add(node);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;            // the last segment might end at the end of the way
+<b class="fc">&nbsp;            if (segment.size() &gt; 1)</b>
+<b class="fc">&nbsp;                splitLoopSegments(segment, way);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private void splitLoopSegments(List&lt;SegmentNode&gt; segment, ReaderWay way) {
+<b class="pc">&nbsp;            if (segment.size() &lt; 2)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Segment size must be &gt;= 2, but was: &quot; + segment.size());</b>
+&nbsp;
+<b class="fc">&nbsp;            boolean isLoop = segment.get(0).osmNodeId == segment.get(segment.size() - 1).osmNodeId;</b>
+<b class="pc">&nbsp;            if (segment.size() == 2 &amp;&amp; isLoop) {</b>
+<b class="nc">&nbsp;                LOGGER.warn(&quot;Loop in OSM way: {}, will be ignored, duplicate node: {}&quot;, way.getId(), segment.get(0).osmNodeId);</b>
+<b class="fc">&nbsp;            } else if (isLoop) {</b>
+&nbsp;                // split into two segments
+<b class="fc">&nbsp;                splitSegmentAtSplitNodes(segment.subList(0, segment.size() - 1), way);</b>
+<b class="fc">&nbsp;                splitSegmentAtSplitNodes(segment.subList(segment.size() - 2, segment.size()), way);</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                splitSegmentAtSplitNodes(segment, way);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private void splitSegmentAtSplitNodes(List&lt;SegmentNode&gt; parentSegment, ReaderWay way) {
+<b class="fc">&nbsp;            List&lt;SegmentNode&gt; segment = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; parentSegment.size(); i++) {</b>
+<b class="fc">&nbsp;                SegmentNode node = parentSegment.get(i);</b>
+<b class="fc">&nbsp;                if (nodeData.isSplitNode(node.osmNodeId)) {</b>
+&nbsp;                    // do not split this node again. for example a barrier can be connecting two ways (appear in both
+&nbsp;                    // ways) and we only want to add a barrier edge once (but we want to add one).
+<b class="fc">&nbsp;                    nodeData.unsetSplitNode(node.osmNodeId);</b>
+&nbsp;
+&nbsp;                    // this node is a barrier. we will copy it and add an extra edge
+<b class="fc">&nbsp;                    SegmentNode barrierFrom = node;</b>
+<b class="fc">&nbsp;                    SegmentNode barrierTo = nodeData.addCopyOfNode(node);</b>
+<b class="fc">&nbsp;                    if (i == parentSegment.size() - 1) {</b>
+&nbsp;                        // make sure the barrier node is always on the inside of the segment
+<b class="fc">&nbsp;                        SegmentNode tmp = barrierFrom;</b>
+<b class="fc">&nbsp;                        barrierFrom = barrierTo;</b>
+<b class="fc">&nbsp;                        barrierTo = tmp;</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    if (!segment.isEmpty()) {</b>
+<b class="fc">&nbsp;                        segment.add(barrierFrom);</b>
+<b class="fc">&nbsp;                        handleSegment(segment, way);</b>
+<b class="fc">&nbsp;                        segment = new ArrayList&lt;&gt;();</b>
+&nbsp;                    }
+&nbsp;
+&nbsp;                    // mark barrier edge
+<b class="fc">&nbsp;                    way.setTag(&quot;gh:barrier_edge&quot;, true);</b>
+<b class="fc">&nbsp;                    segment.add(barrierFrom);</b>
+<b class="fc">&nbsp;                    segment.add(barrierTo);</b>
+<b class="fc">&nbsp;                    handleSegment(segment, way);</b>
+<b class="fc">&nbsp;                    way.removeTag(&quot;gh:barrier_edge&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;                    segment = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;                    segment.add(barrierTo);</b>
+&nbsp;                } else {
+<b class="fc">&nbsp;                    segment.add(node);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            if (segment.size() &gt; 1)</b>
+<b class="fc">&nbsp;                handleSegment(segment, way);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        void handleSegment(List&lt;SegmentNode&gt; segment, ReaderWay way) {
+<b class="fc">&nbsp;            final PointList pointList = new PointList(segment.size(), nodeData.is3D());</b>
+<b class="fc">&nbsp;            final List&lt;Map&lt;String, Object&gt;&gt; nodeTags = new ArrayList&lt;&gt;(segment.size());</b>
+<b class="fc">&nbsp;            int from = -1;</b>
+<b class="fc">&nbsp;            int to = -1;</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; segment.size(); i++) {</b>
+<b class="fc">&nbsp;                SegmentNode node = segment.get(i);</b>
+<b class="fc">&nbsp;                long id = node.id;</b>
+<b class="pc">&nbsp;                if (!isNodeId(id))</b>
+<b class="nc">&nbsp;                    throw new IllegalStateException(&quot;Invalid id for node: &quot; + node.osmNodeId + &quot; when handling segment &quot; + segment + &quot; for way: &quot; + way.getId());</b>
+<b class="fc">&nbsp;                if (isPillarNode(id) &amp;&amp; (i == 0 || i == segment.size() - 1)) {</b>
+<b class="fc">&nbsp;                    id = nodeData.convertPillarToTowerNode(id, node.osmNodeId);</b>
+<b class="fc">&nbsp;                    node.id = id;</b>
+&nbsp;                }
+&nbsp;
+<b class="fc">&nbsp;                if (i == 0)</b>
+<b class="fc">&nbsp;                    from = nodeData.idToTowerNode(id);</b>
+<b class="fc">&nbsp;                else if (i == segment.size() - 1)</b>
+<b class="fc">&nbsp;                    to = nodeData.idToTowerNode(id);</b>
+<b class="pc">&nbsp;                else if (isTowerNode(id))</b>
+<b class="nc">&nbsp;                    throw new IllegalStateException(&quot;Tower nodes should only appear at the end of segments, way: &quot; + way.getId());</b>
+<b class="fc">&nbsp;                nodeData.addCoordinatesToPointList(id, pointList);</b>
+<b class="fc">&nbsp;                nodeTags.add(node.tags);</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (from &lt; 0 || to &lt; 0)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;The first and last nodes of a segment must be tower nodes, way: &quot; + way.getId());</b>
+<b class="fc">&nbsp;            edgeHandler.handleEdge(from, to, pointList, way, nodeTags);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void handleRelation(ReaderRelation relation) {
+<b class="fc">&nbsp;            if (!handledRelations) {</b>
+<b class="fc">&nbsp;                LOGGER.info(&quot;pass2 - start reading OSM relations&quot;);</b>
+<b class="fc">&nbsp;                handledRelations = true;</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            relationProcessor.processRelation(relation, this::getInternalNodeIdOfOSMNode);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void onFinish() {
+<b class="fc">&nbsp;            LOGGER.info(&quot;pass2 - finished, processed ways: {}, way nodes: {}, nodes with tags: {}, node tag capacity: {}, ignored barriers at junctions: {}&quot;,</b>
+<b class="fc">&nbsp;                    nf(wayCounter), nf(acceptedNodes), nf(nodeData.getTaggedNodeCount()), nf(nodeData.getNodeTagCapacity()), nf(ignoredSplitNodes));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public int getInternalNodeIdOfOSMNode(long nodeOsmId) {
+<b class="fc">&nbsp;            long id = nodeData.getId(nodeOsmId);</b>
+<b class="fc">&nbsp;            if (isTowerNode(id))</b>
+<b class="fc">&nbsp;                return -((int) id) - 3;</b>
+<b class="fc">&nbsp;            return -1;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void readOSM(File file, ReaderElementHandler handler, SkipOptions skipOptions) {
+<b class="pc">&nbsp;        try (OSMInput osmInput = openOsmInputFile(file, skipOptions)) {</b>
+&nbsp;            ReaderElement elem;
+<b class="fc">&nbsp;            while ((elem = osmInput.getNext()) != null)</b>
+<b class="fc">&nbsp;                handler.handleElement(elem);</b>
+<b class="fc">&nbsp;            handler.onFinish();</b>
+<b class="pc">&nbsp;            if (osmInput.getUnprocessedElements() &gt; 0)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;There were some remaining elements in the reader queue &quot; + osmInput.getUnprocessedElements());</b>
+<b class="pc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not parse OSM file: &quot; + file.getAbsolutePath(), e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected OSMInput openOsmInputFile(File osmFile, SkipOptions skipOptions) throws XMLStreamException, IOException {
+<b class="fc">&nbsp;        return new OSMInputFile(osmFile).setWorkerThreads(workerThreads).setSkipOptions(skipOptions).open();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Builder {
+&nbsp;        private final WaySegmentParser waySegmentParser;
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param pointAccess used to store tower node coordinates while parsing the ways
+&nbsp;         * @param directory   the directory to be used to store temporary data
+&nbsp;         */
+<b class="fc">&nbsp;        public Builder(PointAccess pointAccess, Directory directory) {</b>
+<b class="fc">&nbsp;            waySegmentParser = new WaySegmentParser(new OSMNodeData(pointAccess, directory));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param elevationProvider used to determine the elevation of an OSM node
+&nbsp;         */
+&nbsp;        public Builder setElevationProvider(ToDoubleFunction&lt;ReaderNode&gt; elevationProvider) {
+<b class="fc">&nbsp;            waySegmentParser.elevationProvider = elevationProvider;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param wayFilter return true for OSM ways that should be considered and false otherwise
+&nbsp;         */
+&nbsp;        public Builder setWayFilter(Predicate&lt;ReaderWay&gt; wayFilter) {
+<b class="fc">&nbsp;            waySegmentParser.wayFilter = wayFilter;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param splitNodeFilter return true if the given OSM node should be duplicated to create an artificial edge
+&nbsp;         */
+&nbsp;        public Builder setSplitNodeFilter(Predicate&lt;ReaderNode&gt; splitNodeFilter) {
+<b class="fc">&nbsp;            waySegmentParser.splitNodeFilter = splitNodeFilter;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param wayPreprocessor callback function that is called for each accepted OSM way during the second pass
+&nbsp;         */
+&nbsp;        public Builder setWayPreprocessor(WayPreprocessor wayPreprocessor) {
+<b class="fc">&nbsp;            waySegmentParser.wayPreprocessor = wayPreprocessor;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param relationPreprocessor callback function that receives OSM relations during the first pass
+&nbsp;         */
+&nbsp;        public Builder setRelationPreprocessor(Consumer&lt;ReaderRelation&gt; relationPreprocessor) {
+<b class="fc">&nbsp;            waySegmentParser.relationPreprocessor = relationPreprocessor;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param relationProcessor callback function that receives OSM relations during the second pass
+&nbsp;         */
+&nbsp;        public Builder setRelationProcessor(RelationProcessor relationProcessor) {
+<b class="fc">&nbsp;            waySegmentParser.relationProcessor = relationProcessor;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param edgeHandler callback function that is called for each edge (way segment)
+&nbsp;         */
+&nbsp;        public Builder setEdgeHandler(EdgeHandler edgeHandler) {
+<b class="fc">&nbsp;            waySegmentParser.edgeHandler = edgeHandler;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @param workerThreads the number of threads used for the low level reading of the OSM file
+&nbsp;         */
+&nbsp;        public Builder setWorkerThreads(int workerThreads) {
+<b class="fc">&nbsp;            waySegmentParser.workerThreads = workerThreads;</b>
+<b class="fc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public WaySegmentParser build() {
+<b class="fc">&nbsp;            return waySegmentParser;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private interface ReaderElementHandler {
+&nbsp;        default void handleElement(ReaderElement elem) throws ParseException {
+<b class="pc">&nbsp;            switch (elem.getType()) {</b>
+&nbsp;                case NODE:
+<b class="fc">&nbsp;                    handleNode((ReaderNode) elem);</b>
+&nbsp;                    break;
+&nbsp;                case WAY:
+<b class="fc">&nbsp;                    handleWay((ReaderWay) elem);</b>
+&nbsp;                    break;
+&nbsp;                case RELATION:
+<b class="fc">&nbsp;                    handleRelation((ReaderRelation) elem);</b>
+&nbsp;                    break;
+&nbsp;                case FILEHEADER:
+<b class="fc">&nbsp;                    handleFileHeader((OSMFileHeader) elem);</b>
+&nbsp;                    break;
+&nbsp;                default:
+<b class="nc">&nbsp;                    throw new IllegalStateException(&quot;Unknown reader element type: &quot; + elem.getType());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        default void handleNode(ReaderNode node) {
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        default void handleWay(ReaderWay way) {
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        default void handleRelation(ReaderRelation relation) {
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        default void handleFileHeader(OSMFileHeader fileHeader) throws ParseException {
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        default void onFinish() {
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface EdgeHandler {
+&nbsp;        void handleEdge(int from, int to, PointList pointList, ReaderWay way, List&lt;Map&lt;String, Object&gt;&gt; nodeTags);
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface RelationProcessor {
+&nbsp;        void processRelation(ReaderRelation relation, LongToIntFunction getNodeIdForOSMNodeId);
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface WayPreprocessor {
+&nbsp;        /**
+&nbsp;         * @param coordinateSupplier maps an OSM node ID (as it can be obtained by way.getNodes()) to the coordinates
+&nbsp;         *                           of this node. If elevation is disabled it will be NaN. Returns null if no such OSM
+&nbsp;         *                           node exists.
+&nbsp;         */
+&nbsp;        void preprocessWay(ReaderWay way, CoordinateSupplier coordinateSupplier, NodeTagSupplier nodeTagSupplier);
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface CoordinateSupplier {
+&nbsp;        GHPoint3D getCoordinate(long osmNodeId);
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface NodeTagSupplier {
+&nbsp;        Map&lt;String, Object&gt; getTags(long osmNodeId);
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

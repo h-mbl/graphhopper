@@ -1,0 +1,681 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Entity</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Entity (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Entity</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Entity$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/50)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/112)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Entity$UncloseableOutputStream</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Entity$Writer</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/37)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/66)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/155)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import com.conveyal.gtfs.error.*;
+&nbsp;import com.csvreader.CsvReader;
+&nbsp;import com.csvreader.CsvWriter;
+&nbsp;import org.apache.commons.io.input.BOMInputStream;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.net.MalformedURLException;
+&nbsp;import java.net.URL;
+&nbsp;import java.nio.charset.Charset;
+&nbsp;import java.nio.file.Path;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.format.DateTimeFormatter;
+&nbsp;import java.util.*;
+&nbsp;import java.util.zip.ZipEntry;
+&nbsp;import java.util.zip.ZipFile;
+&nbsp;import java.util.zip.ZipOutputStream;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * An abstract base class that represents a row in a GTFS table, e.g. a Stop, Trip, or Agency.
+&nbsp; * One concrete subclass is defined for each table in a GTFS feed.
+&nbsp; */
+&nbsp;// TODO K is the key type for this table
+<b class="nc">&nbsp;public abstract class Entity implements Serializable, Cloneable {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = -3576441868127607448L;
+&nbsp;    public static final int INT_MISSING = Integer.MIN_VALUE;
+&nbsp;    public long sourceFileLine;
+&nbsp;
+&nbsp;    /* The feed from which this entity was loaded. */
+&nbsp;    transient GTFSFeed feed;
+&nbsp;
+&nbsp;    /* A class that can produce Entities from CSV, and record errors that occur in the process. */
+&nbsp;    // This is almost a GTFSTable... rename?
+&nbsp;    public static abstract class Loader&lt;E extends Entity&gt; {
+&nbsp;
+<b class="nc">&nbsp;        private static final Logger LOG = LoggerFactory.getLogger(Loader.class);</b>
+&nbsp;
+&nbsp;        protected final GTFSFeed feed;    // the feed into which we are loading the entities
+&nbsp;        protected final String tableName; // name of corresponding table without .txt
+<b class="nc">&nbsp;        protected final Set&lt;String&gt; missingRequiredColumns = new HashSet&lt;&gt;();</b>
+&nbsp;
+&nbsp;        protected CsvReader reader;
+&nbsp;        protected long      row;
+&nbsp;        // TODO &quot;String column&quot; that is set before any calls to avoid passing around the column name
+&nbsp;
+<b class="nc">&nbsp;        public Loader(GTFSFeed feed, String tableName) {</b>
+<b class="nc">&nbsp;            this.feed = feed;</b>
+<b class="nc">&nbsp;            this.tableName = tableName;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /** @return whether the number actual is in the range [min, max] */
+&nbsp;        protected boolean checkRangeInclusive(double min, double max, double actual) {
+<b class="nc">&nbsp;            if (actual &lt; min || actual &gt; max) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new RangeError(tableName, row, null, min, max, actual)); // TODO set column name in loader so it&#39;s available in methods</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Fetch the value from the given column of the current row. Record an error the first time a column is
+&nbsp;         * seen to be missing, and whenever empty values are encountered.
+&nbsp;         * I was originally just calling getStringField from the other getXField functions as a first step to get
+&nbsp;         * the missing-field check. But we don&#39;t want deduplication performed on strings that aren&#39;t being retained.
+&nbsp;         * Therefore the missing-field behavior is this separate function.
+&nbsp;         * @return null if column was missing or field is empty
+&nbsp;         */
+&nbsp;        private String getFieldCheckRequired(String column, boolean required) throws IOException {
+<b class="nc">&nbsp;            String str = reader.get(column);</b>
+<b class="nc">&nbsp;            if (str == null) {</b>
+<b class="nc">&nbsp;                if (!missingRequiredColumns.contains(column)) {</b>
+<b class="nc">&nbsp;                    feed.errors.add(new MissingColumnError(tableName, column));</b>
+<b class="nc">&nbsp;                    missingRequiredColumns.add(column);</b>
+&nbsp;                }
+<b class="nc">&nbsp;            } else if (str.isEmpty()) {</b>
+<b class="nc">&nbsp;                if (required) {</b>
+<b class="nc">&nbsp;                    feed.errors.add(new EmptyFieldError(tableName, row, column));</b>
+&nbsp;                }
+<b class="nc">&nbsp;                str = null;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return str;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /** @return the given column from the current row as a deduplicated String. */
+&nbsp;        protected String getStringField(String column, boolean required) throws IOException {
+<b class="nc">&nbsp;            return getFieldCheckRequired(column, required);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected int getIntField(String column, boolean required, int min, int max) throws IOException {
+<b class="nc">&nbsp;            return getIntField(column, required, min, max, 0);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        protected int getIntField (String column, boolean required, int min, int max, int defaultValue) throws IOException {            
+<b class="nc">&nbsp;            Map&lt;Integer, Integer&gt; mapping = null;            </b>
+<b class="nc">&nbsp;            return getIntField (column, required, min, max, defaultValue, mapping);            </b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected int getIntField(String column, boolean required, int min, int max, int defaultValue, final Map&lt;Integer, Integer&gt; mapping) throws IOException {
+<b class="nc">&nbsp;            String str = getFieldCheckRequired(column, required);</b>
+<b class="nc">&nbsp;            int val = INT_MISSING;</b>
+<b class="nc">&nbsp;            if (str == null) {</b>
+<b class="nc">&nbsp;                val = defaultValue; // defaults to 0 per overloaded function, unless provided.</b>
+&nbsp;            } else try {
+<b class="nc">&nbsp;                val = Integer.parseInt(str);</b>
+<b class="nc">&nbsp;                if (mapping != null) {</b>
+<b class="nc">&nbsp;                    Integer mappedVal = mapping.get(val);</b>
+<b class="nc">&nbsp;                    if (mappedVal != null)</b>
+<b class="nc">&nbsp;                        val = mappedVal;</b>
+&nbsp;                }
+<b class="nc">&nbsp;                checkRangeInclusive(min, max, val);</b>
+<b class="nc">&nbsp;            } catch (NumberFormatException nfe) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new NumberParseError(tableName, row, column));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return val;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Fetch the given column of the current row, and interpret it as a time in the format HH:MM:SS.
+&nbsp;         * @return the time value in seconds since midnight
+&nbsp;         */
+&nbsp;        protected int getTimeField(String column, boolean required) throws IOException {
+<b class="nc">&nbsp;            String str = getFieldCheckRequired(column, required);</b>
+<b class="nc">&nbsp;            int val = INT_MISSING;</b>
+&nbsp;            
+<b class="nc">&nbsp;            if (str != null) {</b>
+<b class="nc">&nbsp;                String[] fields = str.split(&quot;:&quot;);</b>
+<b class="nc">&nbsp;                if (fields.length != 3) {</b>
+<b class="nc">&nbsp;                    feed.errors.add(new TimeParseError(tableName, row, column));</b>
+&nbsp;                } else {
+&nbsp;                    try {
+<b class="nc">&nbsp;                        int hours = Integer.parseInt(fields[0]);</b>
+<b class="nc">&nbsp;                        int minutes = Integer.parseInt(fields[1]);</b>
+<b class="nc">&nbsp;                        int seconds = Integer.parseInt(fields[2]);</b>
+<b class="nc">&nbsp;                        checkRangeInclusive(0, 72, hours); // GTFS hours can go past midnight. Some trains run for 3 days.</b>
+<b class="nc">&nbsp;                        checkRangeInclusive(0, 59, minutes);</b>
+<b class="nc">&nbsp;                        checkRangeInclusive(0, 59, seconds);</b>
+<b class="nc">&nbsp;                        val = (hours * 60 * 60) + minutes * 60 + seconds;</b>
+<b class="nc">&nbsp;                    } catch (NumberFormatException nfe) {</b>
+<b class="nc">&nbsp;                        feed.errors.add(new TimeParseError(tableName, row, column));</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;            
+<b class="nc">&nbsp;            return val;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Fetch the given column of the current row, and interpret it as a date in the format YYYYMMDD.
+&nbsp;         * @return the date value as Java LocalDate, or null if it could not be parsed.
+&nbsp;         */
+&nbsp;        protected LocalDate getDateField(String column, boolean required) throws IOException {
+<b class="nc">&nbsp;            String str = getFieldCheckRequired(column, required);</b>
+<b class="nc">&nbsp;            LocalDate dateTime = null;</b>
+<b class="nc">&nbsp;            if (str != null) try {</b>
+<b class="nc">&nbsp;                dateTime = LocalDate.parse(str, DateTimeFormatter.BASIC_ISO_DATE);</b>
+<b class="nc">&nbsp;                checkRangeInclusive(2000, 2100, dateTime.getYear());</b>
+<b class="nc">&nbsp;            } catch (IllegalArgumentException iae) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new DateParseError(tableName, row, column));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return dateTime;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Fetch the given column of the current row, and interpret it as a URL.
+&nbsp;         * @return the URL, or null if the field was missing or empty.
+&nbsp;         */
+&nbsp;        protected URL getUrlField(String column, boolean required) throws IOException {
+<b class="nc">&nbsp;            String str = getFieldCheckRequired(column, required);</b>
+<b class="nc">&nbsp;            URL url = null;</b>
+<b class="nc">&nbsp;            if (str != null) try {</b>
+<b class="nc">&nbsp;                url = new URL(str);</b>
+<b class="nc">&nbsp;            } catch (MalformedURLException mue) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new URLParseError(tableName, row, column));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return url;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected double getDoubleField(String column, boolean required, double min, double max) throws IOException {
+<b class="nc">&nbsp;            String str = getFieldCheckRequired(column, required);</b>
+<b class="nc">&nbsp;            double val = Double.NaN;</b>
+<b class="nc">&nbsp;            if (str != null) try {</b>
+<b class="nc">&nbsp;                val = Double.parseDouble(str);</b>
+<b class="nc">&nbsp;                checkRangeInclusive(min, max, val);</b>
+<b class="nc">&nbsp;            } catch (NumberFormatException nfe) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new NumberParseError(tableName, row, column));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return val;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Used to check referential integrity.
+&nbsp;         * Return value is not used, but could allow entities to point to each other directly rather than
+&nbsp;         * using indirection through string-keyed maps.
+&nbsp;         */
+&nbsp;        protected &lt;K, V&gt; V getRefField(String column, boolean required, Map&lt;K, V&gt; target) throws IOException {
+<b class="nc">&nbsp;            String str = getFieldCheckRequired(column, required);</b>
+<b class="nc">&nbsp;            V val = null;</b>
+<b class="nc">&nbsp;            if (str != null) {</b>
+<b class="nc">&nbsp;                val = target.get(str);</b>
+<b class="nc">&nbsp;                if (val == null) {</b>
+<b class="nc">&nbsp;                    feed.errors.add(new ReferentialIntegrityError(tableName, row, column, str));</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return val;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected abstract boolean isRequired();
+&nbsp;
+&nbsp;        /** Implemented by subclasses to read one row, produce one GTFS entity, and store that entity in a map. */
+&nbsp;        protected abstract void loadOneRow() throws IOException;
+&nbsp;
+&nbsp;        /**
+&nbsp;         * The main entry point into an Entity.Loader. Interprets each row of a CSV file within a zip file as a sinle
+&nbsp;         * GTFS entity, and loads them into a table.
+&nbsp;         *
+&nbsp;         * @param zipOrDirectory the zip file or directory from which to read a table
+&nbsp;         */
+&nbsp;        public void loadTable(File zipOrDirectory) throws IOException {
+&nbsp;            InputStream zis;
+<b class="nc">&nbsp;            if (zipOrDirectory.isDirectory()) {</b>
+<b class="nc">&nbsp;                Path path = zipOrDirectory.toPath().resolve(tableName + &quot;.txt&quot;);</b>
+<b class="nc">&nbsp;                if (!path.toFile().exists()) {</b>
+<b class="nc">&nbsp;                    missing();</b>
+&nbsp;                    return;
+&nbsp;                }
+<b class="nc">&nbsp;                zis = new FileInputStream(path.toFile());</b>
+<b class="nc">&nbsp;                LOG.info(&quot;Loading GTFS table {} from {}&quot;, tableName, path);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                ZipFile zip = new ZipFile(zipOrDirectory);</b>
+<b class="nc">&nbsp;                ZipEntry entry = zip.getEntry(tableName + &quot;.txt&quot;);</b>
+<b class="nc">&nbsp;                if (entry == null) {</b>
+<b class="nc">&nbsp;                    Enumeration&lt;? extends ZipEntry&gt; entries = zip.entries();</b>
+&nbsp;                    // check if table is contained within sub-directory
+<b class="nc">&nbsp;                    while (entries.hasMoreElements()) {</b>
+<b class="nc">&nbsp;                        ZipEntry e = entries.nextElement();</b>
+<b class="nc">&nbsp;                        if (e.getName().endsWith(tableName + &quot;.txt&quot;)) {</b>
+<b class="nc">&nbsp;                            entry = e;</b>
+<b class="nc">&nbsp;                            feed.errors.add(new TableInSubdirectoryError(tableName, entry.getName().replace(tableName + &quot;.txt&quot;, &quot;&quot;)));</b>
+&nbsp;                        }
+&nbsp;                    }
+<b class="nc">&nbsp;                    missing();</b>
+<b class="nc">&nbsp;                    if (entry == null) return;</b>
+&nbsp;                }
+<b class="nc">&nbsp;                zis = zip.getInputStream(entry);</b>
+<b class="nc">&nbsp;                LOG.info(&quot;Loading GTFS table {} from {}&quot;, tableName, entry);</b>
+&nbsp;            }
+&nbsp;            // skip any byte order mark that may be present. Files must be UTF-8,
+&nbsp;            // but the GTFS spec says that &quot;files that include the UTF byte order mark are acceptable&quot;
+<b class="nc">&nbsp;            InputStream bis = new BOMInputStream(zis);</b>
+<b class="nc">&nbsp;            CsvReader reader = new CsvReader(bis, &#39;,&#39;, Charset.forName(&quot;UTF8&quot;));</b>
+<b class="nc">&nbsp;            this.reader = reader;</b>
+<b class="nc">&nbsp;            reader.readHeaders();</b>
+<b class="nc">&nbsp;            while (reader.readRecord()) {</b>
+&nbsp;                // reader.getCurrentRecord() is zero-based and does not include the header line, keep our own row count
+<b class="nc">&nbsp;                if (++row % 500000 == 0) {</b>
+<b class="nc">&nbsp;                    LOG.info(&quot;Record number {}&quot;, human(row));</b>
+&nbsp;                }
+<b class="nc">&nbsp;                loadOneRow(); // Call subclass method to produce an entity from the current row.</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private void missing() {
+<b class="nc">&nbsp;            if (this.isRequired()) {</b>
+<b class="nc">&nbsp;                feed.errors.add(new MissingTableError(tableName));</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                LOG.info(&quot;Table {} was missing but it is not required.&quot;, tableName);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * An output stream that cannot be closed. CSVWriters try to close their output streams when they are garbage-collected,
+&nbsp;     * which breaks if another CSV writer is still writing to the ZIP file.
+&nbsp;     *
+&nbsp;     * Apache Commons has something similar but it seemed silly to import another large dependency. Eventually Guava will have this,
+&nbsp;     * see Guava issue 1367. At that point we should switch to using Guava.
+&nbsp;     */
+&nbsp;    private static class UncloseableOutputStream extends FilterOutputStream {
+&nbsp;        public UncloseableOutputStream(OutputStream out) {
+<b class="nc">&nbsp;            super(out);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void close () {
+&nbsp;            // no-op
+<b class="nc">&nbsp;            return;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Write this entity to a CSV file. This should be subclassed in subclasses of Entity.
+&nbsp;     * The following (abstract) methods should be overridden in a subclass:
+&nbsp;     * 
+&nbsp;     * writeHeaders(): write the headers to the CsvWriter writer.
+&nbsp;     * writeRow(E): write the passed-in object to the CsvWriter writer, potentially using the write*Field methods.
+&nbsp;     * iterator(): return an iterator over objects of this class (note that the feed is available at this.feed
+&nbsp;     * public Writer (GTFSFeed feed): this should super to Writer(GTFSFeed feed, String tableName), with the table name
+&nbsp;     * defined. 
+&nbsp;     * 
+&nbsp;     * @author mattwigway
+&nbsp;     */
+&nbsp;    public static abstract class Writer&lt;E extends Entity&gt; {
+<b class="nc">&nbsp;        private static final Logger LOG = LoggerFactory.getLogger(Writer.class);</b>
+&nbsp;
+&nbsp;        protected final GTFSFeed feed;    // the feed into which we are loading the entities
+&nbsp;        protected final String tableName; // name of corresponding table without .txt
+&nbsp;
+&nbsp;        protected CsvWriter writer;
+&nbsp;
+&nbsp;        /**
+&nbsp;         * one-based to match reader.
+&nbsp;         */
+&nbsp;        protected long row;
+&nbsp;
+<b class="nc">&nbsp;        protected Writer(GTFSFeed feed, String tableName) {</b>
+<b class="nc">&nbsp;            this.feed = feed;</b>
+<b class="nc">&nbsp;            this.tableName = tableName;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Write the CSV header.
+&nbsp;         */
+&nbsp;        protected abstract void writeHeaders() throws IOException;
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Write one row of the CSV from the passed-in object.
+&nbsp;         */
+&nbsp;        protected abstract void writeOneRow(E obj) throws IOException;
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Get an iterator over objects of this type.
+&nbsp;         */
+&nbsp;        protected abstract Iterator&lt;E&gt; iterator();
+&nbsp;
+&nbsp;        public void writeTable (ZipOutputStream zip) throws IOException {
+<b class="nc">&nbsp;            LOG.info(&quot;Writing GTFS table {}&quot;, tableName);</b>
+&nbsp;
+<b class="nc">&nbsp;            ZipEntry zipEntry = new ZipEntry(tableName + &quot;.txt&quot;);</b>
+<b class="nc">&nbsp;            zip.putNextEntry(zipEntry);</b>
+&nbsp;
+&nbsp;            // don&#39;t let CSVWriter close the stream when it is garbage-collected
+<b class="nc">&nbsp;            OutputStream protectedOut = new UncloseableOutputStream(zip);</b>
+<b class="nc">&nbsp;            this.writer = new CsvWriter(protectedOut, &#39;,&#39;, Charset.forName(&quot;UTF8&quot;));</b>
+&nbsp;
+<b class="nc">&nbsp;            this.writeHeaders();</b>
+&nbsp;
+&nbsp;            // write rows until there are none left.
+<b class="nc">&nbsp;            row = 0;        	</b>
+<b class="nc">&nbsp;            Iterator&lt;E&gt; iter = this.iterator();</b>
+<b class="nc">&nbsp;            while (iter.hasNext()) {</b>
+<b class="nc">&nbsp;                if (++row % 500000 == 0) {</b>
+<b class="nc">&nbsp;                    LOG.info(&quot;Record number {}&quot;, human(row));</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                writeOneRow(iter.next());</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // closing the writer closes the underlying output stream, so we don&#39;t do that.
+<b class="nc">&nbsp;            writer.flush();</b>
+<b class="nc">&nbsp;            zip.closeEntry();</b>
+&nbsp;
+<b class="nc">&nbsp;            LOG.info(&quot;Wrote {} rows&quot;, human(row));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected void writeStringField(String str) throws IOException {
+<b class="nc">&nbsp;            writer.write(str);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected void writeUrlField(URL obj) throws IOException {
+<b class="nc">&nbsp;            writeStringField(obj != null ? obj.toString() : &quot;&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Writes date as YYYYMMDD
+&nbsp;         */
+&nbsp;        protected void writeDateField (LocalDate d) throws IOException {
+<b class="nc">&nbsp;            writeStringField(d.format(DateTimeFormatter.BASIC_ISO_DATE));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Take a time expressed in seconds since noon - 12h (midnight, usually) and write it in HH:MM:SS format.
+&nbsp;         */
+&nbsp;        protected void writeTimeField (int secsSinceMidnight) throws IOException {
+<b class="nc">&nbsp;            if (secsSinceMidnight == INT_MISSING) {</b>
+<b class="nc">&nbsp;                writeStringField(&quot;&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;            
+<b class="nc">&nbsp;            writeStringField(convertToGtfsTime(secsSinceMidnight));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public static String convertToGtfsTime (int secsSinceMidnight) {
+<b class="nc">&nbsp;            int seconds = secsSinceMidnight % 60;</b>
+<b class="nc">&nbsp;            secsSinceMidnight -= seconds;</b>
+&nbsp;            // note that the minute and hour values are still expressed in seconds until we write it out, to avoid unnecessary division.
+<b class="nc">&nbsp;            int minutes = (secsSinceMidnight % 3600);</b>
+&nbsp;            // secsSinceMidnight now represents hours
+<b class="nc">&nbsp;            secsSinceMidnight -= minutes;</b>
+&nbsp;
+&nbsp;            // integer divide is fine as we&#39;ve subtracted off remainders
+<b class="nc">&nbsp;            return String.format(Locale.getDefault(), &quot;%02d:%02d:%02d&quot;, secsSinceMidnight / 3600, minutes / 60, seconds);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        protected void writeIntField (Integer val) throws IOException {
+<b class="nc">&nbsp;            if (val.equals(INT_MISSING))</b>
+<b class="nc">&nbsp;                writeStringField(&quot;&quot;);</b>
+&nbsp;            else
+<b class="nc">&nbsp;                writeStringField(val.toString());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Write a double value, with precision 10^-7. NaN is written as &quot;&quot;.
+&nbsp;         */
+&nbsp;        protected void writeDoubleField (double val) throws IOException {
+&nbsp;            // NaN&#39;s represent missing values
+<b class="nc">&nbsp;            if (Double.isNaN(val))</b>
+<b class="nc">&nbsp;                writeStringField(&quot;&quot;);</b>
+&nbsp;            
+&nbsp;            // control file size: don&#39;t use unnecessary precision
+&nbsp;            // This is usually used for coordinates; one ten-millionth of a degree at the equator is 1.1cm,
+&nbsp;            // and smaller elsewhere on earth, plenty precise enough.
+&nbsp;            // On Jupiter, however, it&#39;s a different story.
+&nbsp;            // Use the US locale so that . is used as the decimal separator
+&nbsp;            else
+<b class="nc">&nbsp;                writeStringField(String.format(Locale.US, &quot;%.7f&quot;, val));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * End a row.
+&nbsp;         * This is just a proxy to the writer, but could be used for hooks in the future.
+&nbsp;         */
+&nbsp;        public void endRecord () throws IOException {
+<b class="nc">&nbsp;            writer.endRecord();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    // shared code between reading and writing
+&nbsp;    private static final String human (long n) {
+<b class="nc">&nbsp;        if (n &gt;= 1000000) return String.format(Locale.getDefault(), &quot;%.1fM&quot;, n/1000000.0);</b>
+<b class="nc">&nbsp;        if (n &gt;= 1000) return String.format(Locale.getDefault(), &quot;%.1fk&quot;, n/1000.0);</b>
+<b class="nc">&nbsp;        else return String.format(Locale.getDefault(), &quot;%d&quot;, n);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

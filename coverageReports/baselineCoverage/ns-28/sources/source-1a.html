@@ -1,0 +1,171 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OSMGetOffBikeParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMGetOffBikeParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMGetOffBikeParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (27/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (22/22)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * This parser scans different OSM tags to identify ways where a cyclist has to get off her bike. Like on footway but
+&nbsp; * also in reverse oneway direction.
+&nbsp; */
+&nbsp;public class OSMGetOffBikeParser implements TagParser {
+&nbsp;
+<b class="fc">&nbsp;    private final List&lt;String&gt; INTENDED = Arrays.asList(&quot;designated&quot;, &quot;yes&quot;, &quot;official&quot;, &quot;permissive&quot;);</b>
+&nbsp;    // steps -&gt; special handling, path -&gt; see #2777
+<b class="fc">&nbsp;    private final HashSet&lt;String&gt; GET_OFF_BIKE = new HashSet&lt;&gt;(Arrays.asList(&quot;footway&quot;, &quot;pedestrian&quot;, &quot;platform&quot;));</b>
+&nbsp;    private final BooleanEncodedValue getOffBikeEnc;
+&nbsp;    private final BooleanEncodedValue bikeAccessEnc;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param bikeAccessEnc used to find out if way is oneway and so it does not matter which bike type is used.
+&nbsp;     */
+<b class="fc">&nbsp;    public OSMGetOffBikeParser(BooleanEncodedValue getOffBikeEnc, BooleanEncodedValue bikeAccessEnc) {</b>
+<b class="fc">&nbsp;        this.getOffBikeEnc = getOffBikeEnc;</b>
+<b class="fc">&nbsp;        this.bikeAccessEnc = bikeAccessEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+<b class="fc">&nbsp;        String highway = way.getTag(&quot;highway&quot;);</b>
+<b class="fc">&nbsp;        String vehicle = way.getTag(&quot;vehicle&quot;, &quot;&quot;);</b>
+<b class="fc">&nbsp;        boolean notIntended = !way.hasTag(&quot;bicycle&quot;, INTENDED) &amp;&amp;</b>
+<b class="fc">&nbsp;                (GET_OFF_BIKE.contains(highway)</b>
+<b class="fc">&nbsp;                        || way.hasTag(&quot;railway&quot;, &quot;platform&quot;)</b>
+<b class="fc">&nbsp;                        || !&quot;cycleway&quot;.equals(highway) &amp;&amp; way.hasTag(&quot;vehicle&quot;, &quot;no&quot;)</b>
+<b class="fc">&nbsp;                        || vehicle.contains(&quot;forestry&quot;)</b>
+<b class="pc">&nbsp;                        || vehicle.contains(&quot;agricultural&quot;)</b>
+<b class="fc">&nbsp;                        || &quot;path&quot;.equals(highway) &amp;&amp; way.hasTag(&quot;foot&quot;, &quot;designated&quot;) &amp;&amp; !way.hasTag(&quot;segregated&quot;, &quot;yes&quot;));</b>
+<b class="fc">&nbsp;        if (&quot;steps&quot;.equals(highway) || way.hasTag(&quot;bicycle&quot;, &quot;dismount&quot;) || notIntended) {</b>
+<b class="fc">&nbsp;            getOffBikeEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;            getOffBikeEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        boolean fwd = bikeAccessEnc.getBool(false, edgeId, edgeIntAccess);</b>
+<b class="fc">&nbsp;        boolean bwd = bikeAccessEnc.getBool(true, edgeId, edgeIntAccess);</b>
+&nbsp;        // get off bike for reverse oneways
+<b class="fc">&nbsp;        if (fwd != bwd) {</b>
+<b class="pc">&nbsp;            if (!fwd) getOffBikeEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="pc">&nbsp;            if (!bwd) getOffBikeEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

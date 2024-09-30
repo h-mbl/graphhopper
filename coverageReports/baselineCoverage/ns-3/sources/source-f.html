@@ -1,0 +1,228 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > StopTime</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: StopTime (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">StopTime</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">StopTime$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import org.mapdb.Fun;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.Serializable;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents a GTFS StopTime. Note that once created and saved in a feed, stop times are by convention immutable
+&nbsp; * because they are in a MapDB.
+&nbsp; */
+<b class="nc">&nbsp;public class StopTime extends Entity implements Cloneable, Serializable {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = -8883780047901081832L;
+&nbsp;    /* StopTime cannot directly reference Trips or Stops because they would be serialized into the MapDB. */
+&nbsp;    public String trip_id;
+<b class="nc">&nbsp;    public int    arrival_time = INT_MISSING;</b>
+<b class="nc">&nbsp;    public int    departure_time = INT_MISSING;</b>
+&nbsp;    public String stop_id;
+&nbsp;    public int    stop_sequence;
+&nbsp;    public String stop_headsign;
+&nbsp;    public int    pickup_type;
+&nbsp;    public int    drop_off_type;
+&nbsp;    public double shape_dist_traveled;
+<b class="nc">&nbsp;    public int    timepoint = INT_MISSING;</b>
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;StopTime&gt; {
+&nbsp;
+&nbsp;        public Loader(GTFSFeed feed) {
+<b class="nc">&nbsp;            super(feed, &quot;stop_times&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+<b class="nc">&nbsp;            StopTime st = new StopTime();</b>
+<b class="nc">&nbsp;            st.sourceFileLine = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;            st.trip_id        = getStringField(&quot;trip_id&quot;, true);</b>
+&nbsp;            // TODO: arrival_time and departure time are not required, but if one is present the other should be
+&nbsp;            // also, if this is the first or last stop, they are both required
+<b class="nc">&nbsp;            st.arrival_time   = getTimeField(&quot;arrival_time&quot;, false);</b>
+<b class="nc">&nbsp;            st.departure_time = getTimeField(&quot;departure_time&quot;, false);</b>
+<b class="nc">&nbsp;            st.stop_id        = getStringField(&quot;stop_id&quot;, true);</b>
+<b class="nc">&nbsp;            st.stop_sequence  = getIntField(&quot;stop_sequence&quot;, true, 0, Integer.MAX_VALUE);</b>
+<b class="nc">&nbsp;            st.stop_headsign  = getStringField(&quot;stop_headsign&quot;, false);</b>
+<b class="nc">&nbsp;            st.pickup_type    = getIntField(&quot;pickup_type&quot;, false, 0, 3); // TODO add ranges as parameters</b>
+<b class="nc">&nbsp;            st.drop_off_type  = getIntField(&quot;drop_off_type&quot;, false, 0, 3);</b>
+<b class="nc">&nbsp;            st.shape_dist_traveled = getDoubleField(&quot;shape_dist_traveled&quot;, false, 0D, Double.MAX_VALUE); // FIXME using both 0 and NaN for &quot;missing&quot;, define DOUBLE_MISSING</b>
+<b class="nc">&nbsp;            st.timepoint      = getIntField(&quot;timepoint&quot;, false, 0, 1, INT_MISSING);</b>
+<b class="nc">&nbsp;            st.feed           = null; // this could circular-serialize the whole feed</b>
+<b class="nc">&nbsp;            feed.stop_times.put(new Fun.Tuple2(st.trip_id, st.stop_sequence), st);</b>
+<b class="nc">&nbsp;            getRefField(&quot;trip_id&quot;, true, feed.trips);</b>
+<b class="nc">&nbsp;            getRefField(&quot;stop_id&quot;, true, feed.stops);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public StopTime clone () {
+&nbsp;        try {
+<b class="nc">&nbsp;            return (StopTime) super.clone();</b>
+<b class="nc">&nbsp;        } catch (CloneNotSupportedException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

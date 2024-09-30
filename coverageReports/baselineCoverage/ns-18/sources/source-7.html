@@ -1,0 +1,728 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NavigateResponseConverter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.navigation</a>
+</div>
+
+<h1>Coverage Summary for Class: NavigateResponseConverter (com.graphhopper.navigation)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NavigateResponseConverter</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/98)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/235)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.navigation;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Parameters.Details.INTERSECTION;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.UUID;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.node.ArrayNode;
+&nbsp;import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+&nbsp;import com.fasterxml.jackson.databind.node.ObjectNode;
+&nbsp;import com.graphhopper.GHResponse;
+&nbsp;import com.graphhopper.ResponsePath;
+&nbsp;import com.graphhopper.jackson.ResponsePathSerializer;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.Instruction;
+&nbsp;import com.graphhopper.util.InstructionList;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;import com.graphhopper.util.RoundaboutInstruction;
+&nbsp;import com.graphhopper.util.TranslationMap;
+&nbsp;import com.graphhopper.util.details.IntersectionValues;
+&nbsp;import com.graphhopper.util.details.PathDetail;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;
+<b class="nc">&nbsp;public class NavigateResponseConverter {</b>
+<b class="nc">&nbsp;    private static final Logger LOGGER = LoggerFactory.getLogger(NavigateResponseConverter.class);</b>
+&nbsp;    private static final int VOICE_INSTRUCTION_MERGE_TRESHHOLD = 100;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Converts a GHResponse into a json that follows the Mapbox API specification
+&nbsp;     */
+&nbsp;    public static ObjectNode convertFromGHResponse(GHResponse ghResponse, TranslationMap translationMap, Locale locale,
+&nbsp;            DistanceConfig distanceConfig) {
+<b class="nc">&nbsp;        ObjectNode json = JsonNodeFactory.instance.objectNode();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (ghResponse.hasErrors())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(</b>
+&nbsp;                    &quot;If the response has errors, you should use the method NavigateResponseConverter#convertFromGHResponseError&quot;);
+&nbsp;
+<b class="nc">&nbsp;        PointList waypoints = ghResponse.getBest().getWaypoints();</b>
+&nbsp;
+<b class="nc">&nbsp;        final ArrayNode routesJson = json.putArray(&quot;routes&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;ResponsePath&gt; paths = ghResponse.getAll();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int i = 0; i &lt; paths.size(); i++) {</b>
+<b class="nc">&nbsp;            ResponsePath path = paths.get(i);</b>
+<b class="nc">&nbsp;            ObjectNode pathJson = routesJson.addObject();</b>
+&nbsp;
+<b class="nc">&nbsp;            putRouteInformation(pathJson, path, i, translationMap, locale, distanceConfig);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        final ArrayNode waypointsJson = json.putArray(&quot;waypoints&quot;);</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; waypoints.size(); i++) {</b>
+<b class="nc">&nbsp;            ObjectNode waypointJson = waypointsJson.addObject();</b>
+&nbsp;            // TODO get names
+<b class="nc">&nbsp;            waypointJson.put(&quot;name&quot;, &quot;&quot;);</b>
+<b class="nc">&nbsp;            putLocation(waypoints.getLat(i), waypoints.getLon(i), waypointJson);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        json.put(&quot;code&quot;, &quot;Ok&quot;);</b>
+&nbsp;        // TODO: Maybe we need a different format... uuid: &quot;cji4ja4f8004o6xrsta8w4p4h&quot;
+<b class="nc">&nbsp;        json.put(&quot;uuid&quot;, UUID.randomUUID().toString().replaceAll(&quot;-&quot;, &quot;&quot;));</b>
+&nbsp;
+<b class="nc">&nbsp;        return json;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void putRouteInformation(ObjectNode pathJson, ResponsePath path, int routeNr,
+&nbsp;            TranslationMap translationMap, Locale locale, DistanceConfig distanceConfig) {
+<b class="nc">&nbsp;        InstructionList instructions = path.getInstructions();</b>
+&nbsp;
+<b class="nc">&nbsp;        pathJson.put(&quot;geometry&quot;, ResponsePathSerializer.encodePolyline(path.getPoints(), false, 1e6));</b>
+<b class="nc">&nbsp;        ArrayNode legsJson = pathJson.putArray(&quot;legs&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        ObjectNode legJson = legsJson.addObject();</b>
+<b class="nc">&nbsp;        ArrayNode steps = legJson.putArray(&quot;steps&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        long time = 0;</b>
+<b class="nc">&nbsp;        double distance = 0;</b>
+<b class="nc">&nbsp;        boolean isFirstInstructionOfLeg = true;</b>
+<b class="nc">&nbsp;        int pointIndexFrom = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        Map&lt;String, List&lt;PathDetail&gt;&gt; pathDetails = path.getPathDetails();</b>
+<b class="nc">&nbsp;        List&lt;PathDetail&gt; intersectionDetails = pathDetails.getOrDefault(INTERSECTION, Collections.emptyList());</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int i = 0; i &lt; instructions.size(); i++) {</b>
+<b class="nc">&nbsp;            ObjectNode instructionJson = steps.addObject();</b>
+<b class="nc">&nbsp;            Instruction instruction = instructions.get(i);</b>
+<b class="nc">&nbsp;            int pointIndexTo = pointIndexFrom;</b>
+<b class="nc">&nbsp;            if (instruction.getSign() != Instruction.REACHED_VIA &amp;&amp; instruction.getSign() != Instruction.FINISH) {</b>
+<b class="nc">&nbsp;                pointIndexTo += instructions.get(i).getPoints().size();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            putInstruction(path.getPoints(), instructions, i, locale, translationMap, instructionJson,</b>
+&nbsp;                    isFirstInstructionOfLeg, distanceConfig, intersectionDetails, pointIndexFrom, pointIndexTo);
+<b class="nc">&nbsp;            pointIndexFrom = pointIndexTo;</b>
+<b class="nc">&nbsp;            time += instruction.getTime();</b>
+<b class="nc">&nbsp;            distance += instruction.getDistance();</b>
+<b class="nc">&nbsp;            isFirstInstructionOfLeg = false;</b>
+<b class="nc">&nbsp;            if (instruction.getSign() == Instruction.REACHED_VIA || instruction.getSign() == Instruction.FINISH) {</b>
+<b class="nc">&nbsp;                putLegInformation(legJson, path, routeNr, time, distance);</b>
+<b class="nc">&nbsp;                isFirstInstructionOfLeg = true;</b>
+<b class="nc">&nbsp;                time = 0;</b>
+<b class="nc">&nbsp;                distance = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;                if (instruction.getSign() == Instruction.REACHED_VIA) {</b>
+&nbsp;                    // Create new leg and steps after a via points
+<b class="nc">&nbsp;                    legJson = legsJson.addObject();</b>
+<b class="nc">&nbsp;                    steps = legJson.putArray(&quot;steps&quot;);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        pathJson.put(&quot;weight_name&quot;, &quot;routability&quot;);</b>
+<b class="nc">&nbsp;        pathJson.put(&quot;weight&quot;, Helper.round(path.getRouteWeight(), 1));</b>
+<b class="nc">&nbsp;        pathJson.put(&quot;duration&quot;, convertToSeconds(path.getTime()));</b>
+<b class="nc">&nbsp;        pathJson.put(&quot;distance&quot;, Helper.round(path.getDistance(), 1));</b>
+<b class="nc">&nbsp;        pathJson.put(&quot;voiceLocale&quot;, locale.toLanguageTag());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void putLegInformation(ObjectNode legJson, ResponsePath path, int i, long time, double distance) {
+&nbsp;        // TODO: Improve path descriptions, so that every path has a description, not
+&nbsp;        // just alternative routes
+&nbsp;        String summary;
+<b class="nc">&nbsp;        if (!path.getDescription().isEmpty())</b>
+<b class="nc">&nbsp;            summary = String.join(&quot;,&quot;, path.getDescription());</b>
+&nbsp;        else
+<b class="nc">&nbsp;            summary = &quot;GraphHopper Route &quot; + i;</b>
+<b class="nc">&nbsp;        legJson.put(&quot;summary&quot;, summary);</b>
+&nbsp;
+&nbsp;        // TODO there is no weight per instruction, let&#39;s use time
+<b class="nc">&nbsp;        legJson.put(&quot;weight&quot;, convertToSeconds(time));</b>
+<b class="nc">&nbsp;        legJson.put(&quot;duration&quot;, convertToSeconds(time));</b>
+<b class="nc">&nbsp;        legJson.put(&quot;distance&quot;, Helper.round(distance, 1));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * filter the IntersectionDetails.
+&nbsp;     *
+&nbsp;     * first job is to find the interesting part in the interSectionDetails based on
+&nbsp;     * pointIndexFrom and pointIndexTo.
+&nbsp;     *
+&nbsp;     * Next job is to eleminate intersections colocated in the same point
+&nbsp;     * since Mapbox chokes on geometries with intersections lying ontop of
+&nbsp;     * each other.
+&nbsp;     *
+&nbsp;     * These type of intersections is used for barrier nodes
+&nbsp;     *
+&nbsp;     * We look for intersections in the lists and merge these adjacent, colocated
+&nbsp;     * intersection into each other taking the edges from both intersections and
+&nbsp;     * removing the connecting zero length edge.
+&nbsp;     * Care has to be taken that the result is sorted by bearing
+&nbsp;     */
+&nbsp;    private static List&lt;PathDetail&gt; filterIntersectionDetails(PointList points, List&lt;PathDetail&gt; intersectionDetails,
+&nbsp;            int pointIndexFrom, int pointIndexTo) {
+<b class="nc">&nbsp;        List&lt;PathDetail&gt; list = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;        // job1: find out the interesting part of the intersectionDetails
+<b class="nc">&nbsp;        for (PathDetail intersectionDetail : intersectionDetails) {</b>
+<b class="nc">&nbsp;            int first = intersectionDetail.getFirst();</b>
+<b class="nc">&nbsp;            if (first &gt;= pointIndexTo) {</b>
+&nbsp;                break;
+&nbsp;            }
+<b class="nc">&nbsp;            if (first &gt;= pointIndexFrom) {</b>
+<b class="nc">&nbsp;                list.add(intersectionDetail);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;        // nothing to be done for job 2. Either no entry or only one
+<b class="nc">&nbsp;        if (list.size() &lt; 2) {</b>
+<b class="nc">&nbsp;            return list;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Now look for adjacent intersections colocated
+<b class="nc">&nbsp;        GHPoint3D intersectionPoint = points.get(list.get(0).getFirst());</b>
+<b class="nc">&nbsp;        List&lt;Integer&gt; duplicates = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (int i = 1; i &lt; list.size(); i++) {</b>
+<b class="nc">&nbsp;            GHPoint3D currentIntersectionPoint = points.get(list.get(i).getFirst());</b>
+<b class="nc">&nbsp;            if (intersectionPoint.equals(currentIntersectionPoint)) {</b>
+<b class="nc">&nbsp;                duplicates.add(i - 1); // store the first index of the duplicate</b>
+&nbsp;            }
+<b class="nc">&nbsp;            intersectionPoint = currentIntersectionPoint;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // now iterate backwards over all duplicates, since we will remove entries from
+&nbsp;        // list
+<b class="nc">&nbsp;        for (int dup = duplicates.size() - 1; dup &gt;= 0; dup--) {</b>
+<b class="nc">&nbsp;            int i = duplicates.get(dup);</b>
+&nbsp;            // member i and i+1 are on the same point
+&nbsp;            // out edge of (i) points to in edge of (i+1)
+&nbsp;            // ... -------&gt; intersection[i].out --------&gt; intersection[i+1].in -----------&gt;
+&nbsp;            //
+&nbsp;            // Create a new PathDetail for merging both intersections into one
+&nbsp;            // ... -------&gt; intersection[i] ------&gt;
+&nbsp;            try {
+<b class="nc">&nbsp;                final Map&lt;String, Object&gt; intersectionMap = (Map&lt;String, Object&gt;) list.get(i).getValue();</b>
+<b class="nc">&nbsp;                final List&lt;IntersectionValues&gt; intersectionValueList = IntersectionValues.createList(intersectionMap);</b>
+&nbsp;
+<b class="nc">&nbsp;                final Map&lt;String, Object&gt; nextIntersectionMap = (Map&lt;String, Object&gt;) list.get(i + 1).getValue();</b>
+<b class="nc">&nbsp;                final List&lt;IntersectionValues&gt; nextIntersectionValueList = IntersectionValues</b>
+<b class="nc">&nbsp;                        .createList(nextIntersectionMap);</b>
+&nbsp;
+&nbsp;                // merge both Lists while
+<b class="nc">&nbsp;                final List&lt;IntersectionValues&gt; mergedInterSectionValueList = Stream.concat(</b>
+&nbsp;                        // removing out from Intersection
+<b class="nc">&nbsp;                        intersectionValueList.stream().filter(x -&gt; !x.out),</b>
+&nbsp;                        // removing in from nextIntersection
+<b class="nc">&nbsp;                        nextIntersectionValueList.stream().filter(x -&gt; !x.in)).</b>
+&nbsp;                        // sort the merged list by bearing
+<b class="nc">&nbsp;                        sorted((x, y) -&gt; Integer.compare(x.bearing, y.bearing)).</b>
+&nbsp;                        // create the result list
+<b class="nc">&nbsp;                        collect(Collectors.toList());</b>
+&nbsp;
+&nbsp;                // remove the duplicate Intersection from the Path (we are at &quot;i&quot; currently)
+<b class="nc">&nbsp;                list.remove(i + 1);</b>
+&nbsp;
+<b class="nc">&nbsp;                Map&lt;String, Object&gt; mergedIntersection = IntersectionValues</b>
+<b class="nc">&nbsp;                        .createIntersection(mergedInterSectionValueList);</b>
+<b class="nc">&nbsp;                PathDetail mergedPathDetail = new PathDetail(mergedIntersection);</b>
+<b class="nc">&nbsp;                mergedPathDetail.setFirst(list.get(i).getFirst());</b>
+&nbsp;                // and replace the intersection with the merged one
+<b class="nc">&nbsp;                list.set(i, mergedPathDetail);</b>
+<b class="nc">&nbsp;            } catch (ClassCastException e) {</b>
+<b class="nc">&nbsp;                LOGGER.warn( &quot;Exception :&quot; + e);</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static ObjectNode putInstruction(PointList points, InstructionList instructions, int instructionIndex,
+&nbsp;            Locale locale,
+&nbsp;            TranslationMap translationMap, ObjectNode instructionJson, boolean isFirstInstructionOfLeg,
+&nbsp;            DistanceConfig distanceConfig, List&lt;PathDetail&gt; intersectionDetails, int pointIndexFrom,
+&nbsp;            int pointIndexTo) {
+<b class="nc">&nbsp;        Instruction instruction = instructions.get(instructionIndex);</b>
+<b class="nc">&nbsp;        ArrayNode intersections = instructionJson.putArray(&quot;intersections&quot;);</b>
+&nbsp;
+&nbsp;        // preprocess intersectionDetails
+<b class="nc">&nbsp;        List&lt;PathDetail&gt; filteredIntersectionDetails = filterIntersectionDetails(points, intersectionDetails,</b>
+&nbsp;                pointIndexFrom, pointIndexTo);
+&nbsp;
+<b class="nc">&nbsp;        for (PathDetail intersectionDetail : filteredIntersectionDetails) {</b>
+<b class="nc">&nbsp;            ObjectNode intersection = intersections.addObject();</b>
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; intersectionValue = (Map&lt;String, Object&gt;) intersectionDetail.getValue();</b>
+&nbsp;            // Location
+<b class="nc">&nbsp;            ArrayNode locationArray = intersection.putArray(&quot;location&quot;);</b>
+<b class="nc">&nbsp;            locationArray.add(Helper.round6(points.getLon(intersectionDetail.getFirst())));</b>
+<b class="nc">&nbsp;            locationArray.add(Helper.round6(points.getLat(intersectionDetail.getFirst())));</b>
+&nbsp;            // Entry
+<b class="nc">&nbsp;            List&lt;Boolean&gt; entries = (List&lt;Boolean&gt;) intersectionValue.getOrDefault(&quot;entries&quot;, Collections.emptyList());</b>
+<b class="nc">&nbsp;            ArrayNode entryArray = intersection.putArray(&quot;entry&quot;);</b>
+<b class="nc">&nbsp;            for (Boolean entry : entries) {</b>
+<b class="nc">&nbsp;                entryArray.add(entry);</b>
+&nbsp;            }
+&nbsp;            // Bearings
+<b class="nc">&nbsp;            List&lt;Integer&gt; bearingsList = (List&lt;Integer&gt;) intersectionValue.getOrDefault(&quot;bearings&quot;,</b>
+<b class="nc">&nbsp;                    Collections.emptyList());</b>
+<b class="nc">&nbsp;            ArrayNode bearingsrray = intersection.putArray(&quot;bearings&quot;);</b>
+<b class="nc">&nbsp;            for (Integer bearing : bearingsList) {</b>
+<b class="nc">&nbsp;                bearingsrray.add(bearing);</b>
+&nbsp;            }
+&nbsp;            // in
+<b class="nc">&nbsp;            if (intersectionValue.containsKey(&quot;in&quot;)) {</b>
+<b class="nc">&nbsp;                intersection.put(&quot;in&quot;, (int) intersectionValue.get(&quot;in&quot;));</b>
+&nbsp;            }
+&nbsp;            // out
+<b class="nc">&nbsp;            if (intersectionValue.containsKey(&quot;out&quot;)) {</b>
+<b class="nc">&nbsp;                intersection.put(&quot;out&quot;, (int) intersectionValue.get(&quot;out&quot;));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Make pointList mutable
+<b class="nc">&nbsp;        PointList pointList = instruction.getPoints().clone(false);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (instructionIndex + 1 &lt; instructions.size()) {</b>
+&nbsp;            // Add the first point of the next instruction
+<b class="nc">&nbsp;            PointList nextPoints = instructions.get(instructionIndex + 1).getPoints();</b>
+<b class="nc">&nbsp;            pointList.add(nextPoints.getLat(0), nextPoints.getLon(0), nextPoints.getEle(0));</b>
+<b class="nc">&nbsp;        } else if (pointList.size() == 1) {</b>
+&nbsp;            // Duplicate the last point in the arrive instruction, if the size is 1
+<b class="nc">&nbsp;            pointList.add(pointList.getLat(0), pointList.getLon(0), pointList.getEle(0));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (intersections.size() == 0) {</b>
+&nbsp;            // this is the fallback if we don&#39;t have any intersections.
+&nbsp;            // this can happen for via points or finish instructions or when no intersection
+&nbsp;            // details have been requested
+<b class="nc">&nbsp;            ObjectNode intersection = intersections.addObject();</b>
+<b class="nc">&nbsp;            intersection.putArray(&quot;entry&quot;);</b>
+<b class="nc">&nbsp;            intersection.putArray(&quot;bearings&quot;);</b>
+<b class="nc">&nbsp;            putLocation(pointList.getLat(0), pointList.getLon(0), intersection);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        instructionJson.put(&quot;driving_side&quot;, &quot;right&quot;);</b>
+&nbsp;
+&nbsp;        // Does not include elevation
+<b class="nc">&nbsp;        instructionJson.put(&quot;geometry&quot;, ResponsePathSerializer.encodePolyline(pointList, false, 1e6));</b>
+&nbsp;
+&nbsp;        // TODO: how about other modes?
+<b class="nc">&nbsp;        instructionJson.put(&quot;mode&quot;, &quot;driving&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        putManeuver(instruction, instructionJson, locale, translationMap, isFirstInstructionOfLeg);</b>
+&nbsp;
+&nbsp;        // TODO distance = weight, is weight even important?
+<b class="nc">&nbsp;        double distance = Helper.round(instruction.getDistance(), 1);</b>
+<b class="nc">&nbsp;        instructionJson.put(&quot;weight&quot;, distance);</b>
+<b class="nc">&nbsp;        instructionJson.put(&quot;duration&quot;, convertToSeconds(instruction.getTime()));</b>
+<b class="nc">&nbsp;        instructionJson.put(&quot;name&quot;, instruction.getName());</b>
+<b class="nc">&nbsp;        instructionJson.put(&quot;distance&quot;, distance);</b>
+&nbsp;
+<b class="nc">&nbsp;        ArrayNode voiceInstructions = instructionJson.putArray(&quot;voiceInstructions&quot;);</b>
+<b class="nc">&nbsp;        ArrayNode bannerInstructions = instructionJson.putArray(&quot;bannerInstructions&quot;);</b>
+&nbsp;
+&nbsp;        // Voice and banner instructions are empty for the last element
+<b class="nc">&nbsp;        if (instructionIndex + 1 &lt; instructions.size()) {</b>
+<b class="nc">&nbsp;            putVoiceInstructions(instructions, distance, instructionIndex, locale, translationMap, voiceInstructions,</b>
+&nbsp;                    distanceConfig);
+<b class="nc">&nbsp;            putBannerInstructions(instructions, distance, instructionIndex, locale, translationMap, bannerInstructions);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return instructionJson;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void putVoiceInstructions(InstructionList instructions, double distance, int index, Locale locale,
+&nbsp;            TranslationMap translationMap,
+&nbsp;            ArrayNode voiceInstructions, DistanceConfig distanceConfig) {
+&nbsp;        /*
+&nbsp;         * A VoiceInstruction Object looks like this
+&nbsp;         * {
+&nbsp;         * distanceAlongGeometry: 40.9,
+&nbsp;         * announcement: &quot;Exit the traffic circle&quot;,
+&nbsp;         * ssmlAnnouncement: &quot;&lt;speak&gt;&lt;amazon:effect name=&quot;drc&quot;&gt;&lt;prosody rate=&quot;1.
+&nbsp;         * 08&quot;&gt;Exit the traffic circle&lt;/prosody&gt;&lt;/amazon:effect&gt;&lt;/speak&gt;&quot;,
+&nbsp;         * }
+&nbsp;         */
+<b class="nc">&nbsp;        Instruction nextInstruction = instructions.get(index + 1);</b>
+<b class="nc">&nbsp;        String turnDescription = nextInstruction.getTurnDescription(translationMap.getWithFallBack(locale));</b>
+&nbsp;
+<b class="nc">&nbsp;        String thenVoiceInstruction = getThenVoiceInstructionpart(instructions, index, locale, translationMap);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;VoiceInstructionConfig.VoiceInstructionValue&gt; voiceValues = distanceConfig</b>
+<b class="nc">&nbsp;                .getVoiceInstructionsForDistance(distance, turnDescription, thenVoiceInstruction);</b>
+&nbsp;
+<b class="nc">&nbsp;        for (VoiceInstructionConfig.VoiceInstructionValue voiceValue : voiceValues) {</b>
+<b class="nc">&nbsp;            putSingleVoiceInstruction(voiceValue.spokenDistance, voiceValue.turnDescription, voiceInstructions);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Speak 80m instructions 80 before the turn
+&nbsp;        // Note: distanceAlongGeometry: &quot;how far from the upcoming maneuver the voice
+&nbsp;        // instruction should begin&quot;
+<b class="nc">&nbsp;        double distanceAlongGeometry = Helper.round(Math.min(distance, 80), 1);</b>
+&nbsp;
+&nbsp;        // Special case for the arrive instruction
+<b class="nc">&nbsp;        if (index + 2 == instructions.size())</b>
+<b class="nc">&nbsp;            distanceAlongGeometry = Helper.round(Math.min(distance, 25), 1);</b>
+&nbsp;
+<b class="nc">&nbsp;        putSingleVoiceInstruction(distanceAlongGeometry, turnDescription + thenVoiceInstruction, voiceInstructions);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void putSingleVoiceInstruction(double distanceAlongGeometry, String turnDescription,
+&nbsp;            ArrayNode voiceInstructions) {
+<b class="nc">&nbsp;        ObjectNode voiceInstruction = voiceInstructions.addObject();</b>
+<b class="nc">&nbsp;        voiceInstruction.put(&quot;distanceAlongGeometry&quot;, distanceAlongGeometry);</b>
+&nbsp;        // TODO: ideally, we would even generate instructions including the instructions
+&nbsp;        // after the next like turn left **then** turn right
+<b class="nc">&nbsp;        voiceInstruction.put(&quot;announcement&quot;, turnDescription);</b>
+<b class="nc">&nbsp;        voiceInstruction.put(&quot;ssmlAnnouncement&quot;, &quot;&lt;speak&gt;&lt;amazon:effect name=\&quot;drc\&quot;&gt;&lt;prosody rate=\&quot;1.08\&quot;&gt;&quot;</b>
+&nbsp;                + turnDescription + &quot;&lt;/prosody&gt;&lt;/amazon:effect&gt;&lt;/speak&gt;&quot;);
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * For close turns, it is important to announce the next turn in the earlier
+&nbsp;     * instruction.
+&nbsp;     * e.g.: instruction i+1= turn right, instruction i+2=turn left, with
+&nbsp;     * instruction i+1 distance &lt; VOICE_INSTRUCTION_MERGE_TRESHHOLD
+&nbsp;     * The voice instruction should be like &quot;turn right, then turn left&quot;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * For instruction i+1 distance &gt; VOICE_INSTRUCTION_MERGE_TRESHHOLD an empty
+&nbsp;     * String will be returned
+&nbsp;     */
+&nbsp;    private static String getThenVoiceInstructionpart(InstructionList instructions, int index, Locale locale,
+&nbsp;            TranslationMap translationMap) {
+<b class="nc">&nbsp;        if (instructions.size() &gt; index + 2) {</b>
+<b class="nc">&nbsp;            Instruction firstInstruction = instructions.get(index + 1);</b>
+<b class="nc">&nbsp;            if (firstInstruction.getDistance() &lt; VOICE_INSTRUCTION_MERGE_TRESHHOLD) {</b>
+<b class="nc">&nbsp;                Instruction secondInstruction = instructions.get(index + 2);</b>
+<b class="nc">&nbsp;                if (secondInstruction.getSign() != Instruction.REACHED_VIA)</b>
+<b class="nc">&nbsp;                    return &quot;, &quot; + translationMap.getWithFallBack(locale).tr(&quot;navigate.then&quot;) + &quot; &quot;</b>
+<b class="nc">&nbsp;                            + secondInstruction.getTurnDescription(translationMap.getWithFallBack(locale));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return &quot;&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Banner instructions are the turn instructions that are shown to the user in
+&nbsp;     * the top bar.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Between two instructions we can show multiple banner instructions, you can
+&nbsp;     * control when they pop up using distanceAlongGeometry.
+&nbsp;     */
+&nbsp;    private static void putBannerInstructions(InstructionList instructions, double distance, int index, Locale locale,
+&nbsp;            TranslationMap translationMap, ArrayNode bannerInstructions) {
+&nbsp;        /*
+&nbsp;         * A BannerInstruction looks like this
+&nbsp;         * distanceAlongGeometry: 107,
+&nbsp;         * primary: {
+&nbsp;         * text: &quot;Lichtensteinstraße&quot;,
+&nbsp;         * components: [
+&nbsp;         * {
+&nbsp;         * text: &quot;Lichtensteinstraße&quot;,
+&nbsp;         * type: &quot;text&quot;,
+&nbsp;         * }
+&nbsp;         * ],
+&nbsp;         * type: &quot;turn&quot;,
+&nbsp;         * modifier: &quot;right&quot;,
+&nbsp;         * },
+&nbsp;         * secondary: null,
+&nbsp;         */
+&nbsp;
+<b class="nc">&nbsp;        ObjectNode bannerInstruction = bannerInstructions.addObject();</b>
+&nbsp;
+&nbsp;        // Show from the beginning
+<b class="nc">&nbsp;        bannerInstruction.put(&quot;distanceAlongGeometry&quot;, distance);</b>
+&nbsp;
+<b class="nc">&nbsp;        ObjectNode primary = bannerInstruction.putObject(&quot;primary&quot;);</b>
+<b class="nc">&nbsp;        putSingleBannerInstruction(instructions.get(index + 1), locale, translationMap, primary);</b>
+&nbsp;
+<b class="nc">&nbsp;        bannerInstruction.putNull(&quot;secondary&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (instructions.size() &gt; index + 2 &amp;&amp; instructions.get(index + 2).getSign() != Instruction.REACHED_VIA) {</b>
+&nbsp;            // Sub shows the instruction after the current one
+<b class="nc">&nbsp;            ObjectNode sub = bannerInstruction.putObject(&quot;sub&quot;);</b>
+<b class="nc">&nbsp;            putSingleBannerInstruction(instructions.get(index + 2), locale, translationMap, sub);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void putSingleBannerInstruction(Instruction instruction, Locale locale,
+&nbsp;            TranslationMap translationMap, ObjectNode singleBannerInstruction) {
+<b class="nc">&nbsp;        String bannerInstructionName = instruction.getName();</b>
+<b class="nc">&nbsp;        if (bannerInstructionName.isEmpty()) {</b>
+&nbsp;            // Fix for final instruction and for instructions without name
+<b class="nc">&nbsp;            bannerInstructionName = instruction.getTurnDescription(translationMap.getWithFallBack(locale));</b>
+&nbsp;
+&nbsp;            // Uppercase first letter
+&nbsp;            // TODO: should we do this for all cases? Then we might change the spelling of
+&nbsp;            // street names though
+<b class="nc">&nbsp;            bannerInstructionName = Helper.firstBig(bannerInstructionName);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        singleBannerInstruction.put(&quot;text&quot;, bannerInstructionName);</b>
+&nbsp;
+<b class="nc">&nbsp;        ArrayNode components = singleBannerInstruction.putArray(&quot;components&quot;);</b>
+<b class="nc">&nbsp;        ObjectNode component = components.addObject();</b>
+<b class="nc">&nbsp;        component.put(&quot;text&quot;, bannerInstructionName);</b>
+<b class="nc">&nbsp;        component.put(&quot;type&quot;, &quot;text&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        singleBannerInstruction.put(&quot;type&quot;, getTurnType(instruction, false));</b>
+<b class="nc">&nbsp;        String modifier = getModifier(instruction);</b>
+<b class="nc">&nbsp;        if (modifier != null)</b>
+<b class="nc">&nbsp;            singleBannerInstruction.put(&quot;modifier&quot;, modifier);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (instruction.getSign() == Instruction.USE_ROUNDABOUT) {</b>
+<b class="nc">&nbsp;            if (instruction instanceof RoundaboutInstruction) {</b>
+<b class="nc">&nbsp;                double turnAngle = ((RoundaboutInstruction) instruction).getTurnAngle();</b>
+<b class="nc">&nbsp;                if (Double.isNaN(turnAngle)) {</b>
+<b class="nc">&nbsp;                    singleBannerInstruction.putNull(&quot;degrees&quot;);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    double degree = (Math.abs(turnAngle) * 180) / Math.PI;</b>
+<b class="nc">&nbsp;                    singleBannerInstruction.put(&quot;degrees&quot;, degree);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void putManeuver(Instruction instruction, ObjectNode instructionJson, Locale locale,
+&nbsp;            TranslationMap translationMap, boolean isFirstInstructionOfLeg) {
+<b class="nc">&nbsp;        ObjectNode maneuver = instructionJson.putObject(&quot;maneuver&quot;);</b>
+<b class="nc">&nbsp;        maneuver.put(&quot;bearing_after&quot;, 0);</b>
+<b class="nc">&nbsp;        maneuver.put(&quot;bearing_before&quot;, 0);</b>
+&nbsp;
+<b class="nc">&nbsp;        PointList points = instruction.getPoints();</b>
+<b class="nc">&nbsp;        putLocation(points.getLat(0), points.getLon(0), maneuver);</b>
+&nbsp;
+<b class="nc">&nbsp;        String modifier = getModifier(instruction);</b>
+<b class="nc">&nbsp;        if (modifier != null)</b>
+<b class="nc">&nbsp;            maneuver.put(&quot;modifier&quot;, modifier);</b>
+&nbsp;
+<b class="nc">&nbsp;        maneuver.put(&quot;type&quot;, getTurnType(instruction, isFirstInstructionOfLeg));</b>
+&nbsp;        // exit number
+<b class="nc">&nbsp;        if (instruction instanceof RoundaboutInstruction)</b>
+<b class="nc">&nbsp;            maneuver.put(&quot;exit&quot;, ((RoundaboutInstruction) instruction).getExitNumber());</b>
+&nbsp;
+<b class="nc">&nbsp;        maneuver.put(&quot;instruction&quot;, instruction.getTurnDescription(translationMap.getWithFallBack(locale)));</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Relevant maneuver types are:
+&nbsp;     * depart (firs instruction)
+&nbsp;     * turn (regular turns)
+&nbsp;     * roundabout (enter roundabout, maneuver contains also the exit number)
+&nbsp;     * arrive (last instruction and waypoints)
+&nbsp;     * &lt;p&gt;
+&nbsp;     * You can find all maneuver types at:
+&nbsp;     * https://www.mapbox.com/api-documentation/#maneuver-types
+&nbsp;     */
+&nbsp;    private static String getTurnType(Instruction instruction, boolean isFirstInstructionOfLeg) {
+<b class="nc">&nbsp;        if (isFirstInstructionOfLeg) {</b>
+<b class="nc">&nbsp;            return &quot;depart&quot;;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            switch (instruction.getSign()) {</b>
+&nbsp;                case Instruction.FINISH:
+&nbsp;                case Instruction.REACHED_VIA:
+<b class="nc">&nbsp;                    return &quot;arrive&quot;;</b>
+&nbsp;                case Instruction.USE_ROUNDABOUT:
+<b class="nc">&nbsp;                    return &quot;roundabout&quot;;</b>
+&nbsp;                default:
+<b class="nc">&nbsp;                    return &quot;turn&quot;;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * No modifier values for arrive and depart
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Find modifier values here:
+&nbsp;     * https://www.mapbox.com/api-documentation/#stepmaneuver-object
+&nbsp;     */
+&nbsp;    private static String getModifier(Instruction instruction) {
+<b class="nc">&nbsp;        switch (instruction.getSign()) {</b>
+&nbsp;            case Instruction.CONTINUE_ON_STREET:
+<b class="nc">&nbsp;                return &quot;straight&quot;;</b>
+&nbsp;            case Instruction.U_TURN_LEFT:
+&nbsp;            case Instruction.U_TURN_RIGHT:
+&nbsp;            case Instruction.U_TURN_UNKNOWN:
+<b class="nc">&nbsp;                return &quot;uturn&quot;;</b>
+&nbsp;            case Instruction.KEEP_LEFT:
+&nbsp;            case Instruction.TURN_SLIGHT_LEFT:
+<b class="nc">&nbsp;                return &quot;slight left&quot;;</b>
+&nbsp;            case Instruction.TURN_LEFT:
+<b class="nc">&nbsp;                return &quot;left&quot;;</b>
+&nbsp;            case Instruction.TURN_SHARP_LEFT:
+<b class="nc">&nbsp;                return &quot;sharp left&quot;;</b>
+&nbsp;            case Instruction.KEEP_RIGHT:
+&nbsp;            case Instruction.TURN_SLIGHT_RIGHT:
+<b class="nc">&nbsp;                return &quot;slight right&quot;;</b>
+&nbsp;            case Instruction.TURN_RIGHT:
+<b class="nc">&nbsp;                return &quot;right&quot;;</b>
+&nbsp;            case Instruction.TURN_SHARP_RIGHT:
+<b class="nc">&nbsp;                return &quot;sharp right&quot;;</b>
+&nbsp;            case Instruction.USE_ROUNDABOUT:
+&nbsp;                // TODO: This might be an issue in left-handed traffic, because there it schould
+&nbsp;                // be left
+<b class="nc">&nbsp;                return &quot;right&quot;;</b>
+&nbsp;            default:
+<b class="nc">&nbsp;                return null;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Puts a location array in GeoJson format into the node
+&nbsp;     */
+&nbsp;    private static ObjectNode putLocation(double lat, double lon, ObjectNode node) {
+<b class="nc">&nbsp;        ArrayNode location = node.putArray(&quot;location&quot;);</b>
+&nbsp;        // GeoJson lon,lat
+<b class="nc">&nbsp;        location.add(Helper.round6(lon));</b>
+<b class="nc">&nbsp;        location.add(Helper.round6(lat));</b>
+<b class="nc">&nbsp;        return node;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Mapbox uses seconds instead of milliSeconds
+&nbsp;     */
+&nbsp;    private static double convertToSeconds(double milliSeconds) {
+<b class="nc">&nbsp;        return Helper.round(milliSeconds / 1000, 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static ObjectNode convertFromGHResponseError(GHResponse ghResponse) {
+<b class="nc">&nbsp;        ObjectNode json = JsonNodeFactory.instance.objectNode();</b>
+&nbsp;        // TODO we could make this more fine grained
+<b class="nc">&nbsp;        json.put(&quot;code&quot;, &quot;InvalidInput&quot;);</b>
+<b class="nc">&nbsp;        json.put(&quot;message&quot;, ghResponse.getErrors().get(0).getMessage());</b>
+<b class="nc">&nbsp;        return json;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

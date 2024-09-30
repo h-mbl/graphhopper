@@ -1,0 +1,430 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GpxConversions</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gpx</a>
+</div>
+
+<h1>Coverage Summary for Class: GpxConversions (com.graphhopper.gpx)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GpxConversions</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/52)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/101)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">GpxConversions$GPXEntry</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/60)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/115)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.gpx;
+&nbsp;
+&nbsp;import com.graphhopper.jackson.Gpx;
+&nbsp;import com.graphhopper.matching.Observation;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;
+&nbsp;import java.text.DateFormat;
+&nbsp;import java.text.DecimalFormat;
+&nbsp;import java.text.DecimalFormatSymbols;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Objects;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;
+<b class="nc">&nbsp;public class GpxConversions {</b>
+&nbsp;
+<b class="nc">&nbsp;    private static final AngleCalc AC = AngleCalc.ANGLE_CALC;</b>
+<b class="nc">&nbsp;    private static final Pattern XML_ESCAPE_PATTERN = Pattern.compile(&quot;[\\&lt;\\&gt;]&quot;);</b>
+&nbsp;
+&nbsp;    static String simpleXMLEscape(String str) {
+&nbsp;        // We could even use the &#39;more flexible&#39; CDATA section but for now do the following:
+&nbsp;        // The &#39;and&#39; could be important sometimes but remove others
+<b class="nc">&nbsp;        return XML_ESCAPE_PATTERN.matcher(str.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)).replaceAll(&quot;_&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;GPXEntry&gt; createGPXList(InstructionList instructions) {
+<b class="nc">&nbsp;        List&lt;GPXEntry&gt; gpxList = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        long timeOffset = 0;</b>
+<b class="nc">&nbsp;        for (Instruction instruction : instructions) {</b>
+<b class="nc">&nbsp;            int i = 0;</b>
+<b class="nc">&nbsp;            for (GHPoint3D point : instruction.getPoints()) {</b>
+&nbsp;                GPXEntry gpxEntry;
+<b class="nc">&nbsp;                if (i == 0) {</b>
+<b class="nc">&nbsp;                    gpxEntry = new GPXEntry(point, timeOffset);</b>
+&nbsp;                } else {
+&nbsp;                    // We don&#39;t have timestamps for pillar nodes
+<b class="nc">&nbsp;                    gpxEntry = new GPXEntry(point);</b>
+&nbsp;                }
+<b class="nc">&nbsp;                gpxList.add(gpxEntry);</b>
+<b class="nc">&nbsp;                i++;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            timeOffset = timeOffset + instruction.getTime();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return gpxList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void createWayPointBlock(StringBuilder output, Instruction instruction, DecimalFormat decimalFormat, Translation tr) {
+<b class="nc">&nbsp;        output.append(&quot;\n&lt;wpt &quot;);</b>
+<b class="nc">&nbsp;        output.append(&quot;lat=\&quot;&quot;).append(decimalFormat.format(instruction.getPoints().getLat(0)));</b>
+<b class="nc">&nbsp;        output.append(&quot;\&quot; lon=\&quot;&quot;).append(decimalFormat.format(instruction.getPoints().getLon(0))).append(&quot;\&quot;&gt;&quot;);</b>
+&nbsp;        String name;
+<b class="nc">&nbsp;        if (instruction.getName().isEmpty())</b>
+<b class="nc">&nbsp;            name = instruction.getTurnDescription(tr);</b>
+&nbsp;        else
+<b class="nc">&nbsp;            name = instruction.getName();</b>
+&nbsp;
+<b class="nc">&nbsp;        output.append(&quot; &lt;name&gt;&quot;).append(simpleXMLEscape(name)).append(&quot;&lt;/name&gt;&quot;);</b>
+<b class="nc">&nbsp;        output.append(&quot;&lt;/wpt&gt;&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String createGPX(InstructionList instructions, String trackName, long startTimeMillis, boolean includeElevation, boolean withRoute, boolean withTrack, boolean withWayPoints, String version, Translation tr) {
+<b class="nc">&nbsp;        DateFormat formatter = Helper.createFormatter();</b>
+&nbsp;
+<b class="nc">&nbsp;        DecimalFormat decimalFormat = new DecimalFormat(&quot;#&quot;, DecimalFormatSymbols.getInstance(Locale.ROOT));</b>
+<b class="nc">&nbsp;        decimalFormat.setMinimumFractionDigits(1);</b>
+<b class="nc">&nbsp;        decimalFormat.setMaximumFractionDigits(6);</b>
+<b class="nc">&nbsp;        decimalFormat.setMinimumIntegerDigits(1);</b>
+&nbsp;
+<b class="nc">&nbsp;        String header = &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot; standalone=\&quot;no\&quot; ?&gt;&quot;</b>
+&nbsp;                + &quot;&lt;gpx xmlns=\&quot;http://www.topografix.com/GPX/1/1\&quot; xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;&quot;
+&nbsp;                + &quot; creator=\&quot;Graphhopper version &quot; + version + &quot;\&quot; version=\&quot;1.1\&quot;&quot;
+&nbsp;                // This xmlns:gh acts only as ID, no valid URL necessary.
+&nbsp;                // Use a separate namespace for custom extensions to make basecamp happy.
+&nbsp;                + &quot; xmlns:gh=\&quot;https://graphhopper.com/public/schema/gpx/1.1\&quot;&gt;&quot;
+&nbsp;                + &quot;\n&lt;metadata&gt;&quot;
+&nbsp;                + &quot;&lt;copyright author=\&quot;OpenStreetMap contributors\&quot;/&gt;&quot;
+&nbsp;                + &quot;&lt;link href=\&quot;http://graphhopper.com\&quot;&gt;&quot;
+&nbsp;                + &quot;&lt;text&gt;GraphHopper GPX&lt;/text&gt;&quot;
+&nbsp;                + &quot;&lt;/link&gt;&quot;
+<b class="nc">&nbsp;                + &quot;&lt;time&gt;&quot; + formatter.format(startTimeMillis) + &quot;&lt;/time&gt;&quot;</b>
+&nbsp;                + &quot;&lt;/metadata&gt;&quot;;
+<b class="nc">&nbsp;        StringBuilder gpxOutput = new StringBuilder(header);</b>
+<b class="nc">&nbsp;        if (!instructions.isEmpty()) {</b>
+<b class="nc">&nbsp;            if (withWayPoints) {</b>
+<b class="nc">&nbsp;                createWayPointBlock(gpxOutput, instructions.get(0), decimalFormat, tr);   // Start</b>
+<b class="nc">&nbsp;                for (Instruction currInstr : instructions) {</b>
+<b class="nc">&nbsp;                    if ((currInstr.getSign() == Instruction.REACHED_VIA) // Via</b>
+<b class="nc">&nbsp;                            || (currInstr.getSign() == Instruction.FINISH)) // End</b>
+&nbsp;                    {
+<b class="nc">&nbsp;                        createWayPointBlock(gpxOutput, currInstr, decimalFormat, tr);</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            if (withRoute) {</b>
+<b class="nc">&nbsp;                gpxOutput.append(&quot;\n&lt;rte&gt;&quot;);</b>
+<b class="nc">&nbsp;                Instruction nextInstr = null;</b>
+<b class="nc">&nbsp;                for (Instruction currInstr : instructions) {</b>
+<b class="nc">&nbsp;                    if (null != nextInstr)</b>
+<b class="nc">&nbsp;                        createRteptBlock(gpxOutput, nextInstr, currInstr, decimalFormat, tr);</b>
+&nbsp;
+<b class="nc">&nbsp;                    nextInstr = currInstr;</b>
+&nbsp;                }
+<b class="nc">&nbsp;                createRteptBlock(gpxOutput, nextInstr, null, decimalFormat, tr);</b>
+<b class="nc">&nbsp;                gpxOutput.append(&quot;\n&lt;/rte&gt;&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        if (withTrack) {</b>
+<b class="nc">&nbsp;            gpxOutput.append(&quot;\n&lt;trk&gt;&lt;name&gt;&quot;).append(trackName).append(&quot;&lt;/name&gt;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            gpxOutput.append(&quot;&lt;trkseg&gt;&quot;);</b>
+<b class="nc">&nbsp;            for (GPXEntry entry : createGPXList(instructions)) {</b>
+<b class="nc">&nbsp;                gpxOutput.append(&quot;\n&lt;trkpt lat=\&quot;&quot;).append(decimalFormat.format(entry.getPoint().getLat()));</b>
+<b class="nc">&nbsp;                gpxOutput.append(&quot;\&quot; lon=\&quot;&quot;).append(decimalFormat.format(entry.getPoint().getLon())).append(&quot;\&quot;&gt;&quot;);</b>
+<b class="nc">&nbsp;                if (includeElevation)</b>
+<b class="nc">&nbsp;                    gpxOutput.append(&quot;&lt;ele&gt;&quot;).append(Helper.round2(((GHPoint3D) entry.getPoint()).getEle())).append(&quot;&lt;/ele&gt;&quot;);</b>
+<b class="nc">&nbsp;                if (entry.getTime() != null)</b>
+<b class="nc">&nbsp;                    gpxOutput.append(&quot;&lt;time&gt;&quot;).append(formatter.format(startTimeMillis + entry.getTime())).append(&quot;&lt;/time&gt;&quot;);</b>
+<b class="nc">&nbsp;                gpxOutput.append(&quot;&lt;/trkpt&gt;&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            gpxOutput.append(&quot;\n&lt;/trkseg&gt;&quot;);</b>
+<b class="nc">&nbsp;            gpxOutput.append(&quot;\n&lt;/trk&gt;&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // we could now use &#39;wpt&#39; for via points
+<b class="nc">&nbsp;        gpxOutput.append(&quot;\n&lt;/gpx&gt;&quot;);</b>
+<b class="nc">&nbsp;        return gpxOutput.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void createRteptBlock(StringBuilder output, Instruction instruction, Instruction nextI, DecimalFormat decimalFormat, Translation tr) {
+<b class="nc">&nbsp;        output.append(&quot;\n&lt;rtept lat=\&quot;&quot;).append(decimalFormat.format(instruction.getPoints().getLat(0))).</b>
+<b class="nc">&nbsp;                append(&quot;\&quot; lon=\&quot;&quot;).append(decimalFormat.format(instruction.getPoints().getLon(0))).append(&quot;\&quot;&gt;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!instruction.getName().isEmpty())</b>
+<b class="nc">&nbsp;            output.append(&quot;&lt;desc&gt;&quot;).append(simpleXMLEscape(instruction.getTurnDescription(tr))).append(&quot;&lt;/desc&gt;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        output.append(&quot;&lt;extensions&gt;&quot;);</b>
+<b class="nc">&nbsp;        output.append(&quot;&lt;gh:distance&gt;&quot;).append(Helper.round(instruction.getDistance(), 1)).append(&quot;&lt;/gh:distance&gt;&quot;);</b>
+<b class="nc">&nbsp;        output.append(&quot;&lt;gh:time&gt;&quot;).append(instruction.getTime()).append(&quot;&lt;/gh:time&gt;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        String direction = calcDirection(instruction, nextI);</b>
+<b class="nc">&nbsp;        if (!direction.isEmpty())</b>
+<b class="nc">&nbsp;            output.append(&quot;&lt;gh:direction&gt;&quot;).append(direction).append(&quot;&lt;/gh:direction&gt;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        double azimuth = calcAzimuth(instruction, nextI);</b>
+<b class="nc">&nbsp;        if (!Double.isNaN(azimuth))</b>
+<b class="nc">&nbsp;            output.append(&quot;&lt;gh:azimuth&gt;&quot;).append(Helper.round2(azimuth)).append(&quot;&lt;/gh:azimuth&gt;&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (instruction instanceof RoundaboutInstruction) {</b>
+<b class="nc">&nbsp;            RoundaboutInstruction ri = (RoundaboutInstruction) instruction;</b>
+&nbsp;
+<b class="nc">&nbsp;            output.append(&quot;&lt;gh:exit_number&gt;&quot;).append(ri.getExitNumber()).append(&quot;&lt;/gh:exit_number&gt;&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        output.append(&quot;&lt;gh:sign&gt;&quot;).append(instruction.getSign()).append(&quot;&lt;/gh:sign&gt;&quot;);</b>
+<b class="nc">&nbsp;        output.append(&quot;&lt;/extensions&gt;&quot;);</b>
+<b class="nc">&nbsp;        output.append(&quot;&lt;/rtept&gt;&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Return the direction like &#39;NE&#39; based on the first tracksegment of the instruction. If
+&nbsp;     * Instruction does not contain enough coordinate points, an empty string will be returned.
+&nbsp;     */
+&nbsp;    public static String calcDirection(Instruction instruction, Instruction nextI) {
+<b class="nc">&nbsp;        double azimuth = calcAzimuth(instruction, nextI);</b>
+<b class="nc">&nbsp;        if (Double.isNaN(azimuth))</b>
+<b class="nc">&nbsp;            return &quot;&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        return AC.azimuth2compassPoint(azimuth);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Return the azimuth in degree based on the first tracksegment of this instruction. If this
+&nbsp;     * instruction contains less than 2 points then NaN will be returned or the specified
+&nbsp;     * instruction will be used if that is the finish instruction.
+&nbsp;     */
+&nbsp;    public static double calcAzimuth(Instruction instruction, Instruction nextI) {
+&nbsp;        double nextLat;
+&nbsp;        double nextLon;
+&nbsp;
+<b class="nc">&nbsp;        if (instruction.getPoints().size() &gt;= 2) {</b>
+<b class="nc">&nbsp;            nextLat = instruction.getPoints().getLat(1);</b>
+<b class="nc">&nbsp;            nextLon = instruction.getPoints().getLon(1);</b>
+<b class="nc">&nbsp;        } else if (nextI != null &amp;&amp; instruction.getPoints().size() == 1) {</b>
+<b class="nc">&nbsp;            nextLat = nextI.getPoints().getLat(0);</b>
+<b class="nc">&nbsp;            nextLon = nextI.getPoints().getLon(0);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return Double.NaN;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        double lat = instruction.getPoints().getLat(0);</b>
+<b class="nc">&nbsp;        double lon = instruction.getPoints().getLon(0);</b>
+<b class="nc">&nbsp;        return AC.calcAzimuth(lat, lon, nextLat, nextLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;Observation&gt; getEntries(Gpx.Trk trk) {
+<b class="nc">&nbsp;        ArrayList&lt;Observation&gt; gpxEntries = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Gpx.Trkseg t : trk.trkseg) {</b>
+<b class="nc">&nbsp;            for (Gpx.Trkpt trkpt : t.trkpt) {</b>
+<b class="nc">&nbsp;                gpxEntries.add(new Observation(new GHPoint3D(trkpt.lat, trkpt.lon, trkpt.ele)));</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return gpxEntries;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @author Peter Karich
+&nbsp;     */
+&nbsp;    public static class GPXEntry {
+&nbsp;        private GHPoint point;
+&nbsp;        private Long time;
+&nbsp;
+<b class="nc">&nbsp;        public GPXEntry(GHPoint p) {</b>
+<b class="nc">&nbsp;            this.point = p;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        public GPXEntry(GHPoint p, long time) {</b>
+<b class="nc">&nbsp;            this.point = p;</b>
+<b class="nc">&nbsp;            this.time = time;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Long getTime() {
+<b class="nc">&nbsp;            return time;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public GHPoint getPoint() {
+<b class="nc">&nbsp;            return point;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean equals(Object o) {
+<b class="nc">&nbsp;            if (this == o) return true;</b>
+<b class="nc">&nbsp;            if (o == null || getClass() != o.getClass()) return false;</b>
+<b class="nc">&nbsp;            GPXEntry gpxEntry = (GPXEntry) o;</b>
+<b class="nc">&nbsp;            return Objects.equals(point, gpxEntry.point) &amp;&amp;</b>
+<b class="nc">&nbsp;                    Objects.equals(time, gpxEntry.time);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int hashCode() {
+<b class="nc">&nbsp;            return Objects.hash(point, time);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            return &quot;GPXEntry{&quot; +</b>
+&nbsp;                    &quot;point=&quot; + point +
+&nbsp;                    &quot;, time=&quot; + time +
+&nbsp;                    &#39;}&#39;;
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

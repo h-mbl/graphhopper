@@ -1,0 +1,587 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > RealtimeFeed</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: RealtimeFeed (com.graphhopper.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RealtimeFeed</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/248)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">RealtimeFeed$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/35)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/255)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.gtfs;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.carrotsearch.hppc.IntHashSet;
+&nbsp;import com.carrotsearch.hppc.IntLongHashMap;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import com.conveyal.gtfs.model.Frequency;
+&nbsp;import com.conveyal.gtfs.model.StopTime;
+&nbsp;import com.conveyal.gtfs.model.Trip;
+&nbsp;import com.google.transit.realtime.GtfsRealtime;
+&nbsp;import org.mapdb.Fun;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.FileOutputStream;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.OutputStream;
+&nbsp;import java.time.*;
+&nbsp;import java.time.temporal.ChronoUnit;
+&nbsp;import java.util.*;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;import java.util.stream.IntStream;
+&nbsp;import java.util.stream.Stream;
+&nbsp;import java.util.stream.StreamSupport;
+&nbsp;
+&nbsp;import static com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.ScheduleRelationship.NO_DATA;
+&nbsp;import static com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.ScheduleRelationship.SKIPPED;
+&nbsp;import static java.time.temporal.ChronoUnit.DAYS;
+&nbsp;
+&nbsp;public class RealtimeFeed {
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(RealtimeFeed.class);</b>
+&nbsp;    private final IntHashSet blockedEdges;
+&nbsp;    private final IntLongHashMap delaysForBoardEdges;
+&nbsp;    private final IntLongHashMap delaysForAlightEdges;
+&nbsp;    private final List&lt;PtGraph.PtEdge&gt; additionalEdges;
+&nbsp;    public final Map&lt;String, GtfsRealtime.FeedMessage&gt; feedMessages;
+&nbsp;
+&nbsp;    private RealtimeFeed(Map&lt;String, GtfsRealtime.FeedMessage&gt; feedMessages, IntHashSet blockedEdges,
+<b class="nc">&nbsp;                         IntLongHashMap delaysForBoardEdges, IntLongHashMap delaysForAlightEdges, List&lt;PtGraph.PtEdge&gt; additionalEdges) {</b>
+<b class="nc">&nbsp;        this.feedMessages = feedMessages;</b>
+<b class="nc">&nbsp;        this.blockedEdges = blockedEdges;</b>
+<b class="nc">&nbsp;        this.delaysForBoardEdges = delaysForBoardEdges;</b>
+<b class="nc">&nbsp;        this.delaysForAlightEdges = delaysForAlightEdges;</b>
+<b class="nc">&nbsp;        this.additionalEdges = additionalEdges;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static RealtimeFeed empty() {
+<b class="nc">&nbsp;        return new RealtimeFeed(Collections.emptyMap(), new IntHashSet(), new IntLongHashMap(), new IntLongHashMap(), Collections.emptyList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static RealtimeFeed fromProtobuf(GtfsStorage staticGtfs, Map&lt;String, Transfers&gt; transfers, Map&lt;String, GtfsRealtime.FeedMessage&gt; feedMessages) {
+<b class="nc">&nbsp;        final IntHashSet blockedEdges = new IntHashSet();</b>
+<b class="nc">&nbsp;        final IntLongHashMap delaysForBoardEdges = new IntLongHashMap();</b>
+<b class="nc">&nbsp;        final IntLongHashMap delaysForAlightEdges = new IntLongHashMap();</b>
+<b class="nc">&nbsp;        final LinkedList&lt;PtGraph.PtEdge&gt; additionalEdges = new LinkedList&lt;&gt;();</b>
+<b class="nc">&nbsp;        final GtfsReader.PtGraphOut overlayGraph = new GtfsReader.PtGraphOut() {</b>
+<b class="nc">&nbsp;            int nextEdge = staticGtfs.getPtGraph().getEdgeCount();</b>
+<b class="nc">&nbsp;            int nextNode = staticGtfs.getPtGraph().getNodeCount();</b>
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public int createEdge(int src, int dest, PtEdgeAttributes attrs) {
+<b class="nc">&nbsp;                int edgeId = nextEdge++;</b>
+<b class="nc">&nbsp;                additionalEdges.add(new PtGraph.PtEdge(edgeId, src, dest, attrs));</b>
+<b class="nc">&nbsp;                return edgeId;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public int createNode() {
+<b class="nc">&nbsp;                return nextNode++;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        };
+&nbsp;
+<b class="nc">&nbsp;        feedMessages.forEach((feedKey, feedMessage) -&gt; {</b>
+<b class="nc">&nbsp;            GTFSFeed feed = staticGtfs.getGtfsFeeds().get(feedKey);</b>
+<b class="nc">&nbsp;            ZoneId timezone = ZoneId.of(feed.agency.values().stream().findFirst().get().agency_timezone);</b>
+<b class="nc">&nbsp;            PtGraph ptGraphNodesAndEdges = staticGtfs.getPtGraph();</b>
+<b class="nc">&nbsp;            final GtfsReader gtfsReader = new GtfsReader(feedKey, ptGraphNodesAndEdges, overlayGraph, staticGtfs, null, transfers.get(feedKey), null);</b>
+<b class="nc">&nbsp;            Instant timestamp = Instant.ofEpochSecond(feedMessage.getHeader().getTimestamp());</b>
+<b class="nc">&nbsp;            LocalDate dateToChange = timestamp.atZone(timezone).toLocalDate(); //FIXME</b>
+<b class="nc">&nbsp;            BitSet validOnDay = new BitSet();</b>
+<b class="nc">&nbsp;            LocalDate startDate = feed.getStartDate();</b>
+<b class="nc">&nbsp;            validOnDay.set((int) DAYS.between(startDate, dateToChange));</b>
+<b class="nc">&nbsp;            feedMessage.getEntityList().stream()</b>
+<b class="nc">&nbsp;                    .filter(GtfsRealtime.FeedEntity::hasTripUpdate)</b>
+<b class="nc">&nbsp;                    .map(GtfsRealtime.FeedEntity::getTripUpdate)</b>
+<b class="nc">&nbsp;                    .filter(tripUpdate -&gt; tripUpdate.getTrip().getScheduleRelationship() == GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED)</b>
+<b class="nc">&nbsp;                    .forEach(tripUpdate -&gt; {</b>
+<b class="nc">&nbsp;                        Collection&lt;Frequency&gt; frequencies = feed.getFrequencies(tripUpdate.getTrip().getTripId());</b>
+<b class="nc">&nbsp;                        int timeOffset = (tripUpdate.getTrip().hasStartTime() &amp;&amp; !frequencies.isEmpty()) ? LocalTime.parse(tripUpdate.getTrip().getStartTime()).toSecondOfDay() : 0;</b>
+<b class="nc">&nbsp;                        final int[] boardEdges = findBoardEdgesForTrip(staticGtfs, feedKey, feed, tripUpdate);</b>
+<b class="nc">&nbsp;                        final int[] leaveEdges = findLeaveEdgesForTrip(staticGtfs, feedKey, feed, tripUpdate);</b>
+<b class="nc">&nbsp;                        if (boardEdges == null || leaveEdges == null) {</b>
+<b class="nc">&nbsp;                            logger.warn(&quot;Trip not found: {}&quot;, tripUpdate.getTrip());</b>
+&nbsp;                            return;
+&nbsp;                        }
+<b class="nc">&nbsp;                        tripUpdate.getStopTimeUpdateList().stream()</b>
+<b class="nc">&nbsp;                                .filter(stopTimeUpdate -&gt; stopTimeUpdate.getScheduleRelationship() == SKIPPED)</b>
+<b class="nc">&nbsp;                                .mapToInt(GtfsRealtime.TripUpdate.StopTimeUpdate::getStopSequence)</b>
+<b class="nc">&nbsp;                                .forEach(skippedStopSequenceNumber -&gt; {</b>
+<b class="nc">&nbsp;                                    blockedEdges.add(boardEdges[skippedStopSequenceNumber]);</b>
+<b class="nc">&nbsp;                                    blockedEdges.add(leaveEdges[skippedStopSequenceNumber]);</b>
+&nbsp;                                });
+<b class="nc">&nbsp;                        GtfsReader.TripWithStopTimes tripWithStopTimes = toTripWithStopTimes(feed, tripUpdate);</b>
+<b class="nc">&nbsp;                        tripWithStopTimes.stopTimes.forEach(stopTime -&gt; {</b>
+<b class="nc">&nbsp;                            if (stopTime.stop_sequence &gt; leaveEdges.length - 1) {</b>
+<b class="nc">&nbsp;                                logger.warn(&quot;Stop sequence number too high {} vs {}&quot;, stopTime.stop_sequence, leaveEdges.length);</b>
+&nbsp;                                return;
+&nbsp;                            }
+<b class="nc">&nbsp;                            final StopTime originalStopTime = feed.stop_times.get(new Fun.Tuple2(tripUpdate.getTrip().getTripId(), stopTime.stop_sequence));</b>
+<b class="nc">&nbsp;                            int arrivalDelay = stopTime.arrival_time - originalStopTime.arrival_time;</b>
+<b class="nc">&nbsp;                            delaysForAlightEdges.put(leaveEdges[stopTime.stop_sequence], arrivalDelay * 1000);</b>
+<b class="nc">&nbsp;                            int departureDelay = stopTime.departure_time - originalStopTime.departure_time;</b>
+<b class="nc">&nbsp;                            if (departureDelay &gt; 0) {</b>
+<b class="nc">&nbsp;                                int boardEdge = boardEdges[stopTime.stop_sequence];</b>
+<b class="nc">&nbsp;                                int departureNode = ptGraphNodesAndEdges.edge(boardEdge).getAdjNode();</b>
+<b class="nc">&nbsp;                                int delayedBoardEdge = gtfsReader.addDelayedBoardEdge(timezone, tripUpdate.getTrip(), stopTime.stop_sequence, stopTime.departure_time + timeOffset, departureNode, validOnDay);</b>
+<b class="nc">&nbsp;                                delaysForBoardEdges.put(delayedBoardEdge, departureDelay * 1000);</b>
+&nbsp;                            }
+&nbsp;                        });
+&nbsp;                    });
+<b class="nc">&nbsp;            feedMessage.getEntityList().stream()</b>
+<b class="nc">&nbsp;                    .filter(GtfsRealtime.FeedEntity::hasTripUpdate)</b>
+<b class="nc">&nbsp;                    .map(GtfsRealtime.FeedEntity::getTripUpdate)</b>
+<b class="nc">&nbsp;                    .filter(tripUpdate -&gt; tripUpdate.getTrip().getScheduleRelationship() == GtfsRealtime.TripDescriptor.ScheduleRelationship.ADDED)</b>
+<b class="nc">&nbsp;                    .forEach(tripUpdate -&gt; {</b>
+<b class="nc">&nbsp;                        Trip trip = new Trip();</b>
+<b class="nc">&nbsp;                        trip.trip_id = tripUpdate.getTrip().getTripId();</b>
+<b class="nc">&nbsp;                        trip.route_id = tripUpdate.getTrip().getRouteId();</b>
+<b class="nc">&nbsp;                        final List&lt;StopTime&gt; stopTimes = tripUpdate.getStopTimeUpdateList().stream()</b>
+<b class="nc">&nbsp;                                .map(stopTimeUpdate -&gt; {</b>
+<b class="nc">&nbsp;                                    final StopTime stopTime = new StopTime();</b>
+<b class="nc">&nbsp;                                    stopTime.stop_sequence = stopTimeUpdate.getStopSequence();</b>
+<b class="nc">&nbsp;                                    stopTime.stop_id = stopTimeUpdate.getStopId();</b>
+<b class="nc">&nbsp;                                    stopTime.trip_id = trip.trip_id;</b>
+<b class="nc">&nbsp;                                    final ZonedDateTime arrival_time = Instant.ofEpochSecond(stopTimeUpdate.getArrival().getTime()).atZone(timezone);</b>
+<b class="nc">&nbsp;                                    stopTime.arrival_time = (int) Duration.between(arrival_time.truncatedTo(ChronoUnit.DAYS), arrival_time).getSeconds();</b>
+<b class="nc">&nbsp;                                    final ZonedDateTime departure_time = Instant.ofEpochSecond(stopTimeUpdate.getArrival().getTime()).atZone(timezone);</b>
+<b class="nc">&nbsp;                                    stopTime.departure_time = (int) Duration.between(departure_time.truncatedTo(ChronoUnit.DAYS), departure_time).getSeconds();</b>
+<b class="nc">&nbsp;                                    return stopTime;</b>
+&nbsp;                                })
+<b class="nc">&nbsp;                                .collect(Collectors.toList());</b>
+<b class="nc">&nbsp;                        GtfsReader.TripWithStopTimes tripWithStopTimes = new GtfsReader.TripWithStopTimes(trip, stopTimes, validOnDay, Collections.emptySet(), Collections.emptySet());</b>
+<b class="nc">&nbsp;                        gtfsReader.addTrip(timezone, 0, new ArrayList&lt;&gt;(), tripWithStopTimes, tripUpdate.getTrip());</b>
+&nbsp;                    });
+<b class="nc">&nbsp;            gtfsReader.wireUpAdditionalDeparturesAndArrivals(timezone);</b>
+&nbsp;        });
+&nbsp;
+<b class="nc">&nbsp;        return new RealtimeFeed(feedMessages, blockedEdges, delaysForBoardEdges, delaysForAlightEdges, additionalEdges);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int[] findLeaveEdgesForTrip(GtfsStorage staticGtfs, String feedKey, GTFSFeed feed, GtfsRealtime.TripUpdate tripUpdate) {
+<b class="nc">&nbsp;        Trip trip = feed.trips.get(tripUpdate.getTrip().getTripId());</b>
+<b class="nc">&nbsp;        StopTime next = feed.getOrderedStopTimesForTrip(trip.trip_id).iterator().next();</b>
+<b class="nc">&nbsp;        int station = staticGtfs.getStationNodes().get(new GtfsStorage.FeedIdWithStopId(feedKey, next.stop_id));</b>
+<b class="nc">&nbsp;        Optional&lt;PtGraph.PtEdge&gt; firstBoarding = StreamSupport.stream(staticGtfs.getPtGraph().backEdgesAround(station).spliterator(), false)</b>
+<b class="nc">&nbsp;                .flatMap(e -&gt; StreamSupport.stream(staticGtfs.getPtGraph().backEdgesAround(e.getAdjNode()).spliterator(), false))</b>
+<b class="nc">&nbsp;                .flatMap(e -&gt; StreamSupport.stream(staticGtfs.getPtGraph().backEdgesAround(e.getAdjNode()).spliterator(), false))</b>
+<b class="nc">&nbsp;                .filter(e -&gt; e.getType() == GtfsStorage.EdgeType.ALIGHT)</b>
+<b class="nc">&nbsp;                .filter(e -&gt; normalize(e.getAttrs().tripDescriptor).equals(tripUpdate.getTrip()))</b>
+<b class="nc">&nbsp;                .findAny();</b>
+<b class="nc">&nbsp;        int n = firstBoarding.get().getAdjNode();</b>
+<b class="nc">&nbsp;        Stream&lt;PtGraph.PtEdge&gt; boardEdges = evenIndexed(nodes(hopDwellChain(staticGtfs, n)))</b>
+<b class="nc">&nbsp;                .mapToObj(e -&gt; alightForBaseNode(staticGtfs, e));</b>
+<b class="nc">&nbsp;        return collectWithPadding(boardEdges);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int[] findBoardEdgesForTrip(GtfsStorage staticGtfs, String feedKey, GTFSFeed feed, GtfsRealtime.TripUpdate tripUpdate) {
+<b class="nc">&nbsp;        Trip trip = feed.trips.get(tripUpdate.getTrip().getTripId());</b>
+<b class="nc">&nbsp;        StopTime next = feed.getOrderedStopTimesForTrip(trip.trip_id).iterator().next();</b>
+<b class="nc">&nbsp;        int station = staticGtfs.getStationNodes().get(new GtfsStorage.FeedIdWithStopId(feedKey, next.stop_id));</b>
+<b class="nc">&nbsp;        Optional&lt;PtGraph.PtEdge&gt; firstBoarding = StreamSupport.stream(staticGtfs.getPtGraph().edgesAround(station).spliterator(), false)</b>
+<b class="nc">&nbsp;                .flatMap(e -&gt; StreamSupport.stream(staticGtfs.getPtGraph().edgesAround(e.getAdjNode()).spliterator(), false))</b>
+<b class="nc">&nbsp;                .flatMap(e -&gt; StreamSupport.stream(staticGtfs.getPtGraph().edgesAround(e.getAdjNode()).spliterator(), false))</b>
+<b class="nc">&nbsp;                .filter(e -&gt; e.getType() == GtfsStorage.EdgeType.BOARD)</b>
+<b class="nc">&nbsp;                .filter(e -&gt; normalize(e.getAttrs().tripDescriptor).equals(tripUpdate.getTrip()))</b>
+<b class="nc">&nbsp;                .findAny();</b>
+<b class="nc">&nbsp;        int n = firstBoarding.get().getAdjNode();</b>
+<b class="nc">&nbsp;        Stream&lt;PtGraph.PtEdge&gt; boardEdges = evenIndexed(nodes(hopDwellChain(staticGtfs, n)))</b>
+<b class="nc">&nbsp;                .mapToObj(e -&gt; boardForAdjNode(staticGtfs, e));</b>
+<b class="nc">&nbsp;        return collectWithPadding(boardEdges);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int[] collectWithPadding(Stream&lt;PtGraph.PtEdge&gt; boardEdges) {
+<b class="nc">&nbsp;        IntArrayList result = new IntArrayList();</b>
+<b class="nc">&nbsp;        boardEdges.forEach(boardEdge -&gt; {</b>
+<b class="nc">&nbsp;            while (result.size() &lt; boardEdge.getAttrs().stop_sequence) {</b>
+<b class="nc">&nbsp;                result.add(-1); // Padding, so that index == stop_sequence</b>
+&nbsp;            }
+<b class="nc">&nbsp;            result.add(boardEdge.getId());</b>
+&nbsp;        });
+<b class="nc">&nbsp;        return result.toArray();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static PtGraph.PtEdge alightForBaseNode(GtfsStorage staticGtfs, int n) {
+<b class="nc">&nbsp;        return StreamSupport.stream(staticGtfs.getPtGraph().edgesAround(n).spliterator(), false)</b>
+<b class="nc">&nbsp;                .filter(e -&gt; e.getType() == GtfsStorage.EdgeType.ALIGHT)</b>
+<b class="nc">&nbsp;                .findAny()</b>
+<b class="nc">&nbsp;                .get();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static PtGraph.PtEdge boardForAdjNode(GtfsStorage staticGtfs, int n) {
+<b class="nc">&nbsp;        return StreamSupport.stream(staticGtfs.getPtGraph().backEdgesAround(n).spliterator(), false)</b>
+<b class="nc">&nbsp;                .filter(e -&gt; e.getType() == GtfsStorage.EdgeType.BOARD)</b>
+<b class="nc">&nbsp;                .findAny()</b>
+<b class="nc">&nbsp;                .get();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static IntStream evenIndexed(IntStream nodes) {
+<b class="nc">&nbsp;        int[] ints = nodes.toArray();</b>
+<b class="nc">&nbsp;        IntStream.Builder builder = IntStream.builder();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; ints.length; i++) {</b>
+<b class="nc">&nbsp;            if (i % 2 == 0)</b>
+<b class="nc">&nbsp;                builder.add(ints[i]);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return builder.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static IntStream nodes(Stream&lt;PtGraph.PtEdge&gt; path) {
+<b class="nc">&nbsp;        List&lt;PtGraph.PtEdge&gt; edges = path.collect(Collectors.toList());</b>
+<b class="nc">&nbsp;        IntStream.Builder builder = IntStream.builder();</b>
+<b class="nc">&nbsp;        builder.accept(edges.get(0).getBaseNode());</b>
+<b class="nc">&nbsp;        for (PtGraph.PtEdge edge : edges) {</b>
+<b class="nc">&nbsp;            builder.accept(edge.getAdjNode());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return builder.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Stream&lt;PtGraph.PtEdge&gt; hopDwellChain(GtfsStorage staticGtfs, int n) {
+<b class="nc">&nbsp;        Stream.Builder&lt;PtGraph.PtEdge&gt; builder = Stream.builder();</b>
+<b class="nc">&nbsp;        Optional&lt;PtGraph.PtEdge&gt; any = StreamSupport.stream(staticGtfs.getPtGraph().edgesAround(n).spliterator(), false)</b>
+<b class="nc">&nbsp;                .filter(e -&gt; e.getType() == GtfsStorage.EdgeType.HOP || e.getType() == GtfsStorage.EdgeType.DWELL)</b>
+<b class="nc">&nbsp;                .findAny();</b>
+<b class="nc">&nbsp;        while (any.isPresent()) {</b>
+<b class="nc">&nbsp;            builder.accept(any.get());</b>
+<b class="nc">&nbsp;            any = StreamSupport.stream(staticGtfs.getPtGraph().edgesAround(any.get().getAdjNode()).spliterator(), false)</b>
+<b class="nc">&nbsp;                    .filter(e -&gt; e.getType() == GtfsStorage.EdgeType.HOP || e.getType() == GtfsStorage.EdgeType.DWELL)</b>
+<b class="nc">&nbsp;                    .findAny();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return builder.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean isBlocked(int edgeId) {
+<b class="nc">&nbsp;        return blockedEdges.contains(edgeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    List&lt;PtGraph.PtEdge&gt; getAdditionalEdges() {
+<b class="nc">&nbsp;        return additionalEdges;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Optional&lt;GtfsReader.TripWithStopTimes&gt; getTripUpdate(GTFSFeed staticFeed, GtfsRealtime.TripDescriptor tripDescriptor, Instant boardTime) {
+&nbsp;        try {
+<b class="nc">&nbsp;            logger.trace(&quot;getTripUpdate {}&quot;, tripDescriptor);</b>
+<b class="nc">&nbsp;            if (!isThisRealtimeUpdateAboutThisLineRun(boardTime)) {</b>
+<b class="nc">&nbsp;                return Optional.empty();</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                GtfsRealtime.TripDescriptor normalizedTripDescriptor = normalize(tripDescriptor);</b>
+<b class="nc">&nbsp;                return feedMessages.values().stream().flatMap(feedMessage -&gt; feedMessage.getEntityList().stream()</b>
+<b class="nc">&nbsp;                        .filter(e -&gt; e.hasTripUpdate())</b>
+<b class="nc">&nbsp;                        .map(e -&gt; e.getTripUpdate())</b>
+<b class="nc">&nbsp;                        .filter(tu -&gt; normalize(tu.getTrip()).equals(normalizedTripDescriptor))</b>
+<b class="nc">&nbsp;                        .map(tu -&gt; toTripWithStopTimes(staticFeed, tu)))</b>
+<b class="nc">&nbsp;                        .findFirst();</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (RuntimeException e) {</b>
+<b class="nc">&nbsp;            feedMessages.forEach((name, feed) -&gt; {</b>
+<b class="nc">&nbsp;                try (OutputStream s = new FileOutputStream(name+&quot;.gtfsdump&quot;)) {</b>
+<b class="nc">&nbsp;                    feed.writeTo(s);</b>
+<b class="nc">&nbsp;                } catch (IOException e1) {</b>
+<b class="nc">&nbsp;                    throw new RuntimeException();</b>
+&nbsp;                }
+&nbsp;            });
+<b class="nc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static GtfsRealtime.TripDescriptor normalize(GtfsRealtime.TripDescriptor tripDescriptor) {
+<b class="nc">&nbsp;        return GtfsRealtime.TripDescriptor.newBuilder(tripDescriptor).clearRouteId().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static GtfsReader.TripWithStopTimes toTripWithStopTimes(GTFSFeed feed, GtfsRealtime.TripUpdate tripUpdate) {
+<b class="nc">&nbsp;        ZoneId timezone = ZoneId.of(feed.agency.values().stream().findFirst().get().agency_timezone);</b>
+<b class="nc">&nbsp;        logger.trace(&quot;{}&quot;, tripUpdate.getTrip());</b>
+<b class="nc">&nbsp;        final List&lt;StopTime&gt; stopTimes = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        Set&lt;Integer&gt; cancelledArrivals = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        Set&lt;Integer&gt; cancelledDepartures = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        Trip originalTrip = feed.trips.get(tripUpdate.getTrip().getTripId());</b>
+<b class="nc">&nbsp;        Trip trip = new Trip();</b>
+<b class="nc">&nbsp;        if (originalTrip != null) {</b>
+<b class="nc">&nbsp;            trip.trip_id = originalTrip.trip_id;</b>
+<b class="nc">&nbsp;            trip.route_id = originalTrip.route_id;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            trip.trip_id = tripUpdate.getTrip().getTripId();</b>
+<b class="nc">&nbsp;            trip.route_id = tripUpdate.getTrip().getRouteId();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        int delay = 0;</b>
+<b class="nc">&nbsp;        int time = -1;</b>
+<b class="nc">&nbsp;        List&lt;GtfsRealtime.TripUpdate.StopTimeUpdate&gt; stopTimeUpdateListWithSentinel = new ArrayList&lt;&gt;(tripUpdate.getStopTimeUpdateList());</b>
+&nbsp;        Iterable&lt;StopTime&gt; interpolatedStopTimesForTrip;
+&nbsp;        try {
+<b class="nc">&nbsp;            interpolatedStopTimesForTrip = feed.getInterpolatedStopTimesForTrip(tripUpdate.getTrip().getTripId());</b>
+<b class="nc">&nbsp;        } catch (GTFSFeed.FirstAndLastStopsDoNotHaveTimes firstAndLastStopsDoNotHaveTimes) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(firstAndLastStopsDoNotHaveTimes);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        int stopSequenceCeiling = Math.max(stopTimeUpdateListWithSentinel.isEmpty() ? 0 : stopTimeUpdateListWithSentinel.get(stopTimeUpdateListWithSentinel.size() - 1).getStopSequence(),</b>
+<b class="nc">&nbsp;                StreamSupport.stream(interpolatedStopTimesForTrip.spliterator(), false).mapToInt(stopTime -&gt; stopTime.stop_sequence).max().orElse(0)</b>
+&nbsp;        ) + 1;
+<b class="nc">&nbsp;        stopTimeUpdateListWithSentinel.add(GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder().setStopSequence(stopSequenceCeiling).setScheduleRelationship(NO_DATA).build());</b>
+<b class="nc">&nbsp;        for (GtfsRealtime.TripUpdate.StopTimeUpdate stopTimeUpdate : stopTimeUpdateListWithSentinel) {</b>
+<b class="nc">&nbsp;            int nextStopSequence = stopTimes.isEmpty() ? 1 : stopTimes.get(stopTimes.size() - 1).stop_sequence + 1;</b>
+<b class="nc">&nbsp;            for (int i = nextStopSequence; i &lt; stopTimeUpdate.getStopSequence(); i++) {</b>
+<b class="nc">&nbsp;                StopTime previousOriginalStopTime = feed.stop_times.get(new Fun.Tuple2(tripUpdate.getTrip().getTripId(), i));</b>
+<b class="nc">&nbsp;                if (previousOriginalStopTime == null) {</b>
+&nbsp;                    continue; // This can and does happen. Stop sequence numbers can be left out.
+&nbsp;                }
+<b class="nc">&nbsp;                StopTime updatedPreviousStopTime = previousOriginalStopTime.clone();</b>
+<b class="nc">&nbsp;                updatedPreviousStopTime.arrival_time = Math.max(previousOriginalStopTime.arrival_time + delay, time);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;stop_sequence {} scheduled arrival {} updated arrival {}&quot;, i, previousOriginalStopTime.arrival_time, updatedPreviousStopTime.arrival_time);</b>
+<b class="nc">&nbsp;                time = updatedPreviousStopTime.arrival_time;</b>
+<b class="nc">&nbsp;                updatedPreviousStopTime.departure_time = Math.max(previousOriginalStopTime.departure_time + delay, time);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;stop_sequence {} scheduled departure {} updated departure {}&quot;, i, previousOriginalStopTime.departure_time, updatedPreviousStopTime.departure_time);</b>
+<b class="nc">&nbsp;                time = updatedPreviousStopTime.departure_time;</b>
+<b class="nc">&nbsp;                stopTimes.add(updatedPreviousStopTime);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;Number of stop times: {}&quot;, stopTimes.size());</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            final StopTime originalStopTime = feed.stop_times.get(new Fun.Tuple2(tripUpdate.getTrip().getTripId(), stopTimeUpdate.getStopSequence()));</b>
+<b class="nc">&nbsp;            if (originalStopTime != null) {</b>
+<b class="nc">&nbsp;                StopTime updatedStopTime = originalStopTime.clone();</b>
+<b class="nc">&nbsp;                if (stopTimeUpdate.getScheduleRelationship() == NO_DATA) {</b>
+<b class="nc">&nbsp;                    delay = 0;</b>
+&nbsp;                }
+<b class="nc">&nbsp;                if (stopTimeUpdate.hasArrival()) {</b>
+<b class="nc">&nbsp;                    delay = stopTimeUpdate.getArrival().getDelay();</b>
+&nbsp;                }
+<b class="nc">&nbsp;                updatedStopTime.arrival_time = Math.max(originalStopTime.arrival_time + delay, time);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;stop_sequence {} scheduled arrival {} updated arrival {}&quot;, stopTimeUpdate.getStopSequence(), originalStopTime.arrival_time, updatedStopTime.arrival_time);</b>
+<b class="nc">&nbsp;                time = updatedStopTime.arrival_time;</b>
+<b class="nc">&nbsp;                if (stopTimeUpdate.hasDeparture()) {</b>
+<b class="nc">&nbsp;                    delay = stopTimeUpdate.getDeparture().getDelay();</b>
+&nbsp;                }
+<b class="nc">&nbsp;                updatedStopTime.departure_time = Math.max(originalStopTime.departure_time + delay, time);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;stop_sequence {} scheduled departure {} updated departure {}&quot;, stopTimeUpdate.getStopSequence(), originalStopTime.departure_time, updatedStopTime.departure_time);</b>
+<b class="nc">&nbsp;                time = updatedStopTime.departure_time;</b>
+<b class="nc">&nbsp;                stopTimes.add(updatedStopTime);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;Number of stop times: {}&quot;, stopTimes.size());</b>
+<b class="nc">&nbsp;                if (stopTimeUpdate.getScheduleRelationship() == SKIPPED) {</b>
+<b class="nc">&nbsp;                    cancelledArrivals.add(stopTimeUpdate.getStopSequence());</b>
+<b class="nc">&nbsp;                    cancelledDepartures.add(stopTimeUpdate.getStopSequence());</b>
+&nbsp;                }
+<b class="nc">&nbsp;            } else if (stopTimeUpdate.getScheduleRelationship() == NO_DATA) {</b>
+<b class="nc">&nbsp;            } else if (tripUpdate.getTrip().getScheduleRelationship() == GtfsRealtime.TripDescriptor.ScheduleRelationship.ADDED) {</b>
+<b class="nc">&nbsp;                final StopTime stopTime = new StopTime();</b>
+<b class="nc">&nbsp;                stopTime.stop_sequence = stopTimeUpdate.getStopSequence();</b>
+<b class="nc">&nbsp;                stopTime.stop_id = stopTimeUpdate.getStopId();</b>
+<b class="nc">&nbsp;                stopTime.trip_id = trip.trip_id;</b>
+<b class="nc">&nbsp;                final ZonedDateTime arrival_time = Instant.ofEpochSecond(stopTimeUpdate.getArrival().getTime()).atZone(timezone);</b>
+<b class="nc">&nbsp;                stopTime.arrival_time = (int) Duration.between(arrival_time.truncatedTo(ChronoUnit.DAYS), arrival_time).getSeconds();</b>
+<b class="nc">&nbsp;                final ZonedDateTime departure_time = Instant.ofEpochSecond(stopTimeUpdate.getArrival().getTime()).atZone(timezone);</b>
+<b class="nc">&nbsp;                stopTime.departure_time = (int) Duration.between(departure_time.truncatedTo(ChronoUnit.DAYS), departure_time).getSeconds();</b>
+<b class="nc">&nbsp;                stopTimes.add(stopTime);</b>
+<b class="nc">&nbsp;                logger.trace(&quot;Number of stop times: {}&quot;, stopTimes.size());</b>
+&nbsp;            } else {
+&nbsp;                // http://localhost:3000/route?point=45.51043713898763%2C-122.68381118774415&amp;point=45.522104713562825%2C-122.6455307006836&amp;weighting=fastest&amp;pt.earliest_departure_time=2018-08-24T16%3A56%3A17Z&amp;arrive_by=false&amp;pt.max_walk_distance_per_leg=1000&amp;pt.limit_solutions=5&amp;locale=en-US&amp;profile=pt&amp;elevation=false&amp;use_miles=false&amp;points_encoded=false&amp;pt.profile=true
+&nbsp;                // long query:
+&nbsp;                // http://localhost:3000/route?point=45.518526513612244%2C-122.68612861633302&amp;point=45.52908004573869%2C-122.6862144470215&amp;weighting=fastest&amp;pt.earliest_departure_time=2018-08-24T16%3A51%3A20Z&amp;arrive_by=false&amp;pt.max_walk_distance_per_leg=10000&amp;pt.limit_solutions=4&amp;locale=en-US&amp;profile=pt&amp;elevation=false&amp;use_miles=false&amp;points_encoded=false&amp;pt.profile=true
+<b class="nc">&nbsp;                throw new RuntimeException();</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        logger.trace(&quot;Number of stop times: {}&quot;, stopTimes.size());</b>
+<b class="nc">&nbsp;        BitSet validOnDay = new BitSet(); // Not valid on any day. Just a template.</b>
+&nbsp;
+<b class="nc">&nbsp;        return new GtfsReader.TripWithStopTimes(trip, stopTimes, validOnDay, cancelledArrivals, cancelledDepartures);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getDelayForBoardEdge(PtGraph.PtEdge edge, Instant now) {
+<b class="nc">&nbsp;        if (isThisRealtimeUpdateAboutThisLineRun(now)) {</b>
+<b class="nc">&nbsp;            return delaysForBoardEdges.getOrDefault(edge.getId(), 0);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return 0;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getDelayForAlightEdge(PtGraph.PtEdge edge, Instant now) {
+<b class="nc">&nbsp;        if (isThisRealtimeUpdateAboutThisLineRun(now)) {</b>
+<b class="nc">&nbsp;            return delaysForAlightEdges.getOrDefault(edge.getId(), 0);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return 0;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean isThisRealtimeUpdateAboutThisLineRun(Instant now) {
+<b class="nc">&nbsp;        if (Duration.between(feedTimestampOrNow(), now).toHours() &gt; 24) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private Instant feedTimestampOrNow() {
+<b class="nc">&nbsp;        return feedMessages.values().stream().map(feedMessage -&gt; {</b>
+<b class="nc">&nbsp;            if (feedMessage.getHeader().hasTimestamp()) {</b>
+<b class="nc">&nbsp;                return Instant.ofEpochSecond(feedMessage.getHeader().getTimestamp());</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return Instant.now();</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }).findFirst().orElse(Instant.now());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public StopTime getStopTime(GTFSFeed staticFeed, GtfsRealtime.TripDescriptor tripDescriptor, Label.Transition t, Instant boardTime, int stopSequence) {
+<b class="nc">&nbsp;        StopTime stopTime = staticFeed.stop_times.get(new Fun.Tuple2&lt;&gt;(tripDescriptor.getTripId(), stopSequence));</b>
+<b class="nc">&nbsp;        if (stopTime == null) {</b>
+<b class="nc">&nbsp;            return getTripUpdate(staticFeed, tripDescriptor, boardTime).get().stopTimes.get(stopSequence - 1);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return stopTime;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

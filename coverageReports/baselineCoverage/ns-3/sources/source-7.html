@@ -1,0 +1,234 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > FareRule</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: FareRule (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FareRule</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">FareRule$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/17)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import com.conveyal.gtfs.error.ReferentialIntegrityError;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.Map;
+&nbsp;
+<b class="nc">&nbsp;public class FareRule extends Entity {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = 3209660216692732272L;
+&nbsp;    public String fare_id;
+&nbsp;    public String route_id;
+&nbsp;    public String origin_id;
+&nbsp;    public String destination_id;
+&nbsp;    public String contains_id;
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;FareRule&gt; {
+&nbsp;
+&nbsp;        private final Map&lt;String, Fare&gt; fares;
+&nbsp;
+&nbsp;        public Loader(GTFSFeed feed, Map&lt;String, Fare&gt; fares) {
+<b class="nc">&nbsp;            super(feed, &quot;fare_rules&quot;);</b>
+<b class="nc">&nbsp;            this.fares = fares;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+&nbsp;
+&nbsp;            /* Calendars and Fares are special: they are stored as joined tables rather than simple maps. */
+<b class="nc">&nbsp;            String fareId = getStringField(&quot;fare_id&quot;, true);</b>
+&nbsp;
+&nbsp;            /* Referential integrity check for fare id */
+<b class="nc">&nbsp;            if (!fares.containsKey(fareId)) {</b>
+<b class="nc">&nbsp;                this.feed.errors.add(new ReferentialIntegrityError(tableName, row, &quot;fare_id&quot;, fareId));</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Fare fare = fares.computeIfAbsent(fareId, Fare::new);</b>
+<b class="nc">&nbsp;            FareRule fr = new FareRule();</b>
+<b class="nc">&nbsp;            fr.sourceFileLine = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;            fr.fare_id = fare.fare_id;</b>
+<b class="nc">&nbsp;            fr.route_id = getStringField(&quot;route_id&quot;, false);</b>
+<b class="nc">&nbsp;            fr.origin_id = getStringField(&quot;origin_id&quot;, false);</b>
+<b class="nc">&nbsp;            fr.destination_id = getStringField(&quot;destination_id&quot;, false);</b>
+<b class="nc">&nbsp;            fr.contains_id = getStringField(&quot;contains_id&quot;, false);</b>
+<b class="nc">&nbsp;            fr.feed = feed;</b>
+<b class="nc">&nbsp;            fare.fare_rules.add(fr);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

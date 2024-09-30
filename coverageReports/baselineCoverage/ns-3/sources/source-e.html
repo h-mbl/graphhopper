@@ -1,0 +1,224 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Stop</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Stop (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Stop</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Stop$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URL;
+&nbsp;
+<b class="nc">&nbsp;public class Stop extends Entity {</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = 464065335273514677L;
+&nbsp;    public String stop_id;
+&nbsp;    public String stop_code;
+&nbsp;    public String stop_name;
+&nbsp;    public String stop_desc;
+&nbsp;    public double stop_lat;
+&nbsp;    public double stop_lon;
+&nbsp;    public String zone_id;
+&nbsp;    public URL    stop_url;
+&nbsp;    public int    location_type;
+&nbsp;    public String parent_station;
+&nbsp;    public String stop_timezone;
+&nbsp;    // TODO should be int
+&nbsp;    public String wheelchair_boarding;
+&nbsp;    public String feed_id;
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;Stop&gt; {
+&nbsp;
+&nbsp;        public Loader(GTFSFeed feed) {
+<b class="nc">&nbsp;            super(feed, &quot;stops&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+<b class="nc">&nbsp;            Stop s = new Stop();</b>
+<b class="nc">&nbsp;            s.sourceFileLine = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;            s.stop_id   = getStringField(&quot;stop_id&quot;, true);</b>
+<b class="nc">&nbsp;            s.stop_code = getStringField(&quot;stop_code&quot;, false);</b>
+<b class="nc">&nbsp;            s.stop_name = getStringField(&quot;stop_name&quot;, true);</b>
+<b class="nc">&nbsp;            s.stop_desc = getStringField(&quot;stop_desc&quot;, false);</b>
+<b class="nc">&nbsp;            s.stop_lat  = getDoubleField(&quot;stop_lat&quot;, true, -90D, 90D);</b>
+<b class="nc">&nbsp;            s.stop_lon  = getDoubleField(&quot;stop_lon&quot;, true, -180D, 180D);</b>
+<b class="nc">&nbsp;            s.zone_id   = getStringField(&quot;zone_id&quot;, false);</b>
+<b class="nc">&nbsp;            s.stop_url  = getUrlField(&quot;stop_url&quot;, false);</b>
+<b class="nc">&nbsp;            s.location_type  = getIntField(&quot;location_type&quot;, false, 0, 4);</b>
+<b class="nc">&nbsp;            s.parent_station = getStringField(&quot;parent_station&quot;, false);</b>
+<b class="nc">&nbsp;            s.stop_timezone  = getStringField(&quot;stop_timezone&quot;, false);</b>
+<b class="nc">&nbsp;            s.wheelchair_boarding = getStringField(&quot;wheelchair_boarding&quot;, false);</b>
+<b class="nc">&nbsp;            s.feed = feed;</b>
+<b class="nc">&nbsp;            s.feed_id = feed.feedId;</b>
+&nbsp;            /* TODO check ref integrity later, this table self-references via parent_station */
+&nbsp;
+<b class="nc">&nbsp;            feed.stops.put(s.stop_id, s);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return &quot;Stop{&quot; +</b>
+&nbsp;                &quot;stop_id=&#39;&quot; + stop_id + &#39;\&#39;&#39; +
+&nbsp;                &#39;}&#39;;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

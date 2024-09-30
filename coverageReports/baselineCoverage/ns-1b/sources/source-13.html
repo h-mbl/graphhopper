@@ -1,0 +1,397 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > WayToEdgeConverter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm</a>
+</div>
+
+<h1>Coverage Summary for Class: WayToEdgeConverter (com.graphhopper.reader.osm)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">WayToEdgeConverter</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.6%
+  </span>
+  <span class="absValue">
+    (45/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.2%
+  </span>
+  <span class="absValue">
+    (67/76)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">WayToEdgeConverter$EdgeResult</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WayToEdgeConverter$NodeResult</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.6%
+  </span>
+  <span class="absValue">
+    (45/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (81/90)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.reader.osm;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.carrotsearch.hppc.LongArrayList;
+&nbsp;import com.carrotsearch.hppc.cursors.IntCursor;
+&nbsp;import com.carrotsearch.hppc.cursors.LongCursor;
+&nbsp;import com.graphhopper.storage.BaseGraph;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.List;
+&nbsp;import java.util.function.LongFunction;
+&nbsp;
+&nbsp;public class WayToEdgeConverter {
+&nbsp;    private final BaseGraph baseGraph;
+&nbsp;    private final LongFunction&lt;Iterator&lt;IntCursor&gt;&gt; edgesByWay;
+&nbsp;
+<b class="fc">&nbsp;    public WayToEdgeConverter(BaseGraph baseGraph, LongFunction&lt;Iterator&lt;IntCursor&gt;&gt; edgesByWay) {</b>
+<b class="fc">&nbsp;        this.baseGraph = baseGraph;</b>
+<b class="fc">&nbsp;        this.edgesByWay = edgesByWay;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds the edge IDs associated with the given OSM ways that are adjacent to the given via-node.
+&nbsp;     * For each way there can be multiple edge IDs and there should be exactly one that is adjacent to the via-node
+&nbsp;     * for each way. Otherwise we throw {@link OSMRestrictionException}
+&nbsp;     */
+&nbsp;    public NodeResult convertForViaNode(LongArrayList fromWays, int viaNode, LongArrayList toWays) throws OSMRestrictionException {
+<b class="pc">&nbsp;        if (fromWays.isEmpty() || toWays.isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;There must be at least one from- and to-way&quot;);</b>
+<b class="pc">&nbsp;        if (fromWays.size() &gt; 1 &amp;&amp; toWays.size() &gt; 1)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;There can only be multiple from- or to-ways, but not both&quot;);</b>
+<b class="fc">&nbsp;        NodeResult result = new NodeResult(fromWays.size(), toWays.size());</b>
+<b class="fc">&nbsp;        for (LongCursor fromWay : fromWays)</b>
+<b class="fc">&nbsp;            edgesByWay.apply(fromWay.value).forEachRemaining(e -&gt; {</b>
+<b class="fc">&nbsp;                if (baseGraph.isAdjacentToNode(e.value, viaNode))</b>
+<b class="fc">&nbsp;                    result.fromEdges.add(e.value);</b>
+&nbsp;            });
+<b class="pc">&nbsp;        if (result.fromEdges.size() &lt; fromWays.size())</b>
+<b class="nc">&nbsp;            throw new OSMRestrictionException(&quot;has from-member ways that aren&#39;t adjacent to the via-member node&quot;);</b>
+<b class="pc">&nbsp;        else if (result.fromEdges.size() &gt; fromWays.size())</b>
+<b class="nc">&nbsp;            throw new OSMRestrictionException(&quot;has from-member ways that aren&#39;t split at the via-member node&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        for (LongCursor toWay : toWays)</b>
+<b class="fc">&nbsp;            edgesByWay.apply(toWay.value).forEachRemaining(e -&gt; {</b>
+<b class="fc">&nbsp;                if (baseGraph.isAdjacentToNode(e.value, viaNode))</b>
+<b class="fc">&nbsp;                    result.toEdges.add(e.value);</b>
+&nbsp;            });
+<b class="pc">&nbsp;        if (result.toEdges.size() &lt; toWays.size())</b>
+<b class="nc">&nbsp;            throw new OSMRestrictionException(&quot;has to-member ways that aren&#39;t adjacent to the via-member node&quot;);</b>
+<b class="pc">&nbsp;        else if (result.toEdges.size() &gt; toWays.size())</b>
+<b class="nc">&nbsp;            throw new OSMRestrictionException(&quot;has to-member ways that aren&#39;t split at the via-member node&quot;);</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class NodeResult {
+&nbsp;        private final IntArrayList fromEdges;
+&nbsp;        private final IntArrayList toEdges;
+&nbsp;
+<b class="fc">&nbsp;        public NodeResult(int numFrom, int numTo) {</b>
+<b class="fc">&nbsp;            fromEdges = new IntArrayList(numFrom);</b>
+<b class="fc">&nbsp;            toEdges = new IntArrayList(numTo);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public IntArrayList getFromEdges() {
+<b class="fc">&nbsp;            return fromEdges;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public IntArrayList getToEdges() {
+<b class="fc">&nbsp;            return toEdges;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds the edge IDs associated with the given OSM ways that are adjacent to each other. For example for given
+&nbsp;     * from-, via- and to-ways there can be multiple edges associated with each (because each way can be split into
+&nbsp;     * multiple edges). We then need to find the from-edge that is connected with one of the via-edges which in turn
+&nbsp;     * must be connected with one of the to-edges. We use DFS/backtracking to do this.
+&nbsp;     * There can also be *multiple* via-ways, but the concept is the same.
+&nbsp;     * Note that there can also be multiple from- or to-*ways*, but only one of each of them should be considered at a
+&nbsp;     * time. In contrast to the via-ways there are only multiple from/to-ways, because of restrictions like no_entry or
+&nbsp;     * no_exit where there can be multiple from- or to-members. So we need to find one edge-chain for each pair of from-
+&nbsp;     * and to-ways.
+&nbsp;     * Besides the edge IDs we also return the node IDs that connect the edges, so we can add turn restrictions at these
+&nbsp;     * nodes later.
+&nbsp;     */
+&nbsp;    public EdgeResult convertForViaWays(LongArrayList fromWays, LongArrayList viaWays, LongArrayList toWays) throws OSMRestrictionException {
+<b class="pc">&nbsp;        if (fromWays.isEmpty() || toWays.isEmpty() || viaWays.isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;There must be at least one from-, via- and to-way&quot;);</b>
+<b class="pc">&nbsp;        if (fromWays.size() &gt; 1 &amp;&amp; toWays.size() &gt; 1)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;There can only be multiple from- or to-ways, but not both&quot;);</b>
+<b class="fc">&nbsp;        List&lt;IntArrayList&gt; solutions = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (LongCursor fromWay : fromWays)</b>
+<b class="fc">&nbsp;            for (LongCursor toWay : toWays)</b>
+<b class="fc">&nbsp;                findEdgeChain(fromWay.value, viaWays, toWay.value, solutions);</b>
+<b class="pc">&nbsp;        if (solutions.size() &lt; fromWays.size() * toWays.size())</b>
+<b class="nc">&nbsp;            throw new OSMRestrictionException(&quot;has disconnected member ways&quot;);</b>
+<b class="fc">&nbsp;        else if (solutions.size() &gt; fromWays.size() * toWays.size())</b>
+<b class="fc">&nbsp;            throw new OSMRestrictionException(&quot;has member ways that do not form a unique path&quot;);</b>
+<b class="fc">&nbsp;        return buildResult(solutions, new EdgeResult(fromWays.size(), viaWays.size(), toWays.size()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static EdgeResult buildResult(List&lt;IntArrayList&gt; edgeChains, EdgeResult result) {
+<b class="fc">&nbsp;        for (IntArrayList edgeChain : edgeChains) {</b>
+<b class="fc">&nbsp;            result.fromEdges.add(edgeChain.get(0));</b>
+<b class="pc">&nbsp;            if (result.nodes.isEmpty()) {</b>
+&nbsp;                // the via-edges and nodes are the same for edge chain
+<b class="fc">&nbsp;                for (int i = 1; i &lt; edgeChain.size() - 3; i += 2) {</b>
+<b class="fc">&nbsp;                    result.nodes.add(edgeChain.get(i));</b>
+<b class="fc">&nbsp;                    result.viaEdges.add(edgeChain.get(i + 1));</b>
+&nbsp;                }
+<b class="fc">&nbsp;                result.nodes.add(edgeChain.get(edgeChain.size() - 2));</b>
+&nbsp;            }
+<b class="fc">&nbsp;            result.toEdges.add(edgeChain.get(edgeChain.size() - 1));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void findEdgeChain(long fromWay, LongArrayList viaWays, long toWay, List&lt;IntArrayList&gt; solutions) throws OSMRestrictionException {
+&nbsp;        // For each edge chain there must be one edge associated with the from-way, at least one for each via-way and one
+&nbsp;        // associated with the to-way. We use DFS with backtracking to find all edge chains that connect an edge
+&nbsp;        // associated with the from-way with one associated with the to-way.
+<b class="fc">&nbsp;        IntArrayList viaEdgesForViaWays = new IntArrayList(viaWays.size());</b>
+<b class="fc">&nbsp;        for (LongCursor c : viaWays) {</b>
+<b class="fc">&nbsp;            Iterator&lt;IntCursor&gt; iterator = edgesByWay.apply(c.value);</b>
+<b class="fc">&nbsp;            viaEdgesForViaWays.add(iterator.next().value);</b>
+<b class="fc">&nbsp;            iterator.forEachRemaining(i -&gt; viaEdgesForViaWays.add(i.value));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        IntArrayList toEdges = listFromIterator(edgesByWay.apply(toWay));</b>
+&nbsp;
+&nbsp;        // the search starts at *every* from edge
+<b class="fc">&nbsp;        edgesByWay.apply(fromWay).forEachRemaining(from -&gt; {</b>
+<b class="fc">&nbsp;            EdgeIteratorState edge = baseGraph.getEdgeIteratorState(from.value, Integer.MIN_VALUE);</b>
+<b class="fc">&nbsp;            explore(viaEdgesForViaWays, toEdges, edge.getBaseNode(), 0, IntArrayList.from(edge.getEdge(), edge.getBaseNode()), solutions);</b>
+<b class="fc">&nbsp;            explore(viaEdgesForViaWays, toEdges, edge.getAdjNode(), 0, IntArrayList.from(edge.getEdge(), edge.getAdjNode()), solutions);</b>
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;    private void explore(IntArrayList viaEdgesForViaWays, IntArrayList toEdges, int node, int viaCount, IntArrayList curr, List&lt;IntArrayList&gt; solutions) {
+<b class="fc">&nbsp;        if (viaCount == viaEdgesForViaWays.size()) {</b>
+<b class="fc">&nbsp;            for (IntCursor to : toEdges) {</b>
+<b class="fc">&nbsp;                if (baseGraph.isAdjacentToNode(to.value, node)) {</b>
+<b class="fc">&nbsp;                    IntArrayList solution = new IntArrayList(curr);</b>
+<b class="fc">&nbsp;                    solution.add(to.value);</b>
+<b class="fc">&nbsp;                    solutions.add(solution);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;            return;
+&nbsp;        }
+<b class="fc">&nbsp;        for (int i = 0; i &lt; viaEdgesForViaWays.size(); i++) {</b>
+<b class="fc">&nbsp;            int viaEdge = viaEdgesForViaWays.get(i);</b>
+<b class="fc">&nbsp;            if (viaEdge &lt; 0) continue;</b>
+<b class="fc">&nbsp;            if (baseGraph.isAdjacentToNode(viaEdge, node)) {</b>
+<b class="fc">&nbsp;                int otherNode = baseGraph.getOtherNode(viaEdge, node);</b>
+<b class="fc">&nbsp;                curr.add(viaEdge, otherNode);</b>
+&nbsp;                // every via edge must only be used once, but instead of removing it we just set it to -1
+<b class="fc">&nbsp;                viaEdgesForViaWays.set(i, -1);</b>
+<b class="fc">&nbsp;                explore(viaEdgesForViaWays, toEdges, otherNode, viaCount + 1, curr, solutions);</b>
+&nbsp;                // backtrack
+<b class="fc">&nbsp;                curr.elementsCount -= 2;</b>
+<b class="fc">&nbsp;                viaEdgesForViaWays.set(i, viaEdge);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static IntArrayList listFromIterator(Iterator&lt;IntCursor&gt; iterator) {
+<b class="fc">&nbsp;        IntArrayList result = new IntArrayList();</b>
+<b class="fc">&nbsp;        iterator.forEachRemaining(c -&gt; result.add(c.value));</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class EdgeResult {
+&nbsp;        private final IntArrayList fromEdges;
+&nbsp;        private final IntArrayList viaEdges;
+&nbsp;        private final IntArrayList toEdges;
+&nbsp;        private final IntArrayList nodes;
+&nbsp;
+<b class="fc">&nbsp;        public EdgeResult(int numFrom, int numVia, int numTo) {</b>
+<b class="fc">&nbsp;            fromEdges = new IntArrayList(numFrom);</b>
+<b class="fc">&nbsp;            viaEdges = new IntArrayList(numVia);</b>
+<b class="fc">&nbsp;            toEdges = new IntArrayList(numTo);</b>
+<b class="fc">&nbsp;            nodes = new IntArrayList(numVia + 1);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public IntArrayList getFromEdges() {
+<b class="fc">&nbsp;            return fromEdges;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public IntArrayList getViaEdges() {
+<b class="fc">&nbsp;            return viaEdges;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public IntArrayList getToEdges() {
+<b class="fc">&nbsp;            return toEdges;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * All the intermediate nodes, i.e. for an edge chain like this:
+&nbsp;         * &lt;pre&gt;
+&nbsp;         *   a   b   c   d
+&nbsp;         * 0---1---2---3---4
+&nbsp;         * &lt;/pre&gt;
+&nbsp;         * where &#39;a&#39; is the from-edge and &#39;d&#39; is the to-edge this will be [1,2,3]
+&nbsp;         */
+&nbsp;        public IntArrayList getNodes() {
+<b class="fc">&nbsp;            return nodes;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

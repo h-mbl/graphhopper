@@ -1,0 +1,319 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DAType</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: DAType (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DAType</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.6%
+  </span>
+  <span class="absValue">
+    (11/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (20/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.4%
+  </span>
+  <span class="absValue">
+    (40/56)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">DAType$MemRef</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    86.7%
+  </span>
+  <span class="absValue">
+    (13/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (20/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.4%
+  </span>
+  <span class="absValue">
+    (42/58)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.toUpperCase;
+&nbsp;
+&nbsp;/**
+&nbsp; * Defines how a DataAccess object is created.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class DAType {
+&nbsp;    /**
+&nbsp;     * The DA object is hold entirely in-memory. Loading and flushing is a no-op. See RAMDataAccess.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final DAType RAM = new DAType(MemRef.HEAP, false, false, true);</b>
+&nbsp;    /**
+&nbsp;     * Optimized RAM DA type for integer access. The set and getBytes methods cannot be used.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final DAType RAM_INT = new DAType(MemRef.HEAP, false, true, true);</b>
+&nbsp;    /**
+&nbsp;     * The DA object is hold entirely in-memory. It will read load disc and flush to it if they
+&nbsp;     * equivalent methods are called. See RAMDataAccess.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final DAType RAM_STORE = new DAType(MemRef.HEAP, true, false, true);</b>
+&nbsp;    /**
+&nbsp;     * Optimized RAM_STORE DA type for integer access. The set and getBytes methods cannot be used.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final DAType RAM_INT_STORE = new DAType(MemRef.HEAP, true, true, true);</b>
+&nbsp;    /**
+&nbsp;     * Memory mapped DA object. See MMapDataAccess.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final DAType MMAP = new DAType(MemRef.MMAP, true, false, true);</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Read-only memory mapped DA object. To avoid write access useful for reading on mobile or
+&nbsp;     * embedded data stores.
+&nbsp;     */
+<b class="fc">&nbsp;    public static final DAType MMAP_RO = new DAType(MemRef.MMAP, true, false, false);</b>
+&nbsp;    private final MemRef memRef;
+&nbsp;    private final boolean storing;
+&nbsp;    private final boolean integ;
+&nbsp;    private final boolean allowWrites;
+&nbsp;
+&nbsp;    public DAType(DAType type) {
+<b class="nc">&nbsp;        this(type.getMemRef(), type.isStoring(), type.isInteg(), type.isAllowWrites());</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public DAType(MemRef memRef, boolean storing, boolean integ, boolean allowWrites) {</b>
+<b class="fc">&nbsp;        this.memRef = memRef;</b>
+<b class="fc">&nbsp;        this.storing = storing;</b>
+<b class="fc">&nbsp;        this.integ = integ;</b>
+<b class="fc">&nbsp;        this.allowWrites = allowWrites;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static DAType fromString(String dataAccess) {
+<b class="fc">&nbsp;        dataAccess = toUpperCase(dataAccess);</b>
+&nbsp;        DAType type;
+<b class="pc">&nbsp;        if (dataAccess.contains(&quot;SYNC&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;SYNC option is no longer supported, see #982&quot;);</b>
+<b class="pc">&nbsp;        else if (dataAccess.contains(&quot;MMAP_RO&quot;))</b>
+<b class="nc">&nbsp;            type = DAType.MMAP_RO;</b>
+<b class="fc">&nbsp;        else if (dataAccess.contains(&quot;MMAP&quot;))</b>
+<b class="fc">&nbsp;            type = DAType.MMAP;</b>
+<b class="pc">&nbsp;        else if (dataAccess.contains(&quot;UNSAFE&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;UNSAFE option is no longer supported, see #1620&quot;);</b>
+<b class="pc">&nbsp;        else if (dataAccess.equals(&quot;RAM&quot;))</b>
+<b class="nc">&nbsp;            type = DAType.RAM;</b>
+&nbsp;        else
+<b class="fc">&nbsp;            type = DAType.RAM_STORE;</b>
+<b class="fc">&nbsp;        return type;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Memory mapped or purely in memory? default is HEAP
+&nbsp;     */
+&nbsp;    MemRef getMemRef() {
+<b class="fc">&nbsp;        return memRef;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isAllowWrites() {
+<b class="fc">&nbsp;        return allowWrites;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if data resides in the JVM heap.
+&nbsp;     */
+&nbsp;    public boolean isInMemory() {
+<b class="fc">&nbsp;        return memRef == MemRef.HEAP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isMMap() {
+<b class="fc">&nbsp;        return memRef == MemRef.MMAP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Temporary data or store (with loading and storing)? default is false
+&nbsp;     */
+&nbsp;    public boolean isStoring() {
+<b class="fc">&nbsp;        return storing;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Optimized for integer values? default is false
+&nbsp;     */
+&nbsp;    public boolean isInteg() {
+<b class="fc">&nbsp;        return integ;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+&nbsp;        String str;
+<b class="fc">&nbsp;        if (getMemRef() == MemRef.MMAP)</b>
+<b class="fc">&nbsp;            str = &quot;MMAP&quot;;</b>
+&nbsp;        else
+<b class="fc">&nbsp;            str = &quot;RAM&quot;;</b>
+&nbsp;
+<b class="pc">&nbsp;        if (isInteg())</b>
+<b class="nc">&nbsp;            str += &quot;_INT&quot;;</b>
+<b class="fc">&nbsp;        if (isStoring())</b>
+<b class="fc">&nbsp;            str += &quot;_STORE&quot;;</b>
+<b class="fc">&nbsp;        return str;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        int hash = 7;</b>
+<b class="nc">&nbsp;        hash = 59 * hash + 37 * this.memRef.hashCode();</b>
+<b class="nc">&nbsp;        hash = 59 * hash + (this.storing ? 1 : 0);</b>
+<b class="nc">&nbsp;        hash = 59 * hash + (this.integ ? 1 : 0);</b>
+<b class="nc">&nbsp;        return hash;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object obj) {
+<b class="pc">&nbsp;        if (obj == null)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="pc">&nbsp;        if (getClass() != obj.getClass())</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="fc">&nbsp;        final DAType other = (DAType) obj;</b>
+<b class="pc">&nbsp;        if (this.memRef != other.memRef)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="pc">&nbsp;        if (this.storing != other.storing)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="pc">&nbsp;        if (this.integ != other.integ)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public enum MemRef {</b>
+<b class="fc">&nbsp;        HEAP, MMAP</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

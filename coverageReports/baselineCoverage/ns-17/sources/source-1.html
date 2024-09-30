@@ -1,0 +1,162 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Distributions</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.matching</a>
+</div>
+
+<h1>Coverage Summary for Class: Distributions (com.graphhopper.matching)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Distributions</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/**
+&nbsp; * Copyright (C) 2015-2016, BMW Car IT GmbH and BMW AG
+&nbsp; * Author: Stefan Holder (stefan.holder@bmw.de)
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *    http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.matching;
+&nbsp;
+&nbsp;import static java.lang.Math.PI;
+&nbsp;import static java.lang.Math.exp;
+&nbsp;import static java.lang.Math.log;
+&nbsp;import static java.lang.Math.pow;
+&nbsp;import static java.lang.Math.sqrt;
+&nbsp;
+&nbsp;/**
+&nbsp; * Implements various probability distributions.
+&nbsp; */
+<b class="nc">&nbsp;public class Distributions {</b>
+&nbsp;
+&nbsp;    static double normalDistribution(double sigma, double x) {
+<b class="nc">&nbsp;        return 1.0 / (sqrt(2.0 * PI) * sigma) * exp(-0.5 * pow(x / sigma, 2));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Use this function instead of Math.log(normalDistribution(sigma, x)) to avoid an
+&nbsp;     * arithmetic underflow for very small probabilities.
+&nbsp;     */
+&nbsp;    public static double logNormalDistribution(double sigma, double x) {
+<b class="nc">&nbsp;        return Math.log(1.0 / (sqrt(2.0 * PI) * sigma)) + (-0.5 * pow(x / sigma, 2));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param beta =1/lambda with lambda being the standard exponential distribution rate parameter
+&nbsp;     */
+&nbsp;    static double exponentialDistribution(double beta, double x) {
+<b class="nc">&nbsp;        return 1.0 / beta * exp(-x / beta);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Use this function instead of Math.log(exponentialDistribution(beta, x)) to avoid an
+&nbsp;     * arithmetic underflow for very small probabilities.
+&nbsp;     *
+&nbsp;     * @param beta =1/lambda with lambda being the standard exponential distribution rate parameter
+&nbsp;     */
+&nbsp;    static double logExponentialDistribution(double beta, double x) {
+<b class="nc">&nbsp;        return log(1.0 / beta) - (x / beta);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

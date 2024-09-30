@@ -1,0 +1,175 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Analysis</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs.analysis</a>
+</div>
+
+<h1>Coverage Summary for Class: Analysis (com.graphhopper.gtfs.analysis)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Analysis</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/28)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.gtfs.analysis;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.BitSetIterator;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.carrotsearch.hppc.cursors.IntCursor;
+&nbsp;import com.graphhopper.gtfs.GtfsStorage;
+&nbsp;import com.graphhopper.gtfs.PtGraph;
+&nbsp;import com.graphhopper.routing.subnetwork.TarjanSCC;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.gtfs.GtfsStorage.EdgeType.ENTER_PT;
+&nbsp;
+<b class="nc">&nbsp;public class Analysis {</b>
+&nbsp;
+&nbsp;
+&nbsp;    public static List&lt;List&lt;GtfsStorage.FeedIdWithStopId&gt;&gt; findStronglyConnectedComponentsOfStopGraph(PtGraph ptGraph) {
+<b class="nc">&nbsp;        PtGraphAsAdjacencyList ptGraphAsAdjacencyList = new PtGraphAsAdjacencyList(ptGraph);</b>
+<b class="nc">&nbsp;        TarjanSCC.ConnectedComponents components = TarjanSCC.findComponents(ptGraphAsAdjacencyList, EdgeFilter.ALL_EDGES, false);</b>
+<b class="nc">&nbsp;        List&lt;List&lt;GtfsStorage.FeedIdWithStopId&gt;&gt; stronglyConnectedComponentsOfStopGraph = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (IntArrayList component : components.getComponents()) {</b>
+<b class="nc">&nbsp;            ArrayList&lt;GtfsStorage.FeedIdWithStopId&gt; stopsOfComponent = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (IntCursor intCursor : component) {</b>
+<b class="nc">&nbsp;                stopsOfComponent.addAll(getStopsForNode(ptGraph, intCursor.value));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (!stopsOfComponent.isEmpty()) {</b>
+<b class="nc">&nbsp;                stronglyConnectedComponentsOfStopGraph.add(stopsOfComponent);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        BitSetIterator iter = components.getSingleNodeComponents().iterator();</b>
+<b class="nc">&nbsp;        for (int i = iter.nextSetBit(); i &gt;= 0; i = iter.nextSetBit()) {</b>
+<b class="nc">&nbsp;            List&lt;GtfsStorage.FeedIdWithStopId&gt; stopsForNode = getStopsForNode(ptGraph, i);</b>
+<b class="nc">&nbsp;            if (!stopsForNode.isEmpty()) {</b>
+<b class="nc">&nbsp;                stronglyConnectedComponentsOfStopGraph.add(stopsForNode);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return stronglyConnectedComponentsOfStopGraph;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;GtfsStorage.FeedIdWithStopId&gt; getStopsForNode(PtGraph ptGraph, int i) {
+<b class="nc">&nbsp;        EnumSet&lt;GtfsStorage.EdgeType&gt; inEdgeTypes = EnumSet.noneOf(GtfsStorage.EdgeType.class);</b>
+<b class="nc">&nbsp;        for (PtGraph.PtEdge ptEdge : ptGraph.backEdgesAround(i)) {</b>
+<b class="nc">&nbsp;            inEdgeTypes.add(ptEdge.getType());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        EnumSet&lt;GtfsStorage.EdgeType&gt; outEdgeTypes = EnumSet.noneOf(GtfsStorage.EdgeType.class);</b>
+<b class="nc">&nbsp;        for (PtGraph.PtEdge ptEdge : ptGraph.edgesAround(i)) {</b>
+<b class="nc">&nbsp;            outEdgeTypes.add(ptEdge.getType());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (inEdgeTypes.equals(EnumSet.of(GtfsStorage.EdgeType.EXIT_PT)) &amp;&amp; outEdgeTypes.equals((EnumSet.of(ENTER_PT)))) {</b>
+<b class="nc">&nbsp;            Set&lt;GtfsStorage.FeedIdWithStopId&gt; stops = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;            ptGraph.backEdgesAround(i).forEach(e -&gt; stops.add(new GtfsStorage.FeedIdWithStopId(e.getAttrs().platformDescriptor.feed_id, e.getAttrs().platformDescriptor.stop_id)));</b>
+<b class="nc">&nbsp;            ptGraph.edgesAround(i).forEach(e -&gt; stops.add(new GtfsStorage.FeedIdWithStopId(e.getAttrs().platformDescriptor.feed_id, e.getAttrs().platformDescriptor.stop_id)));</b>
+<b class="nc">&nbsp;            return new ArrayList&lt;&gt;(stops);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

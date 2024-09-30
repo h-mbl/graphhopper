@@ -1,0 +1,283 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Route</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.conveyal.gtfs.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Route (com.conveyal.gtfs.model)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Route</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/33)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Route$Loader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/54)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (c) 2015, Conveyal
+&nbsp; * All rights reserved.
+&nbsp; *
+&nbsp; * Redistribution and use in source and binary forms, with or without
+&nbsp; * modification, are permitted provided that the following conditions are met:
+&nbsp; *
+&nbsp; *  Redistributions of source code must retain the above copyright notice, this
+&nbsp; *   list of conditions and the following disclaimer.
+&nbsp; *
+&nbsp; *  Redistributions in binary form must reproduce the above copyright notice,
+&nbsp; *   this list of conditions and the following disclaimer in the documentation
+&nbsp; *   and/or other materials provided with the distribution.
+&nbsp; *
+&nbsp; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+&nbsp; * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+&nbsp; * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+&nbsp; * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+&nbsp; * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+&nbsp; * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+&nbsp; * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+&nbsp; * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+&nbsp; * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+&nbsp; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&nbsp; */
+&nbsp;
+&nbsp;package com.conveyal.gtfs.model;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URL;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;public class Route extends Entity { // implements Entity.Factory&lt;Route&gt;</b>
+&nbsp;
+&nbsp;    private static final long serialVersionUID = -819444896818029068L;
+&nbsp;
+&nbsp;    //Used for converting extended route types to simple route types
+&nbsp;    //based on codes found here: https://developers.google.com/transit/gtfs/reference/extended-route-types    
+<b class="nc">&nbsp;    public static final Map&lt;Integer, Integer&gt; EXTENTED_ROUTE_TYPE_MAPPING = new HashMap&lt;&gt;();</b>
+&nbsp;    
+&nbsp;    static {
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(100, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(101, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(102, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(103, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(105, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(106, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(107, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(108, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(109, 2);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(200, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(201, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(202, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(204, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(208, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(400, 1);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(401, 1);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(402, 1);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(405, 1);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(700, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(701, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(702, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(704, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(715, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(717, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(800, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(900, 0);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(1000, 4);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(1300, 6);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(1400, 7);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(1501, 3);</b>
+<b class="nc">&nbsp;        EXTENTED_ROUTE_TYPE_MAPPING.put(1700, 3);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String route_id;
+&nbsp;    public String agency_id;
+&nbsp;    public String route_short_name;
+&nbsp;    public String route_long_name;
+&nbsp;    public String route_desc;
+&nbsp;    public int    route_type;
+&nbsp;    public URL    route_url;
+&nbsp;    public String route_color;
+&nbsp;    public String route_text_color;
+&nbsp;    public URL route_branding_url;
+&nbsp;    public String feed_id;
+&nbsp;
+&nbsp;    public static class Loader extends Entity.Loader&lt;Route&gt; {
+&nbsp;
+&nbsp;        public Loader(GTFSFeed feed) {
+<b class="nc">&nbsp;            super(feed, &quot;routes&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        protected boolean isRequired() {
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void loadOneRow() throws IOException {
+<b class="nc">&nbsp;            Route r = new Route();</b>
+<b class="nc">&nbsp;            r.sourceFileLine = row + 1; // offset line number by 1 to account for 0-based row index</b>
+<b class="nc">&nbsp;            r.route_id = getStringField(&quot;route_id&quot;, true);</b>
+<b class="nc">&nbsp;            Agency agency = getRefField(&quot;agency_id&quot;, false, feed.agency);</b>
+&nbsp;
+&nbsp;            // if there is only one agency, associate with it automatically
+<b class="nc">&nbsp;            if (agency == null &amp;&amp; feed.agency.size() == 1) {</b>
+<b class="nc">&nbsp;                agency = feed.agency.values().iterator().next();</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // If we still haven&#39;t got an agency, it&#39;s because we have a bad reference, or because there is no agency
+<b class="nc">&nbsp;            if (agency != null) {</b>
+<b class="nc">&nbsp;                r.agency_id = agency.agency_id;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            r.route_short_name = getStringField(&quot;route_short_name&quot;, false); // one or the other required, needs a special validator</b>
+<b class="nc">&nbsp;            r.route_long_name = getStringField(&quot;route_long_name&quot;, false);</b>
+<b class="nc">&nbsp;            r.route_desc = getStringField(&quot;route_desc&quot;, false);</b>
+<b class="nc">&nbsp;            r.route_type = getIntField(&quot;route_type&quot;, true, 0, 7, 0, EXTENTED_ROUTE_TYPE_MAPPING);</b>
+<b class="nc">&nbsp;            r.route_url = getUrlField(&quot;route_url&quot;, false);</b>
+<b class="nc">&nbsp;            r.route_color = getStringField(&quot;route_color&quot;, false);</b>
+<b class="nc">&nbsp;            r.route_text_color = getStringField(&quot;route_text_color&quot;, false);</b>
+<b class="nc">&nbsp;            r.route_branding_url = getUrlField(&quot;route_branding_url&quot;, false);</b>
+<b class="nc">&nbsp;            r.feed = feed;</b>
+<b class="nc">&nbsp;            r.feed_id = feed.feedId;</b>
+<b class="nc">&nbsp;            feed.routes.put(r.route_id, r);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

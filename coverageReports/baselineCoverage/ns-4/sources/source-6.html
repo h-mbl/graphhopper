@@ -1,0 +1,315 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Trip</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper</a>
+</div>
+
+<h1>Coverage Summary for Class: Trip (com.graphhopper)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Trip</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Trip$Leg</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Trip$PtLeg</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Trip$Stop</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Trip$WalkLeg</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/37)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper;
+&nbsp;
+&nbsp;import com.graphhopper.util.InstructionList;
+&nbsp;import com.graphhopper.util.details.PathDetail;
+&nbsp;import org.locationtech.jts.geom.Geometry;
+&nbsp;import org.locationtech.jts.geom.Point;
+&nbsp;
+&nbsp;import java.util.Date;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+<b class="nc">&nbsp;public class Trip {</b>
+&nbsp;    public static abstract class Leg {
+&nbsp;        public final String type;
+&nbsp;        public final String departureLocation;
+&nbsp;        public final Geometry geometry;
+&nbsp;        public final double distance;
+&nbsp;
+<b class="nc">&nbsp;        public Leg(String type, String departureLocation, Geometry geometry, double distance) {</b>
+<b class="nc">&nbsp;            this.type = type;</b>
+<b class="nc">&nbsp;            this.departureLocation = departureLocation;</b>
+<b class="nc">&nbsp;            this.geometry = geometry;</b>
+<b class="nc">&nbsp;            this.distance = distance;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public double getDistance() {
+<b class="nc">&nbsp;            return distance;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public abstract Date getDepartureTime();
+&nbsp;        public abstract Date getArrivalTime();
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Stop {
+&nbsp;        public final String stop_id;
+&nbsp;        public final String stop_name;
+&nbsp;        public final Point geometry;
+&nbsp;
+&nbsp;        public final Date arrivalTime;
+&nbsp;        public final Date plannedArrivalTime;
+&nbsp;        public final Date predictedArrivalTime;
+&nbsp;        public final boolean arrivalCancelled;
+&nbsp;
+&nbsp;        public final Date departureTime;
+&nbsp;        public final Date plannedDepartureTime;
+&nbsp;        public final Date predictedDepartureTime;
+&nbsp;        public final boolean departureCancelled;
+&nbsp;
+<b class="nc">&nbsp;        public Stop(String stop_id, String name, Point geometry, Date arrivalTime, Date plannedArrivalTime, Date predictedArrivalTime, boolean arrivalCancelled, Date departureTime, Date plannedDepartureTime, Date predictedDepartureTime, boolean departureCancelled) {</b>
+<b class="nc">&nbsp;            this.stop_id = stop_id;</b>
+<b class="nc">&nbsp;            this.stop_name = name;</b>
+<b class="nc">&nbsp;            this.geometry = geometry;</b>
+<b class="nc">&nbsp;            this.arrivalTime = arrivalTime;</b>
+<b class="nc">&nbsp;            this.plannedArrivalTime = plannedArrivalTime;</b>
+<b class="nc">&nbsp;            this.predictedArrivalTime = predictedArrivalTime;</b>
+<b class="nc">&nbsp;            this.arrivalCancelled = arrivalCancelled;</b>
+<b class="nc">&nbsp;            this.departureTime = departureTime;</b>
+<b class="nc">&nbsp;            this.plannedDepartureTime = plannedDepartureTime;</b>
+<b class="nc">&nbsp;            this.predictedDepartureTime = predictedDepartureTime;</b>
+<b class="nc">&nbsp;            this.departureCancelled = departureCancelled;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            return &quot;Stop{&quot; +</b>
+&nbsp;                    &quot;stop_id=&#39;&quot; + stop_id + &#39;\&#39;&#39; +
+&nbsp;                    &quot;, arrivalTime=&quot; + arrivalTime +
+&nbsp;                    &quot;, departureTime=&quot; + departureTime +
+&nbsp;                    &#39;}&#39;;
+&nbsp;        }
+&nbsp;    }
+&nbsp;    public static class WalkLeg extends Leg {
+&nbsp;        public final InstructionList instructions;
+&nbsp;        public final Map&lt;String, List&lt;PathDetail&gt;&gt; details;
+&nbsp;        private final Date departureTime;
+&nbsp;        private final Date arrivalTime;
+&nbsp;
+&nbsp;        public WalkLeg(String departureLocation, Date departureTime, Geometry geometry, double distance, InstructionList instructions, Map&lt;String, List&lt;PathDetail&gt;&gt; details, Date arrivalTime) {
+<b class="nc">&nbsp;            super(&quot;walk&quot;, departureLocation, geometry, distance);</b>
+<b class="nc">&nbsp;            this.instructions = instructions;</b>
+<b class="nc">&nbsp;            this.departureTime = departureTime;</b>
+<b class="nc">&nbsp;            this.details = details;</b>
+<b class="nc">&nbsp;            this.arrivalTime = arrivalTime;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Date getDepartureTime() {
+<b class="nc">&nbsp;            return departureTime;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Date getArrivalTime() {
+<b class="nc">&nbsp;            return arrivalTime;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;    public static class PtLeg extends Leg {
+&nbsp;        public final String feed_id;
+&nbsp;        public final boolean isInSameVehicleAsPrevious;
+&nbsp;        public final String trip_headsign;
+&nbsp;        public final long travelTime;
+&nbsp;        public final List&lt;Stop&gt; stops;
+&nbsp;        public final String trip_id;
+&nbsp;        public final String route_id;
+&nbsp;
+&nbsp;        public PtLeg(String feedId, boolean isInSameVehicleAsPrevious, String tripId, String routeId, String headsign, List&lt;Stop&gt; stops, double distance, long travelTime, Geometry geometry) {
+<b class="nc">&nbsp;            super(&quot;pt&quot;, stops.get(0).stop_name, geometry, distance);</b>
+<b class="nc">&nbsp;            this.feed_id = feedId;</b>
+<b class="nc">&nbsp;            this.isInSameVehicleAsPrevious = isInSameVehicleAsPrevious;</b>
+<b class="nc">&nbsp;            this.trip_id = tripId;</b>
+<b class="nc">&nbsp;            this.route_id = routeId;</b>
+<b class="nc">&nbsp;            this.trip_headsign = headsign;</b>
+<b class="nc">&nbsp;            this.travelTime = travelTime;</b>
+<b class="nc">&nbsp;            this.stops = stops;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Date getDepartureTime() {
+<b class="nc">&nbsp;            return stops.get(0).departureTime;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Date getArrivalTime() {
+<b class="nc">&nbsp;            return stops.get(stops.size()-1).arrivalTime;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

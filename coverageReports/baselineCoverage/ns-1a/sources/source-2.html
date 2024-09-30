@@ -1,0 +1,320 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AbstractTiffElevationProvider</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.dem</a>
+</div>
+
+<h1>Coverage Summary for Class: AbstractTiffElevationProvider (com.graphhopper.reader.dem)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AbstractTiffElevationProvider</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    40%
+  </span>
+  <span class="absValue">
+    (12/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    63%
+  </span>
+  <span class="absValue">
+    (46/73)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.reader.dem;
+&nbsp;
+&nbsp;import com.graphhopper.storage.DataAccess;
+&nbsp;import com.graphhopper.util.Downloader;
+&nbsp;
+&nbsp;import javax.net.ssl.SSLException;
+&nbsp;import java.awt.image.Raster;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.SocketTimeoutException;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;/**
+&nbsp; * Provides basic methods that are usually used in an ElevationProvider that reads tiff files.
+&nbsp; *
+&nbsp; * @author Robin Boldt
+&nbsp; */
+&nbsp;public abstract class AbstractTiffElevationProvider extends TileBasedElevationProvider {
+<b class="fc">&nbsp;    private final Map&lt;String, HeightTile&gt; cacheData = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    final double precision = 1e7;</b>
+&nbsp;
+&nbsp;    private final int WIDTH;
+&nbsp;    private final int HEIGHT;
+&nbsp;
+&nbsp;    // Degrees of latitude covered by this tile
+&nbsp;    final int LAT_DEGREE;
+&nbsp;    // Degrees of longitude covered by this tile
+&nbsp;    final int LON_DEGREE;
+&nbsp;
+&nbsp;    public AbstractTiffElevationProvider(String baseUrl, String cacheDir, String downloaderName, int width, int height, int latDegree, int lonDegree) {
+<b class="fc">&nbsp;        super(cacheDir);</b>
+<b class="fc">&nbsp;        this.baseUrl = baseUrl;</b>
+<b class="fc">&nbsp;        this.downloader = new Downloader(downloaderName).setTimeout(10000);</b>
+<b class="fc">&nbsp;        this.WIDTH = width;</b>
+<b class="fc">&nbsp;        this.HEIGHT = height;</b>
+<b class="fc">&nbsp;        this.LAT_DEGREE = latDegree;</b>
+<b class="fc">&nbsp;        this.LON_DEGREE = lonDegree;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void release() {
+<b class="fc">&nbsp;        cacheData.clear();</b>
+<b class="fc">&nbsp;        if (dir != null) {</b>
+&nbsp;            // for memory mapped type we remove temporary files
+<b class="pc">&nbsp;            if (autoRemoveTemporary)</b>
+<b class="fc">&nbsp;                dir.clear();</b>
+&nbsp;            else
+<b class="nc">&nbsp;                dir.close();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Return true if the coordinates are outside of the supported area
+&nbsp;     */
+&nbsp;    abstract boolean isOutsideSupportedArea(double lat, double lon);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The smallest lat that is still in the HeightTile
+&nbsp;     */
+&nbsp;    abstract int getMinLatForTile(double lat);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The smallest lon that is still in the HeightTile
+&nbsp;     */
+&nbsp;    abstract int getMinLonForTile(double lon);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Specify the name of the file after downloading
+&nbsp;     */
+&nbsp;    abstract String getFileNameOfLocalFile(double lat, double lon);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Return the local file name without file ending, has to be lower case, because DataAccess only supports lower case names.
+&nbsp;     */
+&nbsp;    abstract String getFileName(double lat, double lon);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the complete URL to download the file
+&nbsp;     */
+&nbsp;    abstract String getDownloadURL(double lat, double lon);
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getEle(double lat, double lon) {
+&nbsp;        // Return fast, if there is no data available
+<b class="pc">&nbsp;        if (isOutsideSupportedArea(lat, lon))</b>
+<b class="nc">&nbsp;            return 0;</b>
+&nbsp;
+<b class="fc">&nbsp;        lat = (int) (lat * precision) / precision;</b>
+<b class="fc">&nbsp;        lon = (int) (lon * precision) / precision;</b>
+<b class="fc">&nbsp;        String name = getFileName(lat, lon);</b>
+<b class="fc">&nbsp;        HeightTile demProvider = cacheData.get(name);</b>
+<b class="pc">&nbsp;        if (demProvider == null) {</b>
+<b class="pc">&nbsp;            if (!cacheDir.exists())</b>
+<b class="nc">&nbsp;                cacheDir.mkdirs();</b>
+&nbsp;
+<b class="fc">&nbsp;            int minLat = getMinLatForTile(lat);</b>
+<b class="fc">&nbsp;            int minLon = getMinLonForTile(lon);</b>
+&nbsp;            // less restrictive against boundary checking
+<b class="fc">&nbsp;            demProvider = new HeightTile(minLat, minLon, WIDTH, HEIGHT, LON_DEGREE * precision, LON_DEGREE, LAT_DEGREE);</b>
+<b class="fc">&nbsp;            demProvider.setInterpolate(interpolate);</b>
+&nbsp;
+<b class="fc">&nbsp;            cacheData.put(name, demProvider);</b>
+<b class="fc">&nbsp;            DataAccess heights = getDirectory().create(name + &quot;.gh&quot;);</b>
+<b class="fc">&nbsp;            demProvider.setHeights(heights);</b>
+<b class="fc">&nbsp;            boolean loadExisting = false;</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                loadExisting = heights.loadExisting();</b>
+<b class="nc">&nbsp;            } catch (Exception ex) {</b>
+<b class="nc">&nbsp;                logger.warn(&quot;cannot load &quot; + name + &quot;, error: &quot; + ex.getMessage());</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (!loadExisting) {</b>
+<b class="fc">&nbsp;                File zipFile = new File(cacheDir, new File(getFileNameOfLocalFile(lat, lon)).getName());</b>
+<b class="pc">&nbsp;                if (!zipFile.exists())</b>
+&nbsp;                    try {
+<b class="fc">&nbsp;                        String zippedURL = getDownloadURL(lat, lon);</b>
+<b class="fc">&nbsp;                        downloadToFile(zipFile, zippedURL);</b>
+<b class="nc">&nbsp;                    } catch (SSLException ex) {</b>
+<b class="nc">&nbsp;                        throw new IllegalStateException(&quot;SSL problem with elevation provider &quot; + getClass().getSimpleName(), ex);</b>
+<b class="fc">&nbsp;                    } catch (IOException ex) {</b>
+<b class="fc">&nbsp;                        demProvider.setSeaLevel(true);</b>
+&nbsp;                        // use small size on disc and in-memory
+<b class="fc">&nbsp;                        heights.create(10).flush();</b>
+<b class="fc">&nbsp;                        return 0;</b>
+&nbsp;                    }
+&nbsp;
+&nbsp;                // short == 2 bytes
+<b class="nc">&nbsp;                heights.create(2L * WIDTH * HEIGHT);</b>
+&nbsp;
+<b class="nc">&nbsp;                Raster raster = readFile(zipFile, name + &quot;.tif&quot;);</b>
+<b class="nc">&nbsp;                fillDataAccessWithElevationData(raster, heights, WIDTH);</b>
+&nbsp;
+&nbsp;            } // loadExisting
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (demProvider.isSeaLevel())</b>
+<b class="nc">&nbsp;            return 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        return demProvider.getHeight(lat, lon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    abstract Raster readFile(File file, String tifName);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Download a file at the provided url and save it as the given downloadFile if the downloadFile does not exist.
+&nbsp;     */
+&nbsp;    private void downloadToFile(File downloadFile, String url) throws IOException {
+<b class="pc">&nbsp;        if (!downloadFile.exists()) {</b>
+<b class="fc">&nbsp;            int max = 3;</b>
+<b class="pc">&nbsp;            for (int trial = 0; trial &lt; max; trial++) {</b>
+&nbsp;                try {
+<b class="fc">&nbsp;                    downloader.downloadFile(url, downloadFile.getAbsolutePath());</b>
+&nbsp;                    return;
+<b class="fc">&nbsp;                } catch (SocketTimeoutException ex) {</b>
+<b class="fc">&nbsp;                    if (trial &gt;= max - 1)</b>
+<b class="fc">&nbsp;                        throw new RuntimeException(ex);</b>
+&nbsp;                    try {
+<b class="fc">&nbsp;                        Thread.sleep(sleep);</b>
+<b class="nc">&nbsp;                    } catch (InterruptedException ignored) {</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void fillDataAccessWithElevationData(Raster raster, DataAccess heights, int dataAccessWidth) {
+<b class="nc">&nbsp;        final int height = raster.getHeight();</b>
+<b class="nc">&nbsp;        final int width = raster.getWidth();</b>
+<b class="nc">&nbsp;        int x = 0;</b>
+<b class="nc">&nbsp;        int y = 0;</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            for (y = 0; y &lt; height; y++) {</b>
+<b class="nc">&nbsp;                for (x = 0; x &lt; width; x++) {</b>
+<b class="nc">&nbsp;                    short val = (short) raster.getPixel(x, y, (int[]) null)[0];</b>
+<b class="nc">&nbsp;                    if (val &lt; -1000 || val &gt; 12000)</b>
+<b class="nc">&nbsp;                        val = Short.MIN_VALUE;</b>
+&nbsp;
+<b class="nc">&nbsp;                    heights.setShort(2 * ((long) y * dataAccessWidth + x), val);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            heights.flush();</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Problem at x:&quot; + x + &quot;, y:&quot; + y, ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

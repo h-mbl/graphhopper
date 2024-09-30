@@ -1,0 +1,250 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > LowLevelAPIExample</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.example</a>
+</div>
+
+<h1>Coverage Summary for Class: LowLevelAPIExample (com.graphhopper.example)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LowLevelAPIExample</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/61)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.example;
+&nbsp;
+&nbsp;import com.graphhopper.routing.Dijkstra;
+&nbsp;import com.graphhopper.routing.EdgeToEdgeRoutingAlgorithm;
+&nbsp;import com.graphhopper.routing.Path;
+&nbsp;import com.graphhopper.routing.ch.CHRoutingAlgorithmFactory;
+&nbsp;import com.graphhopper.routing.ch.PrepareContractionHierarchies;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.VehicleAccess;
+&nbsp;import com.graphhopper.routing.ev.VehicleSpeed;
+&nbsp;import com.graphhopper.routing.querygraph.QueryGraph;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;import com.graphhopper.routing.util.EncodingManager;
+&nbsp;import com.graphhopper.routing.util.TraversalMode;
+&nbsp;import com.graphhopper.routing.weighting.TurnCostProvider;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.routing.weighting.custom.CustomModelParser;
+&nbsp;import com.graphhopper.storage.*;
+&nbsp;import com.graphhopper.storage.index.LocationIndexTree;
+&nbsp;import com.graphhopper.storage.index.Snap;
+&nbsp;import com.graphhopper.util.CustomModel;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.PMap;
+&nbsp;
+&nbsp;import static com.graphhopper.json.Statement.If;
+&nbsp;import static com.graphhopper.json.Statement.Op.LIMIT;
+&nbsp;import static com.graphhopper.json.Statement.Op.MULTIPLY;
+&nbsp;
+&nbsp;/**
+&nbsp; * Use this example to gain access to the low level API of GraphHopper.
+&nbsp; * If you want to keep using the GraphHopper class but want to customize the internal EncodingManager
+&nbsp; * you can use the hook GraphHopper.customizeEncodingManager.
+&nbsp; */
+<b class="nc">&nbsp;public class LowLevelAPIExample {</b>
+&nbsp;    public static void main(String[] args) {
+<b class="nc">&nbsp;        createAndSaveGraph();</b>
+<b class="nc">&nbsp;        useContractionHierarchiesToMakeQueriesFaster();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static final String graphLocation = &quot;target/lowlevel-graph&quot;;
+&nbsp;
+&nbsp;    public static void createAndSaveGraph() {
+&nbsp;        {
+<b class="nc">&nbsp;            BooleanEncodedValue accessEnc = VehicleAccess.create(&quot;car&quot;);</b>
+<b class="nc">&nbsp;            DecimalEncodedValue speedEnc = VehicleSpeed.create(&quot;car&quot;, 7, 2, false);</b>
+<b class="nc">&nbsp;            EncodingManager em = EncodingManager.start().add(accessEnc).add(speedEnc).build();</b>
+<b class="nc">&nbsp;            BaseGraph graph = new BaseGraph.Builder(em).setDir(new RAMDirectory(graphLocation, true)).create();</b>
+&nbsp;            // Make a weighted edge between two nodes and set average speed to 50km/h
+<b class="nc">&nbsp;            EdgeIteratorState edge = graph.edge(0, 1).setDistance(1234).set(speedEnc, 50);</b>
+&nbsp;
+&nbsp;            // Set node coordinates and build location index
+<b class="nc">&nbsp;            NodeAccess na = graph.getNodeAccess();</b>
+<b class="nc">&nbsp;            graph.edge(0, 1).set(accessEnc, true).set(speedEnc, 10).setDistance(1530);</b>
+<b class="nc">&nbsp;            na.setNode(0, 15.15, 20.20);</b>
+<b class="nc">&nbsp;            na.setNode(1, 15.25, 20.21);</b>
+<b class="nc">&nbsp;            LocationIndexTree index = new LocationIndexTree(graph, graph.getDirectory());</b>
+<b class="nc">&nbsp;            index.prepareIndex();</b>
+&nbsp;
+&nbsp;            // Flush the graph and location index to disk
+<b class="nc">&nbsp;            graph.flush();</b>
+<b class="nc">&nbsp;            index.flush();</b>
+<b class="nc">&nbsp;            graph.close();</b>
+<b class="nc">&nbsp;            index.close();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        {
+&nbsp;            // Load the graph ... can be also in a different code location
+&nbsp;            // note that the EncodingManager must be the same
+<b class="nc">&nbsp;            BooleanEncodedValue accessEnc = VehicleAccess.create(&quot;car&quot;);</b>
+<b class="nc">&nbsp;            DecimalEncodedValue speedEnc = VehicleSpeed.create(&quot;car&quot;, 7, 2, false);</b>
+<b class="nc">&nbsp;            EncodingManager em = EncodingManager.start().add(accessEnc).add(speedEnc).build();</b>
+<b class="nc">&nbsp;            BaseGraph graph = new BaseGraph.Builder(em).setDir(new RAMDirectory(graphLocation, true)).build();</b>
+<b class="nc">&nbsp;            graph.loadExisting();</b>
+&nbsp;
+&nbsp;            // Load the location index
+<b class="nc">&nbsp;            LocationIndexTree index = new LocationIndexTree(graph.getBaseGraph(), graph.getDirectory());</b>
+<b class="nc">&nbsp;            if (!index.loadExisting())</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;location index cannot be loaded!&quot;);</b>
+&nbsp;
+&nbsp;            // calculate with location index
+<b class="nc">&nbsp;            Snap fromSnap = index.findClosest(15.15, 20.20, EdgeFilter.ALL_EDGES);</b>
+<b class="nc">&nbsp;            Snap toSnap = index.findClosest(15.25, 20.21, EdgeFilter.ALL_EDGES);</b>
+<b class="nc">&nbsp;            QueryGraph queryGraph = QueryGraph.create(graph, fromSnap, toSnap);</b>
+<b class="nc">&nbsp;            Weighting weighting = CustomModelParser.createWeighting(em, TurnCostProvider.NO_TURN_COST_PROVIDER,</b>
+<b class="nc">&nbsp;                    new CustomModel().addToPriority(If(&quot;!&quot; + accessEnc.getName(), MULTIPLY, &quot;0&quot;)).addToSpeed(If(&quot;true&quot;, LIMIT, speedEnc.getName())));</b>
+<b class="nc">&nbsp;            Path path = new Dijkstra(queryGraph, weighting, TraversalMode.NODE_BASED).calcPath(fromSnap.getClosestNode(), toSnap.getClosestNode());</b>
+<b class="nc">&nbsp;            assert Helper.round(path.getDistance(), -2) == 1500;</b>
+&nbsp;
+&nbsp;            // calculate without location index (get the fromId and toId nodes from other code parts)
+<b class="nc">&nbsp;            path = new Dijkstra(graph, weighting, TraversalMode.NODE_BASED).calcPath(0, 1);</b>
+<b class="nc">&nbsp;            assert Helper.round(path.getDistance(), -2) == 1500;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void useContractionHierarchiesToMakeQueriesFaster() {
+&nbsp;        // Creating and saving the graph
+<b class="nc">&nbsp;        BooleanEncodedValue accessEnc = VehicleAccess.create(&quot;car&quot;);</b>
+<b class="nc">&nbsp;        DecimalEncodedValue speedEnc = VehicleSpeed.create(&quot;car&quot;, 7, 2, false);</b>
+<b class="nc">&nbsp;        EncodingManager em = EncodingManager.start().add(accessEnc).add(speedEnc).build();</b>
+<b class="nc">&nbsp;        BaseGraph graph = new BaseGraph.Builder(em)</b>
+<b class="nc">&nbsp;                .setDir(new RAMDirectory(graphLocation, true))</b>
+<b class="nc">&nbsp;                .create();</b>
+<b class="nc">&nbsp;        graph.flush();</b>
+<b class="nc">&nbsp;        Weighting weighting = CustomModelParser.createWeighting(em, TurnCostProvider.NO_TURN_COST_PROVIDER,</b>
+<b class="nc">&nbsp;                new CustomModel().addToPriority(If(&quot;!&quot; + accessEnc.getName(), MULTIPLY, &quot;0&quot;)).addToSpeed(If(&quot;true&quot;, LIMIT, speedEnc.getName())));</b>
+<b class="nc">&nbsp;        CHConfig chConfig = CHConfig.nodeBased(&quot;my_profile&quot;, weighting);</b>
+&nbsp;
+&nbsp;        // Set node coordinates and build location index
+<b class="nc">&nbsp;        NodeAccess na = graph.getNodeAccess();</b>
+<b class="nc">&nbsp;        graph.edge(0, 1).set(accessEnc, true).set(speedEnc, 10).setDistance(1020);</b>
+<b class="nc">&nbsp;        na.setNode(0, 15.15, 20.20);</b>
+<b class="nc">&nbsp;        na.setNode(1, 15.25, 20.21);</b>
+&nbsp;
+&nbsp;        // Prepare the graph for fast querying ...
+<b class="nc">&nbsp;        graph.freeze();</b>
+<b class="nc">&nbsp;        PrepareContractionHierarchies pch = PrepareContractionHierarchies.fromGraph(graph, chConfig);</b>
+<b class="nc">&nbsp;        PrepareContractionHierarchies.Result pchRes = pch.doWork();</b>
+<b class="nc">&nbsp;        RoutingCHGraph chGraph = RoutingCHGraphImpl.fromGraph(graph, pchRes.getCHStorage(), pchRes.getCHConfig());</b>
+&nbsp;
+&nbsp;        // create location index
+<b class="nc">&nbsp;        LocationIndexTree index = new LocationIndexTree(graph, graph.getDirectory());</b>
+<b class="nc">&nbsp;        index.prepareIndex();</b>
+&nbsp;
+&nbsp;        // calculate a path with location index
+<b class="nc">&nbsp;        Snap fromSnap = index.findClosest(15.15, 20.20, EdgeFilter.ALL_EDGES);</b>
+<b class="nc">&nbsp;        Snap toSnap = index.findClosest(15.25, 20.21, EdgeFilter.ALL_EDGES);</b>
+<b class="nc">&nbsp;        QueryGraph queryGraph = QueryGraph.create(graph, fromSnap, toSnap);</b>
+<b class="nc">&nbsp;        EdgeToEdgeRoutingAlgorithm algo = new CHRoutingAlgorithmFactory(chGraph, queryGraph).createAlgo(new PMap());</b>
+<b class="nc">&nbsp;        Path path = algo.calcPath(fromSnap.getClosestNode(), toSnap.getClosestNode());</b>
+<b class="nc">&nbsp;        assert Helper.round(path.getDistance(), -2) == 1000;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

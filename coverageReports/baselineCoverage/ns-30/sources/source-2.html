@@ -1,0 +1,371 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ArrayUtil</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: ArrayUtil (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ArrayUtil</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (18/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.5%
+  </span>
+  <span class="absValue">
+    (46/52)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.9%
+  </span>
+  <span class="absValue">
+    (90/99)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.BitSet;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.carrotsearch.hppc.IntIndexedContainer;
+&nbsp;import com.carrotsearch.hppc.cursors.IntCursor;
+&nbsp;import com.carrotsearch.hppc.sorting.IndirectComparator;
+&nbsp;import com.carrotsearch.hppc.sorting.IndirectSort;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Random;
+&nbsp;
+<b class="nc">&nbsp;public class ArrayUtil {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an IntArrayList of a given size where each element is set to the given value
+&nbsp;     */
+&nbsp;    public static IntArrayList constant(int size, int value) {
+<b class="fc">&nbsp;        IntArrayList result = new IntArrayList(size);</b>
+<b class="fc">&nbsp;        Arrays.fill(result.buffer, value);</b>
+<b class="fc">&nbsp;        result.elementsCount = size;</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an IntArrayList filled with zeros
+&nbsp;     */
+&nbsp;    public static IntArrayList zero(int size) {
+<b class="fc">&nbsp;        IntArrayList result = new IntArrayList(size);</b>
+<b class="fc">&nbsp;        result.elementsCount = size;</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an IntArrayList filled with the integers 0,1,2,3,...,size-1
+&nbsp;     */
+&nbsp;    public static IntArrayList iota(int size) {
+<b class="fc">&nbsp;        return range(0, size);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an IntArrayList filled with the integers [startIncl,endExcl[
+&nbsp;     */
+&nbsp;    public static IntArrayList range(int startIncl, int endExcl) {
+<b class="fc">&nbsp;        IntArrayList result = new IntArrayList(endExcl - startIncl);</b>
+<b class="fc">&nbsp;        result.elementsCount = endExcl - startIncl;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; result.size(); ++i)</b>
+<b class="fc">&nbsp;            result.set(i, startIncl + i);</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an IntArrayList filled with the integers [startIncl,endIncl]
+&nbsp;     */
+&nbsp;    public static IntArrayList rangeClosed(int startIncl, int endIncl) {
+<b class="fc">&nbsp;        return range(startIncl, endIncl + 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an IntArrayList filled with a permutation of the numbers 0,1,2,...,size-1
+&nbsp;     */
+&nbsp;    public static IntArrayList permutation(int size, Random rnd) {
+<b class="fc">&nbsp;        IntArrayList result = iota(size);</b>
+<b class="fc">&nbsp;        shuffle(result, rnd);</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean isPermutation(IntArrayList arr) {
+<b class="fc">&nbsp;        BitSet present = new BitSet(arr.size());</b>
+<b class="fc">&nbsp;        for (IntCursor e : arr) {</b>
+<b class="fc">&nbsp;            if (e.value &gt;= arr.size() || e.value &lt; 0)</b>
+<b class="fc">&nbsp;                return false;</b>
+<b class="fc">&nbsp;            if (present.get(e.value))</b>
+<b class="fc">&nbsp;                return false;</b>
+<b class="fc">&nbsp;            present.set(e.value);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Reverses the order of the given list&#39;s elements in place and returns it
+&nbsp;     */
+&nbsp;    public static IntArrayList reverse(IntArrayList list) {
+<b class="fc">&nbsp;        final int[] buffer = list.buffer;</b>
+&nbsp;        int tmp;
+<b class="fc">&nbsp;        for (int start = 0, end = list.size() - 1; start &lt; end; start++, end--) {</b>
+&nbsp;            // swap the values
+<b class="fc">&nbsp;            tmp = buffer[start];</b>
+<b class="fc">&nbsp;            buffer[start] = buffer[end];</b>
+<b class="fc">&nbsp;            buffer[end] = tmp;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Shuffles the elements of the given list in place and returns it
+&nbsp;     */
+&nbsp;    public static IntArrayList shuffle(IntArrayList list, Random random) {
+<b class="fc">&nbsp;        int maxHalf = list.size() / 2;</b>
+<b class="fc">&nbsp;        for (int x1 = 0; x1 &lt; maxHalf; x1++) {</b>
+<b class="fc">&nbsp;            int x2 = random.nextInt(maxHalf) + maxHalf;</b>
+<b class="fc">&nbsp;            int tmp = list.buffer[x1];</b>
+<b class="fc">&nbsp;            list.buffer[x1] = list.buffer[x2];</b>
+<b class="fc">&nbsp;            list.buffer[x2] = tmp;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Removes all duplicate elements of the given array in the range [0, end[ in place
+&nbsp;     *
+&nbsp;     * @return the size of the new range that contains no duplicates (smaller or equal to end).
+&nbsp;     */
+&nbsp;    public static int removeConsecutiveDuplicates(int[] arr, int end) {
+<b class="fc">&nbsp;        int curr = 0;</b>
+<b class="fc">&nbsp;        for (int i = 1; i &lt; end; ++i) {</b>
+<b class="fc">&nbsp;            if (arr[i] != arr[curr])</b>
+<b class="fc">&nbsp;                arr[++curr] = arr[i];</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return curr + 1;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a copy of the given list where all consecutive duplicates are removed
+&nbsp;     */
+&nbsp;    public static IntIndexedContainer withoutConsecutiveDuplicates(IntIndexedContainer arr) {
+<b class="fc">&nbsp;        IntArrayList result = new IntArrayList();</b>
+<b class="fc">&nbsp;        if (arr.isEmpty())</b>
+<b class="fc">&nbsp;            return result;</b>
+<b class="fc">&nbsp;        int prev = arr.get(0);</b>
+<b class="fc">&nbsp;        result.add(prev);</b>
+<b class="fc">&nbsp;        for (int i = 1; i &lt; arr.size(); i++) {</b>
+<b class="fc">&nbsp;            int val = arr.get(i);</b>
+<b class="fc">&nbsp;            if (val != prev)</b>
+<b class="fc">&nbsp;                result.add(val);</b>
+<b class="fc">&nbsp;            prev = val;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Maps one array using another, i.e. every element arr[x] is replaced by map[arr[x]]
+&nbsp;     */
+&nbsp;    public static void transform(IntIndexedContainer arr, IntIndexedContainer map) {
+<b class="fc">&nbsp;        for (int i = 0; i &lt; arr.size(); ++i)</b>
+<b class="fc">&nbsp;            arr.set(i, map.get(arr.get(i)));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static int[] calcSortOrder(IntArrayList arr1, IntArrayList arr2) {
+<b class="pc">&nbsp;        if (arr1.elementsCount != arr2.elementsCount) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Arrays must have equal size&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return calcSortOrder(arr1.buffer, arr2.buffer, arr1.elementsCount);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method calculates the sort order of the first {@param length} element-pairs given by two arrays.
+&nbsp;     * The order is chosen such that it sorts the element-pairs first by the first and second by the second array.
+&nbsp;     * The input arrays are not manipulated by this method.
+&nbsp;     *
+&nbsp;     * @param length must not be larger than either of the two input array lengths.
+&nbsp;     * @return an array x of length {@param length}. e.g. if this method returns x = {2, 0, 1} it means that that
+&nbsp;     * the element-pair with index 2 comes first in the order and so on
+&nbsp;     */
+&nbsp;    public static int[] calcSortOrder(final int[] arr1, final int[] arr2, int length) {
+<b class="pc">&nbsp;        if (arr1.length &lt; length || arr2.length &lt; length)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Arrays must not be shorter than given length&quot;);</b>
+<b class="fc">&nbsp;        IndirectComparator comp = (indexA, indexB) -&gt; {</b>
+<b class="fc">&nbsp;            final int arr1cmp = Integer.compare(arr1[indexA], arr1[indexB]);</b>
+<b class="fc">&nbsp;            return arr1cmp != 0 ? arr1cmp : Integer.compare(arr2[indexA], arr2[indexB]);</b>
+&nbsp;        };
+<b class="fc">&nbsp;        return IndirectSort.mergesort(0, length, comp);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a copy of the given array such that it is ordered by the given order.
+&nbsp;     * The order can be shorter or equal, but not longer than the array.
+&nbsp;     */
+&nbsp;    public static int[] applyOrder(int[] arr, int[] order) {
+<b class="pc">&nbsp;        if (order.length &gt; arr.length)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;sort order must not be shorter than array&quot;);</b>
+<b class="fc">&nbsp;        int[] result = new int[order.length];</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; result.length; ++i)</b>
+<b class="fc">&nbsp;            result[i] = arr[order[i]];</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new array where each element represents the index position of this element in the given array
+&nbsp;     * or is set to -1 if this element does not appear in the input array. None of the elements of the input array may
+&nbsp;     * be equal or larger than the arrays length.
+&nbsp;     */
+&nbsp;    public static int[] invert(int[] arr) {
+<b class="fc">&nbsp;        int[] result = new int[arr.length];</b>
+<b class="fc">&nbsp;        Arrays.fill(result, -1);</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; arr.length; i++)</b>
+<b class="fc">&nbsp;            result[arr[i]] = i;</b>
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static IntArrayList invert(IntArrayList list) {
+<b class="nc">&nbsp;        IntArrayList result = new IntArrayList(list.size());</b>
+<b class="nc">&nbsp;        result.elementsCount = list.size();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; result.elementsCount; ++i)</b>
+<b class="nc">&nbsp;            result.set(list.get(i), i);</b>
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param a sorted array
+&nbsp;     * @param b sorted array
+&nbsp;     * @return sorted array consisting of the elements of a and b, duplicates get removed
+&nbsp;     */
+&nbsp;    public static int[] merge(int[] a, int[] b) {
+<b class="fc">&nbsp;        if (a.length + b.length == 0)</b>
+<b class="fc">&nbsp;            return new int[]{};</b>
+<b class="fc">&nbsp;        int[] result = new int[a.length + b.length];</b>
+<b class="fc">&nbsp;        int size = 0;</b>
+<b class="fc">&nbsp;        int i = 0;</b>
+<b class="fc">&nbsp;        int j = 0;</b>
+<b class="fc">&nbsp;        while (i &lt; a.length &amp;&amp; j &lt; b.length) {</b>
+<b class="fc">&nbsp;            if (a[i] &lt; b[j])</b>
+<b class="fc">&nbsp;                result[size++] = a[i++];</b>
+&nbsp;            else
+<b class="fc">&nbsp;                result[size++] = b[j++];</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (i == a.length) {</b>
+<b class="fc">&nbsp;            System.arraycopy(b, j, result, size, b.length - j);</b>
+<b class="fc">&nbsp;            size += b.length - j;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            System.arraycopy(a, i, result, size, a.length - i);</b>
+<b class="fc">&nbsp;            size += a.length - i;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int sizeWithoutDuplicates = removeConsecutiveDuplicates(result, size);</b>
+<b class="fc">&nbsp;        return Arrays.copyOf(result, sizeWithoutDuplicates);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

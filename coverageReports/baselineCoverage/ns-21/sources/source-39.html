@@ -1,0 +1,191 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Surface</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ev</a>
+</div>
+
+<h1>Coverage Summary for Class: Surface (com.graphhopper.routing.ev)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Surface</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (23/23)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.ev;
+&nbsp;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;/**
+&nbsp; * This enum defines the road surface of an edge like unpaved or asphalt. If not tagged the value will be MISSING, which
+&nbsp; * the default and best surface value (as surface is currently often not tagged). All unknown surface tags will get
+&nbsp; * OTHER (the worst surface).
+&nbsp; */
+<b class="fc">&nbsp;public enum Surface {</b>
+&nbsp;    // Order is important to make ordinal roughly comparable
+<b class="fc">&nbsp;    MISSING,</b>
+<b class="fc">&nbsp;    PAVED, ASPHALT, CONCRETE, PAVING_STONES, COBBLESTONE,</b>
+<b class="fc">&nbsp;    UNPAVED, COMPACTED, FINE_GRAVEL, GRAVEL, GROUND, DIRT, GRASS, SAND, WOOD,</b>
+<b class="fc">&nbsp;    OTHER;</b>
+&nbsp;
+&nbsp;    public static final String KEY = &quot;surface&quot;;
+&nbsp;
+<b class="fc">&nbsp;    private static final Map&lt;String, Surface&gt; SURFACE_MAP = new HashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;    static {
+<b class="fc">&nbsp;        for (Surface surface : values()) {</b>
+<b class="fc">&nbsp;            if (surface == MISSING || surface == OTHER)</b>
+&nbsp;                continue;
+<b class="fc">&nbsp;            SURFACE_MAP.put(surface.toString(), surface);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        SURFACE_MAP.put(&quot;metal&quot;, PAVED);</b>
+<b class="fc">&nbsp;        SURFACE_MAP.put(&quot;sett&quot;, COBBLESTONE);</b>
+<b class="fc">&nbsp;        SURFACE_MAP.put(&quot;unhewn_cobblestone&quot;, COBBLESTONE);</b>
+<b class="fc">&nbsp;        SURFACE_MAP.put(&quot;earth&quot;, DIRT);</b>
+<b class="fc">&nbsp;        SURFACE_MAP.put(&quot;pebblestone&quot;, GRAVEL);</b>
+<b class="fc">&nbsp;        SURFACE_MAP.put(&quot;grass_paver&quot;, GRASS);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static EnumEncodedValue&lt;Surface&gt; create() {
+<b class="fc">&nbsp;        return new EnumEncodedValue&lt;&gt;(KEY, Surface.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return Helper.toLowerCase(super.toString());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Surface find(String name) {
+<b class="fc">&nbsp;        if (Helper.isEmpty(name))</b>
+<b class="fc">&nbsp;            return MISSING;</b>
+&nbsp;
+<b class="fc">&nbsp;        int colonIndex = name.indexOf(&quot;:&quot;);</b>
+<b class="fc">&nbsp;        if (colonIndex != -1) {</b>
+<b class="fc">&nbsp;            name = name.substring(0, colonIndex);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return SURFACE_MAP.getOrDefault(name, OTHER);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

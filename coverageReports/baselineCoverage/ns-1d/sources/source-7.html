@@ -1,0 +1,234 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PbfStreamSplitter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm.pbf</a>
+</div>
+
+<h1>Coverage Summary for Class: PbfStreamSplitter (com.graphhopper.reader.osm.pbf)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PbfStreamSplitter</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.9%
+  </span>
+  <span class="absValue">
+    (8/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    58.3%
+  </span>
+  <span class="absValue">
+    (7/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.6%
+  </span>
+  <span class="absValue">
+    (29/36)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;// This software is released into the Public Domain.  See copying.txt for details.
+&nbsp;package com.graphhopper.reader.osm.pbf;
+&nbsp;
+&nbsp;import org.openstreetmap.osmosis.osmbinary.Fileformat;
+&nbsp;
+&nbsp;import java.io.DataInputStream;
+&nbsp;import java.io.EOFException;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.logging.Level;
+&nbsp;import java.util.logging.Logger;
+&nbsp;
+&nbsp;/**
+&nbsp; * Parses a PBF data stream and extracts the raw data of each blob in sequence until the end of the
+&nbsp; * stream is reached.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Brett Henderson
+&nbsp; */
+&nbsp;public class PbfStreamSplitter implements Iterator&lt;PbfRawBlob&gt; {
+<b class="fc">&nbsp;    private static Logger log = Logger.getLogger(PbfStreamSplitter.class.getName());</b>
+&nbsp;    private DataInputStream dis;
+&nbsp;    private int dataBlockCount;
+&nbsp;    private boolean eof;
+&nbsp;    private PbfRawBlob nextBlob;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new instance.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param pbfStream The PBF data stream to be parsed.
+&nbsp;     */
+<b class="fc">&nbsp;    public PbfStreamSplitter(DataInputStream pbfStream) {</b>
+<b class="fc">&nbsp;        dis = pbfStream;</b>
+<b class="fc">&nbsp;        dataBlockCount = 0;</b>
+<b class="fc">&nbsp;        eof = false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Fileformat.BlobHeader readHeader(int headerLength) throws IOException {
+<b class="fc">&nbsp;        byte[] headerBuffer = new byte[headerLength];</b>
+<b class="fc">&nbsp;        dis.readFully(headerBuffer);</b>
+&nbsp;
+<b class="fc">&nbsp;        Fileformat.BlobHeader blobHeader = Fileformat.BlobHeader.parseFrom(headerBuffer);</b>
+&nbsp;
+<b class="fc">&nbsp;        return blobHeader;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private byte[] readRawBlob(Fileformat.BlobHeader blobHeader) throws IOException {
+<b class="fc">&nbsp;        byte[] rawBlob = new byte[blobHeader.getDatasize()];</b>
+&nbsp;
+<b class="fc">&nbsp;        dis.readFully(rawBlob);</b>
+&nbsp;
+<b class="fc">&nbsp;        return rawBlob;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void getNextBlob() {
+&nbsp;        try {
+&nbsp;            // Read the length of the next header block. This is the only time
+&nbsp;            // we should expect to encounter an EOF exception. In all other
+&nbsp;            // cases it indicates a corrupt or truncated file.
+&nbsp;            int headerLength;
+&nbsp;            try {
+<b class="fc">&nbsp;                headerLength = dis.readInt();</b>
+<b class="fc">&nbsp;            } catch (EOFException e) {</b>
+<b class="fc">&nbsp;                eof = true;</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (log.isLoggable(Level.FINER)) {</b>
+<b class="nc">&nbsp;                log.finer(&quot;Reading header for blob &quot; + dataBlockCount++);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            Fileformat.BlobHeader blobHeader = readHeader(headerLength);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (log.isLoggable(Level.FINER)) {</b>
+<b class="nc">&nbsp;                log.finer(&quot;Processing blob of type &quot; + blobHeader.getType() + &quot;.&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            byte[] blobData = readRawBlob(blobHeader);</b>
+&nbsp;
+<b class="fc">&nbsp;            nextBlob = new PbfRawBlob(blobHeader.getType(), blobData);</b>
+&nbsp;
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Unable to get next blob from PBF stream.&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean hasNext() {
+<b class="pc">&nbsp;        if (nextBlob == null &amp;&amp; !eof) {</b>
+<b class="fc">&nbsp;            getNextBlob();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return nextBlob != null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public PbfRawBlob next() {
+<b class="fc">&nbsp;        PbfRawBlob result = nextBlob;</b>
+<b class="fc">&nbsp;        nextBlob = null;</b>
+&nbsp;
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void remove() {
+<b class="nc">&nbsp;        throw new UnsupportedOperationException();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void release() {
+<b class="pc">&nbsp;        if (dis != null) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                dis.close();</b>
+<b class="nc">&nbsp;            } catch (IOException e) {</b>
+<b class="nc">&nbsp;                throw new RuntimeException(e);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        dis = null;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

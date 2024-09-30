@@ -1,0 +1,421 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OSMInputFile</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMInputFile (com.graphhopper.reader.osm)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMInputFile</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    93.3%
+  </span>
+  <span class="absValue">
+    (14/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.3%
+  </span>
+  <span class="absValue">
+    (55/83)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76%
+  </span>
+  <span class="absValue">
+    (95/125)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.reader.osm;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderElement;
+&nbsp;import com.graphhopper.reader.osm.pbf.PbfReader;
+&nbsp;import com.graphhopper.reader.osm.pbf.Sink;
+&nbsp;
+&nbsp;import javax.xml.stream.XMLInputFactory;
+&nbsp;import javax.xml.stream.XMLStreamConstants;
+&nbsp;import javax.xml.stream.XMLStreamException;
+&nbsp;import javax.xml.stream.XMLStreamReader;
+&nbsp;import java.io.*;
+&nbsp;import java.lang.reflect.Constructor;
+&nbsp;import java.util.ArrayDeque;
+&nbsp;import java.util.Queue;
+&nbsp;import java.util.concurrent.BlockingQueue;
+&nbsp;import java.util.concurrent.LinkedBlockingQueue;
+&nbsp;import java.util.concurrent.TimeUnit;
+&nbsp;import java.util.zip.GZIPInputStream;
+&nbsp;import java.util.zip.ZipInputStream;
+&nbsp;
+&nbsp;/**
+&nbsp; * A readable OSM file.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Nop
+&nbsp; */
+&nbsp;public class OSMInputFile implements Sink, OSMInput {
+&nbsp;    private static final int MAX_BATCH_SIZE = 1_000;
+&nbsp;    private final InputStream bis;
+&nbsp;    private final BlockingQueue&lt;ReaderElement&gt; itemQueue;
+&nbsp;    private final Queue&lt;ReaderElement&gt; itemBatch;
+&nbsp;    private boolean eof;
+&nbsp;    // for xml parsing
+&nbsp;    private XMLStreamReader xmlParser;
+&nbsp;    // for pbf parsing
+<b class="fc">&nbsp;    private boolean binary = false;</b>
+&nbsp;    private PbfReader pbfReader;
+&nbsp;    private Thread pbfReaderThread;
+&nbsp;    private boolean hasIncomingData;
+<b class="fc">&nbsp;    private int workerThreads = -1;</b>
+<b class="fc">&nbsp;    private SkipOptions skipOptions = SkipOptions.none();</b>
+&nbsp;    private OSMFileHeader fileheader;
+&nbsp;
+<b class="fc">&nbsp;    public OSMInputFile(File file) throws IOException {</b>
+<b class="fc">&nbsp;        bis = decode(file);</b>
+<b class="fc">&nbsp;        itemQueue = new LinkedBlockingQueue&lt;&gt;(50_000);</b>
+<b class="fc">&nbsp;        itemBatch = new ArrayDeque&lt;&gt;(MAX_BATCH_SIZE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OSMInputFile open() throws XMLStreamException {
+<b class="fc">&nbsp;        if (binary) {</b>
+<b class="fc">&nbsp;            openPBFReader(bis);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            openXMLStream(bis);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Currently only for pbf format. Default is number of cores.
+&nbsp;     */
+&nbsp;    public OSMInputFile setWorkerThreads(int threads) {
+<b class="fc">&nbsp;        workerThreads = threads;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Use this to prevent the creation of OSM nodes, ways and/or relations to speed up the file reading process.
+&nbsp;     * This will only affect the reading of pbf files.
+&nbsp;     */
+&nbsp;    public OSMInputFile setSkipOptions(SkipOptions skipOptions) {
+<b class="fc">&nbsp;        this.skipOptions = skipOptions;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    private InputStream decode(File file) throws IOException {
+<b class="fc">&nbsp;        final String name = file.getName();</b>
+&nbsp;
+<b class="fc">&nbsp;        InputStream ips = null;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            ips = new BufferedInputStream(new FileInputStream(file), 50000);</b>
+<b class="nc">&nbsp;        } catch (FileNotFoundException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        ips.mark(10);</b>
+&nbsp;
+&nbsp;        // check file header
+<b class="fc">&nbsp;        byte header[] = new byte[6];</b>
+<b class="pc">&nbsp;        if (ips.read(header) &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Input file is not of valid type &quot; + file.getPath());</b>
+&nbsp;
+&nbsp;        /*     can parse bz2 directly with additional lib
+&nbsp;         if (header[0] == &#39;B&#39; &amp;&amp; header[1] == &#39;Z&#39;)
+&nbsp;         {
+&nbsp;         return new CBZip2InputStream(ips);
+&nbsp;         }
+&nbsp;         */
+<b class="pc">&nbsp;        if (header[0] == 31 &amp;&amp; header[1] == -117) {</b>
+<b class="fc">&nbsp;            ips.reset();</b>
+<b class="fc">&nbsp;            return new GZIPInputStream(ips, 50000);</b>
+<b class="pc">&nbsp;        } else if (header[0] == 0 &amp;&amp; header[1] == 0 &amp;&amp; header[2] == 0</b>
+&nbsp;                &amp;&amp; header[4] == 10 &amp;&amp; header[5] == 9
+&nbsp;                &amp;&amp; (header[3] == 13 || header[3] == 14)) {
+<b class="fc">&nbsp;            ips.reset();</b>
+<b class="fc">&nbsp;            binary = true;</b>
+<b class="fc">&nbsp;            return ips;</b>
+<b class="pc">&nbsp;        } else if (header[0] == &#39;P&#39; &amp;&amp; header[1] == &#39;K&#39;) {</b>
+<b class="nc">&nbsp;            ips.reset();</b>
+<b class="nc">&nbsp;            ZipInputStream zip = new ZipInputStream(ips);</b>
+<b class="nc">&nbsp;            zip.getNextEntry();</b>
+&nbsp;
+<b class="nc">&nbsp;            return zip;</b>
+<b class="pc">&nbsp;        } else if (name.endsWith(&quot;.osm&quot;) || name.endsWith(&quot;.xml&quot;)) {</b>
+<b class="fc">&nbsp;            ips.reset();</b>
+<b class="fc">&nbsp;            return ips;</b>
+<b class="nc">&nbsp;        } else if (name.endsWith(&quot;.bz2&quot;) || name.endsWith(&quot;.bzip2&quot;)) {</b>
+<b class="nc">&nbsp;            String clName = &quot;org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream&quot;;</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                Class clazz = Class.forName(clName);</b>
+<b class="nc">&nbsp;                ips.reset();</b>
+<b class="nc">&nbsp;                Constructor&lt;InputStream&gt; ctor = clazz.getConstructor(InputStream.class, boolean.class);</b>
+<b class="nc">&nbsp;                return ctor.newInstance(ips, true);</b>
+<b class="nc">&nbsp;            } catch (Exception e) {</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Cannot instantiate &quot; + clName, e);</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Input file is not of valid type &quot; + file.getPath());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void openXMLStream(InputStream in)
+&nbsp;            throws XMLStreamException {
+<b class="fc">&nbsp;        XMLInputFactory factory = XMLInputFactory.newInstance();</b>
+<b class="fc">&nbsp;        xmlParser = factory.createXMLStreamReader(in, &quot;UTF-8&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        int event = xmlParser.next();</b>
+<b class="pc">&nbsp;        if (event != XMLStreamConstants.START_ELEMENT || !xmlParser.getLocalName().equalsIgnoreCase(&quot;osm&quot;)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;File is not a valid OSM stream&quot;);</b>
+&nbsp;        }
+&nbsp;        // See https://wiki.openstreetmap.org/wiki/PBF_Format#Definition_of_the_OSMHeader_fileblock
+<b class="fc">&nbsp;        String timestamp = xmlParser.getAttributeValue(null, &quot;osmosis_replication_timestamp&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (timestamp == null)</b>
+<b class="fc">&nbsp;            timestamp = xmlParser.getAttributeValue(null, &quot;timestamp&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (timestamp != null) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                fileheader = new OSMFileHeader();</b>
+<b class="fc">&nbsp;                fileheader.setTag(&quot;timestamp&quot;, timestamp);</b>
+<b class="nc">&nbsp;            } catch (Exception ex) {</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        eof = false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public ReaderElement getNext() throws XMLStreamException {
+<b class="pc">&nbsp;        if (eof)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;EOF reached&quot;);</b>
+&nbsp;
+&nbsp;        ReaderElement item;
+<b class="fc">&nbsp;        if (binary)</b>
+<b class="fc">&nbsp;            item = getNextPBF();</b>
+&nbsp;        else
+<b class="fc">&nbsp;            item = getNextXML();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (item != null)</b>
+<b class="fc">&nbsp;            return item;</b>
+&nbsp;
+<b class="fc">&nbsp;        eof = true;</b>
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private ReaderElement getNextXML() throws XMLStreamException {
+&nbsp;
+<b class="fc">&nbsp;        int event = xmlParser.next();</b>
+<b class="fc">&nbsp;        if (fileheader != null) {</b>
+<b class="fc">&nbsp;            ReaderElement copyfileheader = fileheader;</b>
+<b class="fc">&nbsp;            fileheader = null;</b>
+<b class="fc">&nbsp;            return copyfileheader;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        while (event != XMLStreamConstants.END_DOCUMENT) {</b>
+<b class="fc">&nbsp;            if (event == XMLStreamConstants.START_ELEMENT) {</b>
+<b class="fc">&nbsp;                String idStr = xmlParser.getAttributeValue(null, &quot;id&quot;);</b>
+<b class="fc">&nbsp;                if (idStr != null) {</b>
+<b class="fc">&nbsp;                    String name = xmlParser.getLocalName();</b>
+<b class="fc">&nbsp;                    long id = 0;</b>
+<b class="pc">&nbsp;                    switch (name.charAt(0)) {</b>
+&nbsp;                        case &#39;n&#39;:
+&nbsp;                            // note vs. node
+<b class="pc">&nbsp;                            if (&quot;node&quot;.equals(name)) {</b>
+<b class="fc">&nbsp;                                id = Long.parseLong(idStr);</b>
+<b class="fc">&nbsp;                                return OSMXMLHelper.createNode(id, xmlParser);</b>
+&nbsp;                            }
+&nbsp;                            break;
+&nbsp;
+&nbsp;                        case &#39;w&#39;: {
+<b class="fc">&nbsp;                            id = Long.parseLong(idStr);</b>
+<b class="fc">&nbsp;                            return OSMXMLHelper.createWay(id, xmlParser);</b>
+&nbsp;                        }
+&nbsp;                        case &#39;r&#39;:
+<b class="fc">&nbsp;                            id = Long.parseLong(idStr);</b>
+<b class="fc">&nbsp;                            return OSMXMLHelper.createRelation(id, xmlParser);</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            event = xmlParser.next();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        xmlParser.close();</b>
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isEOF() {
+<b class="nc">&nbsp;        return eof;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void close() throws IOException {
+&nbsp;        try {
+<b class="fc">&nbsp;            if (binary)</b>
+<b class="fc">&nbsp;                pbfReader.close();</b>
+&nbsp;            else
+<b class="fc">&nbsp;                xmlParser.close();</b>
+<b class="nc">&nbsp;        } catch (XMLStreamException ex) {</b>
+<b class="nc">&nbsp;            throw new IOException(ex);</b>
+&nbsp;        } finally {
+<b class="fc">&nbsp;            eof = true;</b>
+<b class="fc">&nbsp;            bis.close();</b>
+&nbsp;            // if exception happened on OSMInputFile-thread we need to shutdown the pbf handling
+<b class="pc">&nbsp;            if (pbfReaderThread != null &amp;&amp; pbfReaderThread.isAlive())</b>
+<b class="nc">&nbsp;                pbfReaderThread.interrupt();</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void openPBFReader(InputStream stream) {
+<b class="fc">&nbsp;        hasIncomingData = true;</b>
+<b class="pc">&nbsp;        if (workerThreads &lt;= 0)</b>
+<b class="nc">&nbsp;            workerThreads = 1;</b>
+&nbsp;
+<b class="fc">&nbsp;        pbfReader = new PbfReader(stream, this, workerThreads, skipOptions);</b>
+<b class="fc">&nbsp;        pbfReaderThread = new Thread(pbfReader, &quot;PBF Reader&quot;);</b>
+<b class="fc">&nbsp;        pbfReaderThread.start();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void process(ReaderElement item) {
+&nbsp;        try {
+&nbsp;            // blocks if full
+<b class="fc">&nbsp;            itemQueue.put(item);</b>
+<b class="nc">&nbsp;        } catch (InterruptedException ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getUnprocessedElements() {
+<b class="fc">&nbsp;        return itemQueue.size() + itemBatch.size();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void complete() {
+<b class="fc">&nbsp;        hasIncomingData = false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private ReaderElement getNextPBF() {
+<b class="fc">&nbsp;        while (itemBatch.isEmpty()) {</b>
+<b class="fc">&nbsp;            if (!hasIncomingData &amp;&amp; itemQueue.isEmpty()) {</b>
+<b class="fc">&nbsp;                return null; // signal EOF</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            if (itemQueue.drainTo(itemBatch, MAX_BATCH_SIZE) == 0) {</b>
+&nbsp;                try {
+<b class="fc">&nbsp;                    ReaderElement element = itemQueue.poll(100, TimeUnit.MILLISECONDS);</b>
+<b class="fc">&nbsp;                    if (element != null) {</b>
+<b class="fc">&nbsp;                        return element; // short circuit</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                } catch (InterruptedException e) {</b>
+<b class="nc">&nbsp;                    Thread.currentThread().interrupt();</b>
+<b class="nc">&nbsp;                    return null; // signal EOF</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return itemBatch.poll();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

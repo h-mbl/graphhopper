@@ -1,0 +1,454 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ResponsePath</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper</a>
+</div>
+
+<h1>Coverage Summary for Class: ResponsePath (com.graphhopper)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ResponsePath</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.3%
+  </span>
+  <span class="absValue">
+    (28/41)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    45%
+  </span>
+  <span class="absValue">
+    (18/40)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    64.8%
+  </span>
+  <span class="absValue">
+    (68/105)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper;
+&nbsp;
+&nbsp;import com.graphhopper.util.InstructionList;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;import com.graphhopper.util.details.PathDetail;
+&nbsp;import org.locationtech.jts.geom.Envelope;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class holds the data like points and instructions of a Path.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="fc">&nbsp;public class ResponsePath {</b>
+<b class="fc">&nbsp;    private final List&lt;Throwable&gt; errors = new ArrayList&lt;&gt;(4);</b>
+&nbsp;    private List&lt;String&gt; description;
+&nbsp;    private double distance;
+&nbsp;    private double ascend;
+&nbsp;    private double descend;
+&nbsp;    private double routeWeight;
+&nbsp;    private long time;
+<b class="fc">&nbsp;    private String debugInfo = &quot;&quot;;</b>
+&nbsp;    private InstructionList instructions;
+<b class="fc">&nbsp;    private PointList waypointList = PointList.EMPTY;</b>
+<b class="fc">&nbsp;    private List&lt;Integer&gt; waypointIndices = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private PointList pointList = PointList.EMPTY;</b>
+&nbsp;    private int numChanges;
+<b class="fc">&nbsp;    private final List&lt;Trip.Leg&gt; legs = new ArrayList&lt;&gt;(5);</b>
+<b class="fc">&nbsp;    private final List&lt;Integer&gt; pointsOrder = new ArrayList&lt;&gt;(5);</b>
+<b class="fc">&nbsp;    private final Map&lt;String, List&lt;PathDetail&gt;&gt; pathDetails = new HashMap&lt;&gt;();</b>
+&nbsp;    private BigDecimal fare;
+<b class="fc">&nbsp;    private boolean impossible = false;</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the description of this route alternative to make it meaningful for the user e.g. it
+&nbsp;     * displays one or two main roads of the route.
+&nbsp;     */
+&nbsp;    public List&lt;String&gt; getDescription() {
+<b class="nc">&nbsp;        if (description == null)</b>
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+<b class="nc">&nbsp;        return description;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setDescription(List&lt;String&gt; names) {
+<b class="fc">&nbsp;        this.description = names;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath addDebugInfo(String debugInfo) {
+<b class="pc">&nbsp;        if (debugInfo == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Debug information has to be none null&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (!this.debugInfo.isEmpty())</b>
+<b class="nc">&nbsp;            this.debugInfo += &quot;;&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;        this.debugInfo += debugInfo;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getDebugInfo() {
+<b class="fc">&nbsp;        return debugInfo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setPointsOrder(List&lt;Integer&gt; list) {
+<b class="nc">&nbsp;        pointsOrder.clear();</b>
+<b class="nc">&nbsp;        pointsOrder.addAll(list);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Integer&gt; getPointsOrder() {
+<b class="nc">&nbsp;        return pointsOrder;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns all points on the path. Keep in mind that calculating the distance from
+&nbsp;     * these points might yield different results compared to getDistance as points could have been
+&nbsp;     * simplified on import or after querying.
+&nbsp;     */
+&nbsp;    public PointList getPoints() {
+<b class="fc">&nbsp;        check(&quot;getPoints&quot;);</b>
+<b class="fc">&nbsp;        return pointList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setPoints(PointList points) {
+<b class="pc">&nbsp;        if (pointList != PointList.EMPTY)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot call setPoint twice&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        pointList = points;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns the input points snapped to the road network.
+&nbsp;     */
+&nbsp;    public PointList getWaypoints() {
+<b class="fc">&nbsp;        check(&quot;getWaypoints&quot;);</b>
+<b class="fc">&nbsp;        return waypointList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method initializes this path with the snapped input points.
+&nbsp;     */
+&nbsp;    public ResponsePath setWaypoints(PointList wpList) {
+<b class="pc">&nbsp;        if (waypointList != PointList.EMPTY)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot call setWaypoints twice&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.waypointList = wpList;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Integer&gt; getWaypointIndices() {
+<b class="fc">&nbsp;        check(&quot;getWaypointIndices&quot;);</b>
+<b class="fc">&nbsp;        return waypointIndices;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setWaypointIndices(List&lt;Integer&gt; waypointIndices) {
+<b class="fc">&nbsp;        this.waypointIndices = waypointIndices;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns the distance of the path. Always prefer this method over
+&nbsp;     * getPoints().calcDistance
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return distance in meter
+&nbsp;     */
+&nbsp;    public double getDistance() {
+<b class="fc">&nbsp;        check(&quot;getDistance&quot;);</b>
+<b class="fc">&nbsp;        return distance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setDistance(double distance) {
+<b class="fc">&nbsp;        this.distance = distance;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns the total elevation change (going upwards) in meter.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return ascend in meter
+&nbsp;     */
+&nbsp;    public double getAscend() {
+<b class="fc">&nbsp;        return ascend;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setAscend(double ascend) {
+<b class="pc">&nbsp;        if (ascend &lt; 0 || Double.isNaN(ascend))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;ascend has to be positive but was &quot; + ascend);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.ascend = ascend;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns the total elevation change (going downwards) in meter.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return decline in meter
+&nbsp;     */
+&nbsp;    public double getDescend() {
+<b class="fc">&nbsp;        return descend;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setDescend(double descend) {
+<b class="pc">&nbsp;        if (descend &lt; 0 || Double.isNaN(descend))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;descend has to be positive but was &quot; + descend);</b>
+&nbsp;
+<b class="fc">&nbsp;        this.descend = descend;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return time in millis
+&nbsp;     */
+&nbsp;    public long getTime() {
+<b class="fc">&nbsp;        check(&quot;getTimes&quot;);</b>
+<b class="fc">&nbsp;        return time;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setTime(long timeInMillis) {
+<b class="fc">&nbsp;        this.time = timeInMillis;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns a double value which is better than the time for comparison of routes but
+&nbsp;     * only if you know what you are doing, e.g. only to compare routes gained with the same query
+&nbsp;     * parameters like vehicle.
+&nbsp;     */
+&nbsp;    public double getRouteWeight() {
+<b class="fc">&nbsp;        check(&quot;getRouteWeight&quot;);</b>
+<b class="fc">&nbsp;        return routeWeight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath setRouteWeight(double weight) {
+<b class="fc">&nbsp;        this.routeWeight = weight;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the 2D bounding box of this route
+&nbsp;     */
+&nbsp;    public Envelope calcBBox2D() {
+<b class="nc">&nbsp;        check(&quot;calcBBox2D&quot;);</b>
+<b class="nc">&nbsp;        Envelope bounds = new Envelope();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; pointList.size(); i++) {</b>
+<b class="nc">&nbsp;            bounds.expandToInclude(pointList.getLon(i), pointList.getLat(i));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return bounds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        String str = &quot;nodes:&quot; + pointList.size() + &quot;; &quot; + pointList.toString();</b>
+<b class="nc">&nbsp;        if (instructions != null &amp;&amp; !instructions.isEmpty())</b>
+<b class="nc">&nbsp;            str += &quot;, &quot; + instructions.toString();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (hasErrors())</b>
+<b class="nc">&nbsp;            str += &quot;, &quot; + errors.toString();</b>
+&nbsp;
+<b class="nc">&nbsp;        return str;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public InstructionList getInstructions() {
+<b class="fc">&nbsp;        check(&quot;getInstructions&quot;);</b>
+<b class="pc">&nbsp;        if (instructions == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;To access instructions you need to enable creation before routing&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        return instructions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setInstructions(InstructionList instructions) {
+<b class="fc">&nbsp;        this.instructions = instructions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Adds the given PathDetails to the existing ones. If there are already PathDetails set, the number
+&nbsp;     * details has to be equal to &lt;code&gt;details&lt;/code&gt;.
+&nbsp;     *
+&nbsp;     * @param details The PathDetails to add
+&nbsp;     */
+&nbsp;    public void addPathDetails(Map&lt;String, List&lt;PathDetail&gt;&gt; details) {
+<b class="pc">&nbsp;        if (!this.pathDetails.isEmpty() &amp;&amp; !details.isEmpty() &amp;&amp; this.pathDetails.size() != details.size()) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Details have to be the same size&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        for (Map.Entry&lt;String, List&lt;PathDetail&gt;&gt; detailEntry : details.entrySet()) {</b>
+<b class="fc">&nbsp;            String key = detailEntry.getKey();</b>
+<b class="fc">&nbsp;            List&lt;PathDetail&gt; pathDetails = this.pathDetails.get(key);</b>
+<b class="fc">&nbsp;            if (pathDetails != null) {</b>
+<b class="fc">&nbsp;                pathDetails.addAll(detailEntry.getValue());</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                this.pathDetails.put(key, detailEntry.getValue());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public Map&lt;String, List&lt;PathDetail&gt;&gt; getPathDetails() {
+<b class="fc">&nbsp;        return this.pathDetails;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void check(String method) {
+<b class="pc">&nbsp;        if (hasErrors()) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;You cannot call &quot; + method + &quot; if response contains errors. Check this with ghResponse.hasErrors(). &quot;</b>
+<b class="nc">&nbsp;                    + &quot;Errors are: &quot; + getErrors());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if this alternative response contains one or more errors
+&nbsp;     */
+&nbsp;    public boolean hasErrors() {
+<b class="fc">&nbsp;        return !errors.isEmpty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Throwable&gt; getErrors() {
+<b class="fc">&nbsp;        return errors;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath addError(Throwable error) {
+<b class="fc">&nbsp;        errors.add(error);</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponsePath addErrors(List&lt;Throwable&gt; errors) {
+<b class="nc">&nbsp;        this.errors.addAll(errors);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setNumChanges(int numChanges) {
+<b class="nc">&nbsp;        this.numChanges = numChanges;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNumChanges() {
+<b class="nc">&nbsp;        return numChanges;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Trip.Leg&gt; getLegs() {
+<b class="nc">&nbsp;        return legs;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setFare(BigDecimal fare) {
+<b class="nc">&nbsp;        this.fare = fare;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BigDecimal getFare() {
+<b class="nc">&nbsp;        return fare;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isImpossible() {
+<b class="nc">&nbsp;        return impossible;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setImpossible(boolean impossible) {
+<b class="nc">&nbsp;        this.impossible = impossible;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

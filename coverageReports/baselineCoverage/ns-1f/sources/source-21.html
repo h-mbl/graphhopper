@@ -1,0 +1,516 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Path</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: Path (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Path</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (27/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (15/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.5%
+  </span>
+  <span class="absValue">
+    (75/82)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Path$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Path$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Path$3</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Path$EdgeVisitor</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (36/39)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85%
+  </span>
+  <span class="absValue">
+    (17/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.5%
+  </span>
+  <span class="absValue">
+    (86/93)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.carrotsearch.hppc.IntIndexedContainer;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.storage.NodeAccess;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.FetchMode;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class represents the result of a shortest path calculation. It also provides methods to extract further
+&nbsp; * information about the found path, like instructions etc.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @author Ottavio Campana
+&nbsp; * @author jan soe
+&nbsp; * @author easbar
+&nbsp; */
+&nbsp;public class Path {
+&nbsp;    final Graph graph;
+&nbsp;    private final NodeAccess nodeAccess;
+<b class="fc">&nbsp;    private double weight = Double.MAX_VALUE;</b>
+&nbsp;    private double distance;
+&nbsp;    private long time;
+<b class="fc">&nbsp;    private IntArrayList edgeIds = new IntArrayList();</b>
+<b class="fc">&nbsp;    private int fromNode = -1;</b>
+<b class="fc">&nbsp;    private int endNode = -1;</b>
+&nbsp;    private List&lt;String&gt; description;
+&nbsp;    private boolean found;
+<b class="fc">&nbsp;    private String debugInfo = &quot;&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;    public Path(Graph graph) {</b>
+<b class="fc">&nbsp;        this.graph = graph;</b>
+<b class="fc">&nbsp;        this.nodeAccess = graph.getNodeAccess();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Graph getGraph() {
+<b class="nc">&nbsp;        return graph;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the description of this route alternative to make it meaningful for the user e.g. it
+&nbsp;     * displays one or two main roads of the route.
+&nbsp;     */
+&nbsp;    public List&lt;String&gt; getDescription() {
+<b class="fc">&nbsp;        if (description == null)</b>
+<b class="fc">&nbsp;            return Collections.emptyList();</b>
+<b class="fc">&nbsp;        return description;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path setDescription(List&lt;String&gt; description) {
+<b class="fc">&nbsp;        this.description = description;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public IntArrayList getEdges() {
+<b class="fc">&nbsp;        return edgeIds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setEdges(IntArrayList edgeIds) {
+<b class="nc">&nbsp;        this.edgeIds = edgeIds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addEdge(int edge) {
+<b class="fc">&nbsp;        edgeIds.add(edge);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEdgeCount() {
+<b class="fc">&nbsp;        return edgeIds.size();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getEndNode() {
+<b class="fc">&nbsp;        return endNode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path setEndNode(int end) {
+<b class="fc">&nbsp;        endNode = end;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the first node of this Path.
+&nbsp;     */
+&nbsp;    private int getFromNode() {
+<b class="pc">&nbsp;        if (fromNode &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;fromNode &lt; 0 should not happen&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        return fromNode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * We need to remember fromNode explicitly as its not saved in one edgeId of edgeIds.
+&nbsp;     */
+&nbsp;    public Path setFromNode(int from) {
+<b class="fc">&nbsp;        fromNode = from;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isFound() {
+<b class="fc">&nbsp;        return found;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path setFound(boolean found) {
+<b class="fc">&nbsp;        this.found = found;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path setDistance(double distance) {
+<b class="fc">&nbsp;        this.distance = distance;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path addDistance(double distance) {
+<b class="fc">&nbsp;        this.distance += distance;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return distance in meter
+&nbsp;     */
+&nbsp;    public double getDistance() {
+<b class="fc">&nbsp;        return distance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return time in millis
+&nbsp;     */
+&nbsp;    public long getTime() {
+<b class="fc">&nbsp;        return time;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path setTime(long time) {
+<b class="nc">&nbsp;        this.time = time;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path addTime(long time) {
+<b class="fc">&nbsp;        this.time += time;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This weight will be updated during the algorithm. The initial value is maximum double.
+&nbsp;     */
+&nbsp;    public double getWeight() {
+<b class="fc">&nbsp;        return weight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Path setWeight(double w) {
+<b class="fc">&nbsp;        this.weight = w;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Yields the final edge of the path
+&nbsp;     */
+&nbsp;    public EdgeIteratorState getFinalEdge() {
+<b class="fc">&nbsp;        return graph.getEdgeIteratorState(edgeIds.get(edgeIds.size() - 1), endNode);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setDebugInfo(String debugInfo) {
+<b class="fc">&nbsp;        this.debugInfo = debugInfo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getDebugInfo() {
+<b class="fc">&nbsp;        return debugInfo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Iterates over all edges in this path sorted from start to end and calls the visitor callback
+&nbsp;     * for every edge.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param visitor callback to handle every edge. The edge is decoupled from the iterator and can
+&nbsp;     *                be stored.
+&nbsp;     */
+&nbsp;    public void forEveryEdge(EdgeVisitor visitor) {
+<b class="fc">&nbsp;        int tmpNode = getFromNode();</b>
+<b class="fc">&nbsp;        int len = edgeIds.size();</b>
+<b class="fc">&nbsp;        int prevEdgeId = EdgeIterator.NO_EDGE;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; len; i++) {</b>
+<b class="fc">&nbsp;            EdgeIteratorState edgeBase = graph.getEdgeIteratorState(edgeIds.get(i), tmpNode);</b>
+<b class="pc">&nbsp;            if (edgeBase == null)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Edge &quot; + edgeIds.get(i) + &quot; was empty when requested with node &quot; + tmpNode</b>
+<b class="nc">&nbsp;                        + &quot;, array index:&quot; + i + &quot;, edges:&quot; + edgeIds.size());</b>
+&nbsp;
+<b class="fc">&nbsp;            tmpNode = edgeBase.getBaseNode();</b>
+&nbsp;            // more efficient swap, currently not implemented for virtual edges: visitor.next(edgeBase.detach(true), i);
+<b class="fc">&nbsp;            edgeBase = graph.getEdgeIteratorState(edgeBase.getEdge(), tmpNode);</b>
+<b class="fc">&nbsp;            visitor.next(edgeBase, i, prevEdgeId);</b>
+&nbsp;
+<b class="fc">&nbsp;            prevEdgeId = edgeBase.getEdge();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        visitor.finish();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the list of all edges.
+&nbsp;     */
+&nbsp;    public List&lt;EdgeIteratorState&gt; calcEdges() {
+<b class="fc">&nbsp;        final List&lt;EdgeIteratorState&gt; edges = new ArrayList&lt;&gt;(edgeIds.size());</b>
+<b class="fc">&nbsp;        if (edgeIds.isEmpty())</b>
+<b class="fc">&nbsp;            return edges;</b>
+&nbsp;
+<b class="fc">&nbsp;        forEveryEdge(new EdgeVisitor() {</b>
+&nbsp;            @Override
+&nbsp;            public void next(EdgeIteratorState eb, int index, int prevEdgeId) {
+<b class="fc">&nbsp;                edges.add(eb);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public void finish() {
+&nbsp;
+<b class="fc">&nbsp;            }</b>
+&nbsp;        });
+<b class="fc">&nbsp;        return edges;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the uncached node indices of the tower nodes in this path.
+&nbsp;     */
+&nbsp;    public IntIndexedContainer calcNodes() {
+<b class="fc">&nbsp;        final IntArrayList nodes = new IntArrayList(edgeIds.size() + 1);</b>
+<b class="fc">&nbsp;        if (edgeIds.isEmpty()) {</b>
+<b class="fc">&nbsp;            if (isFound()) {</b>
+<b class="fc">&nbsp;                nodes.add(endNode);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return nodes;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int tmpNode = getFromNode();</b>
+<b class="fc">&nbsp;        nodes.add(tmpNode);</b>
+<b class="fc">&nbsp;        forEveryEdge(new EdgeVisitor() {</b>
+&nbsp;            @Override
+&nbsp;            public void next(EdgeIteratorState eb, int index, int prevEdgeId) {
+<b class="fc">&nbsp;                nodes.add(eb.getAdjNode());</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public void finish() {
+&nbsp;
+<b class="fc">&nbsp;            }</b>
+&nbsp;        });
+<b class="fc">&nbsp;        return nodes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method calculated a list of points for this path
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return the geometry of this path
+&nbsp;     */
+&nbsp;    public PointList calcPoints() {
+<b class="fc">&nbsp;        final PointList points = new PointList(edgeIds.size() + 1, nodeAccess.is3D());</b>
+<b class="fc">&nbsp;        if (edgeIds.isEmpty()) {</b>
+<b class="pc">&nbsp;            if (isFound()) {</b>
+<b class="fc">&nbsp;                points.add(nodeAccess, endNode);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return points;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int tmpNode = getFromNode();</b>
+<b class="fc">&nbsp;        points.add(nodeAccess, tmpNode);</b>
+<b class="fc">&nbsp;        forEveryEdge(new EdgeVisitor() {</b>
+&nbsp;            @Override
+&nbsp;            public void next(EdgeIteratorState eb, int index, int prevEdgeId) {
+<b class="fc">&nbsp;                PointList pl = eb.fetchWayGeometry(FetchMode.PILLAR_AND_ADJ);</b>
+<b class="fc">&nbsp;                for (int j = 0; j &lt; pl.size(); j++) {</b>
+<b class="fc">&nbsp;                    points.add(pl, j);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public void finish() {
+&nbsp;
+<b class="fc">&nbsp;            }</b>
+&nbsp;        });
+<b class="fc">&nbsp;        return points;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return &quot;found: &quot; + found + &quot;, weight: &quot; + weight + &quot;, time: &quot; + time + &quot;, distance: &quot; + distance + &quot;, edges: &quot; + edgeIds.size();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The callback used in forEveryEdge.
+&nbsp;     */
+&nbsp;    public interface EdgeVisitor {
+&nbsp;        void next(EdgeIteratorState edge, int index, int prevEdgeId);
+&nbsp;
+&nbsp;        void finish();
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

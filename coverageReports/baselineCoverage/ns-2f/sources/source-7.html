@@ -1,0 +1,356 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Snap</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage.index</a>
+</div>
+
+<h1>Coverage Summary for Class: Snap (com.graphhopper.storage.index)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Snap</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.7%
+  </span>
+  <span class="absValue">
+    (18/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.8%
+  </span>
+  <span class="absValue">
+    (22/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (45/54)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Snap$Position</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    95.2%
+  </span>
+  <span class="absValue">
+    (20/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.8%
+  </span>
+  <span class="absValue">
+    (22/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.9%
+  </span>
+  <span class="absValue">
+    (47/56)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage.index;
+&nbsp;
+&nbsp;import com.graphhopper.routing.querygraph.QueryGraph;
+&nbsp;import com.graphhopper.storage.BaseGraph;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Result of LocationIndex lookup.
+&nbsp; * &lt;pre&gt; X=query coordinates S=snapped coordinates: &quot;snapping&quot; real coords to road N=tower or pillar
+&nbsp; * node T=closest tower node XS=distance
+&nbsp; * X
+&nbsp; * |
+&nbsp; * T--S----N
+&nbsp; * &lt;/pre&gt;
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="fc">&nbsp;public class Snap {</b>
+&nbsp;    public static final int INVALID_NODE = -1;
+&nbsp;    private final GHPoint queryPoint;
+<b class="fc">&nbsp;    private double queryDistance = Double.MAX_VALUE;</b>
+<b class="fc">&nbsp;    private int wayIndex = -1;</b>
+<b class="fc">&nbsp;    private int closestNode = INVALID_NODE;</b>
+&nbsp;    private EdgeIteratorState closestEdge;
+&nbsp;    private GHPoint3D snappedPoint;
+&nbsp;    private Position snappedPosition;
+&nbsp;
+<b class="fc">&nbsp;    public Snap(double queryLat, double queryLon) {</b>
+<b class="fc">&nbsp;        queryPoint = new GHPoint(queryLat, queryLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the closest matching node. This is either a tower node of the base graph
+&nbsp;     * or a virtual node (see also {@link QueryGraph#create(BaseGraph, List)}).
+&nbsp;     *
+&nbsp;     * @return {@link #INVALID_NODE} if nothing found, this should be avoided via a call of &#39;isValid&#39;
+&nbsp;     */
+&nbsp;    public int getClosestNode() {
+<b class="fc">&nbsp;        return closestNode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setClosestNode(int node) {
+<b class="fc">&nbsp;        closestNode = node;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the distance of the query to the snapped coordinates. In meter
+&nbsp;     */
+&nbsp;    public double getQueryDistance() {
+<b class="fc">&nbsp;        return queryDistance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setQueryDistance(double dist) {
+<b class="fc">&nbsp;        queryDistance = dist;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getWayIndex() {
+<b class="fc">&nbsp;        return wayIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setWayIndex(int wayIndex) {
+<b class="fc">&nbsp;        this.wayIndex = wayIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return 0 if on edge. 1 if on pillar node and 2 if on tower node.
+&nbsp;     */
+&nbsp;    public Position getSnappedPosition() {
+<b class="fc">&nbsp;        return snappedPosition;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setSnappedPosition(Position pos) {
+<b class="fc">&nbsp;        this.snappedPosition = pos;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if a closest node was found
+&nbsp;     */
+&nbsp;    public boolean isValid() {
+<b class="fc">&nbsp;        return closestNode &gt;= 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public EdgeIteratorState getClosestEdge() {
+<b class="fc">&nbsp;        return closestEdge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setClosestEdge(EdgeIteratorState edge) {
+<b class="fc">&nbsp;        closestEdge = edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHPoint getQueryPoint() {
+<b class="fc">&nbsp;        return queryPoint;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the position of the query point &#39;snapped&#39; to a close road segment or node. Call
+&nbsp;     * calcSnappedPoint before, if not, an IllegalStateException is thrown.
+&nbsp;     */
+&nbsp;    public GHPoint3D getSnappedPoint() {
+<b class="pc">&nbsp;        if (snappedPoint == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Calculate snapped point before!&quot;);</b>
+<b class="fc">&nbsp;        return snappedPoint;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setSnappedPoint(GHPoint3D point) {
+<b class="fc">&nbsp;        this.snappedPoint = point;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the closest point on the edge from the query point. If too close to a tower or pillar node this method
+&nbsp;     * might change the snappedPosition and wayIndex.
+&nbsp;     */
+&nbsp;    public void calcSnappedPoint(DistanceCalc distCalc) {
+<b class="pc">&nbsp;        if (closestEdge == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;No closest edge?&quot;);</b>
+<b class="pc">&nbsp;        if (snappedPoint != null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Calculate snapped point only once&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        PointList fullPL = getClosestEdge().fetchWayGeometry(FetchMode.ALL);</b>
+<b class="fc">&nbsp;        double tmpLat = fullPL.getLat(wayIndex);</b>
+<b class="fc">&nbsp;        double tmpLon = fullPL.getLon(wayIndex);</b>
+<b class="fc">&nbsp;        double tmpEle = fullPL.getEle(wayIndex);</b>
+<b class="fc">&nbsp;        if (snappedPosition != Position.EDGE) {</b>
+<b class="fc">&nbsp;            snappedPoint = new GHPoint3D(tmpLat, tmpLon, tmpEle);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        double queryLat = getQueryPoint().lat, queryLon = getQueryPoint().lon;</b>
+<b class="fc">&nbsp;        double adjLat = fullPL.getLat(wayIndex + 1), adjLon = fullPL.getLon(wayIndex + 1);</b>
+<b class="pc">&nbsp;        if (distCalc.validEdgeDistance(queryLat, queryLon, tmpLat, tmpLon, adjLat, adjLon)) {</b>
+<b class="fc">&nbsp;            GHPoint crossingPoint = distCalc.calcCrossingPointToEdge(queryLat, queryLon, tmpLat, tmpLon, adjLat, adjLon);</b>
+<b class="fc">&nbsp;            double adjEle = fullPL.getEle(wayIndex + 1);</b>
+&nbsp;
+&nbsp;            // We want to prevent extra virtual nodes and very short virtual edges in case the snap/crossing point is
+&nbsp;            // very close to a tower node. Since we delayed the calculation of the crossing point until here, we need
+&nbsp;            // to correct the Snap.Position in these cases. Note that it is possible that the query point is very far
+&nbsp;            // from the tower node, but the crossing point is still very close to it.
+<b class="fc">&nbsp;            if (considerEqual(crossingPoint.lat, crossingPoint.lon, tmpLat, tmpLon)) {</b>
+<b class="fc">&nbsp;                snappedPosition = wayIndex == 0 ? Position.TOWER : Position.PILLAR;</b>
+<b class="fc">&nbsp;                snappedPoint = new GHPoint3D(tmpLat, tmpLon, tmpEle);</b>
+<b class="fc">&nbsp;                closestNode = wayIndex == 0 ? closestEdge.getBaseNode() : closestNode;</b>
+<b class="fc">&nbsp;            } else if (considerEqual(crossingPoint.lat, crossingPoint.lon, adjLat, adjLon)) {</b>
+<b class="fc">&nbsp;                wayIndex++;</b>
+<b class="pc">&nbsp;                snappedPosition = wayIndex == fullPL.size() - 1 ? Position.TOWER : Position.PILLAR;</b>
+<b class="fc">&nbsp;                snappedPoint = new GHPoint3D(adjLat, adjLon, adjEle);</b>
+<b class="pc">&nbsp;                closestNode = wayIndex == fullPL.size() - 1 ? closestEdge.getAdjNode() : closestNode;</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                snappedPoint = new GHPoint3D(crossingPoint.lat, crossingPoint.lon, (tmpEle + adjEle) / 2);</b>
+&nbsp;            }
+&nbsp;        } else {
+&nbsp;            // outside of edge segment [wayIndex, wayIndex+1] should not happen for EDGE
+<b class="nc">&nbsp;            assert false : &quot;incorrect pos: &quot; + snappedPosition + &quot; for &quot; + snappedPoint + &quot;, &quot; + fullPL + &quot;, &quot; + wayIndex;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean considerEqual(double lat, double lon, double lat2, double lon2) {
+<b class="fc">&nbsp;        return Math.abs(lat - lat2) &lt; 1e-6 &amp;&amp; Math.abs(lon - lon2) &lt; 1e-6;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        if (closestEdge != null)</b>
+<b class="nc">&nbsp;            return snappedPosition + &quot;, &quot; + closestNode + &quot; &quot; + closestEdge.getEdge() + &quot;:&quot; + closestEdge.getBaseNode() + &quot;-&quot; + closestEdge.getAdjNode() +</b>
+<b class="nc">&nbsp;                    &quot; snap: [&quot; + Helper.round6(snappedPoint.getLat()) + &quot;, &quot; + Helper.round6(snappedPoint.getLon()) + &quot;],&quot; +</b>
+<b class="nc">&nbsp;                    &quot; query: [&quot; + Helper.round6(queryPoint.getLat()) + &quot;,&quot; + Helper.round6(queryPoint.getLon()) + &quot;]&quot;;</b>
+<b class="nc">&nbsp;        return closestNode + &quot;, &quot; + queryPoint + &quot;, &quot; + wayIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Whether the query point is projected onto a tower node, pillar node or somewhere within
+&nbsp;     * the closest edge.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Due to precision differences it is hard to define when something is exactly 90° or &quot;on-node&quot;
+&nbsp;     * like TOWER or PILLAR or if it is more &quot;on-edge&quot; (EDGE). The default mechanism is to prefer
+&nbsp;     * &quot;on-edge&quot; even if it could be 90°. To prefer &quot;on-node&quot; you could use e.g. GHPoint.equals with
+&nbsp;     * a default precision of 1e-6.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @see DistanceCalc#validEdgeDistance
+&nbsp;     */
+<b class="fc">&nbsp;    public enum Position {</b>
+<b class="fc">&nbsp;        EDGE, TOWER, PILLAR</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

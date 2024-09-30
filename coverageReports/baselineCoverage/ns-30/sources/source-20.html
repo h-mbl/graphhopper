@@ -1,0 +1,747 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PointList</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: PointList (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PointList</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.7%
+  </span>
+  <span class="absValue">
+    (39/43)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.2%
+  </span>
+  <span class="absValue">
+    (97/124)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.3%
+  </span>
+  <span class="absValue">
+    (177/210)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PointList$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    16.7%
+  </span>
+  <span class="absValue">
+    (3/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    16.7%
+  </span>
+  <span class="absValue">
+    (3/18)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">PointList$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    77.8%
+  </span>
+  <span class="absValue">
+    (7/9)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    69.2%
+  </span>
+  <span class="absValue">
+    (45/65)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.1%
+  </span>
+  <span class="absValue">
+    (100/128)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.9%
+  </span>
+  <span class="absValue">
+    (187/237)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;import org.locationtech.jts.geom.Coordinate;
+&nbsp;import org.locationtech.jts.geom.GeometryFactory;
+&nbsp;import org.locationtech.jts.geom.LineString;
+&nbsp;import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.NoSuchElementException;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.round2;
+&nbsp;import static com.graphhopper.util.Helper.round6;
+&nbsp;
+&nbsp;/**
+&nbsp; * Slim list to store several points (without the need for a point object). Be aware that the PointList is closely
+&nbsp; * coupled with the {@link ShallowImmutablePointList} both are not designed for inheritance (but final is not possible if we keep it simple).
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class PointList implements Iterable&lt;GHPoint3D&gt;, PointAccess {
+&nbsp;    // should be thread-safe according to https://github.com/locationtech/jts/issues/512
+<b class="fc">&nbsp;    private static final GeometryFactory factory = new GeometryFactory();</b>
+<b class="fc">&nbsp;    public static final PointList EMPTY = new PointList(0, true) {</b>
+&nbsp;        @Override
+&nbsp;        public void set(int index, double lat, double lon, double ele) {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void add(double lat, double lon, double ele) {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void removeLastPoint() {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean isEmpty() {
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void clear() {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void setElevation(int index, double ele) {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void trimToSize(int newSize) {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void parse2DJSON(String str) {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public PointList copy(int from, int end) {
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;cannot copy EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public PointList clone(boolean reverse) {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot access EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double getLat(int index) {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot access EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double getLon(int index) {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot access EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double getEle(int index) {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot access EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void reverse() {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot change EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int size() {
+<b class="fc">&nbsp;            return 0;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public GHPoint3D get(int index) {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot access EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean is3D() {
+<b class="nc">&nbsp;            throw new UnsupportedOperationException(&quot;cannot access EMPTY PointList&quot;);</b>
+&nbsp;        }
+&nbsp;    };
+&nbsp;
+&nbsp;    final static String ERR_MSG = &quot;Tried to access PointList with too big index!&quot;;
+<b class="fc">&nbsp;    protected int size = 0;</b>
+&nbsp;    protected boolean is3D;
+&nbsp;    private double[] latitudes;
+&nbsp;    private double[] longitudes;
+&nbsp;    private double[] elevations;
+<b class="fc">&nbsp;    private boolean isImmutable = false;</b>
+&nbsp;    private LineString cachedLineString;
+&nbsp;
+&nbsp;    public PointList() {
+<b class="fc">&nbsp;        this(10, false);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public PointList(int cap, boolean is3D) {</b>
+<b class="fc">&nbsp;        latitudes = new double[cap];</b>
+<b class="fc">&nbsp;        longitudes = new double[cap];</b>
+<b class="fc">&nbsp;        this.is3D = is3D;</b>
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            elevations = new double[cap];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean is3D() {
+<b class="fc">&nbsp;        return is3D;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getDimension() {
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            return 3;</b>
+<b class="fc">&nbsp;        return 2;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void ensureNode(int nodeId) {
+<b class="nc">&nbsp;        incCap(nodeId + 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setNode(int nodeId, double lat, double lon, double ele) {
+<b class="fc">&nbsp;        set(nodeId, lat, lon, ele);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void set(int index, double lat, double lon, double ele) {
+<b class="fc">&nbsp;        ensureMutability();</b>
+<b class="pc">&nbsp;        if (index &gt;= size)</b>
+<b class="nc">&nbsp;            throw new ArrayIndexOutOfBoundsException(&quot;index has to be smaller than size &quot; + size);</b>
+&nbsp;
+<b class="fc">&nbsp;        latitudes[index] = lat;</b>
+<b class="fc">&nbsp;        longitudes[index] = lon;</b>
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            elevations[index] = ele;</b>
+<b class="pc">&nbsp;        else if (!Double.isNaN(ele))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;This is a 2D list we cannot store elevation: &quot; + ele);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void incCap(int newSize) {
+<b class="fc">&nbsp;        if (newSize &lt;= latitudes.length)</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        int cap = newSize * 2;</b>
+<b class="fc">&nbsp;        if (cap &lt; 15)</b>
+<b class="fc">&nbsp;            cap = 15;</b>
+<b class="fc">&nbsp;        latitudes = Arrays.copyOf(latitudes, cap);</b>
+<b class="fc">&nbsp;        longitudes = Arrays.copyOf(longitudes, cap);</b>
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            elevations = Arrays.copyOf(elevations, cap);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void add(double lat, double lon) {
+<b class="pc">&nbsp;        if (is3D)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot add point without elevation data in 3D mode&quot;);</b>
+<b class="fc">&nbsp;        add(lat, lon, Double.NaN);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void add(double lat, double lon, double ele) {
+<b class="fc">&nbsp;        ensureMutability();</b>
+<b class="fc">&nbsp;        int newSize = size + 1;</b>
+<b class="fc">&nbsp;        incCap(newSize);</b>
+<b class="fc">&nbsp;        latitudes[size] = lat;</b>
+<b class="fc">&nbsp;        longitudes[size] = lon;</b>
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            elevations[size] = ele;</b>
+<b class="pc">&nbsp;        else if (!Double.isNaN(ele))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;This is a 2D list we cannot store elevation: &quot; + ele);</b>
+<b class="fc">&nbsp;        size = newSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void add(PointAccess nodeAccess, int index) {
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            add(nodeAccess.getLat(index), nodeAccess.getLon(index), nodeAccess.getEle(index));</b>
+&nbsp;        else
+<b class="fc">&nbsp;            add(nodeAccess.getLat(index), nodeAccess.getLon(index));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void add(GHPoint point) {
+<b class="fc">&nbsp;        if (is3D)</b>
+<b class="fc">&nbsp;            add(point.lat, point.lon, ((GHPoint3D) point).ele);</b>
+&nbsp;        else
+<b class="fc">&nbsp;            add(point.lat, point.lon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void add(PointList points) {
+<b class="fc">&nbsp;        ensureMutability();</b>
+<b class="fc">&nbsp;        int newSize = size + points.size();</b>
+<b class="fc">&nbsp;        incCap(newSize);</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; points.size(); i++) {</b>
+<b class="fc">&nbsp;            int tmp = size + i;</b>
+<b class="fc">&nbsp;            latitudes[tmp] = points.getLat(i);</b>
+<b class="fc">&nbsp;            longitudes[tmp] = points.getLon(i);</b>
+<b class="fc">&nbsp;            if (is3D)</b>
+<b class="fc">&nbsp;                elevations[tmp] = points.getEle(i);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        size = newSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void removeLastPoint() {
+<b class="fc">&nbsp;        if (size == 0)</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Cannot remove last point from empty PointList&quot;);</b>
+<b class="fc">&nbsp;        size--;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int size() {
+<b class="fc">&nbsp;        return size;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isEmpty() {
+<b class="fc">&nbsp;        return size() == 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getLat(int index) {
+<b class="pc">&nbsp;        if (index &gt;= size)</b>
+<b class="nc">&nbsp;            throw new ArrayIndexOutOfBoundsException(ERR_MSG + &quot; index:&quot; + index + &quot;, size:&quot; + size);</b>
+&nbsp;
+<b class="fc">&nbsp;        return latitudes[index];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getLon(int index) {
+<b class="pc">&nbsp;        if (index &gt;= size)</b>
+<b class="nc">&nbsp;            throw new ArrayIndexOutOfBoundsException(ERR_MSG + &quot; index:&quot; + index + &quot;, size:&quot; + size);</b>
+&nbsp;
+<b class="fc">&nbsp;        return longitudes[index];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getEle(int index) {
+<b class="pc">&nbsp;        if (index &gt;= size)</b>
+<b class="nc">&nbsp;            throw new ArrayIndexOutOfBoundsException(ERR_MSG + &quot; index:&quot; + index + &quot;, size:&quot; + size);</b>
+<b class="fc">&nbsp;        if (!is3D)</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;
+<b class="fc">&nbsp;        return elevations[index];</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setElevation(int index, double ele) {
+<b class="pc">&nbsp;        if (index &gt;= size)</b>
+<b class="nc">&nbsp;            throw new ArrayIndexOutOfBoundsException(ERR_MSG + &quot; index:&quot; + index + &quot;, size:&quot; + size);</b>
+<b class="pc">&nbsp;        if (!is3D)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;This is a 2D PointList, you cannot set it&#39;s elevation&quot;);</b>
+<b class="fc">&nbsp;        this.elevations[index] = ele;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void reverse() {
+<b class="fc">&nbsp;        ensureMutability();</b>
+&nbsp;        // in-place reverse
+<b class="fc">&nbsp;        int max = size / 2;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; max; i++) {</b>
+<b class="fc">&nbsp;            int swapIndex = size - i - 1;</b>
+&nbsp;
+<b class="fc">&nbsp;            double tmp = latitudes[i];</b>
+<b class="fc">&nbsp;            latitudes[i] = latitudes[swapIndex];</b>
+<b class="fc">&nbsp;            latitudes[swapIndex] = tmp;</b>
+&nbsp;
+<b class="fc">&nbsp;            tmp = longitudes[i];</b>
+<b class="fc">&nbsp;            longitudes[i] = longitudes[swapIndex];</b>
+<b class="fc">&nbsp;            longitudes[swapIndex] = tmp;</b>
+&nbsp;
+<b class="fc">&nbsp;            if (is3D) {</b>
+<b class="fc">&nbsp;                tmp = elevations[i];</b>
+<b class="fc">&nbsp;                elevations[i] = elevations[swapIndex];</b>
+<b class="fc">&nbsp;                elevations[swapIndex] = tmp;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void clear() {
+<b class="fc">&nbsp;        ensureMutability();</b>
+<b class="fc">&nbsp;        size = 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void trimToSize(int newSize) {
+<b class="fc">&nbsp;        ensureMutability();</b>
+<b class="pc">&nbsp;        if (newSize &gt; size)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;new size needs be smaller than old size&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        size = newSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        StringBuilder sb = new StringBuilder();</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; size(); i++) {</b>
+<b class="fc">&nbsp;            if (i &gt; 0)</b>
+<b class="fc">&nbsp;                sb.append(&quot;, &quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;            sb.append(&#39;(&#39;);</b>
+<b class="fc">&nbsp;            sb.append(this.getLat(i));</b>
+<b class="fc">&nbsp;            sb.append(&#39;,&#39;);</b>
+<b class="fc">&nbsp;            sb.append(this.getLon(i));</b>
+<b class="fc">&nbsp;            if (this.is3D()) {</b>
+<b class="fc">&nbsp;                sb.append(&#39;,&#39;);</b>
+<b class="fc">&nbsp;                sb.append(this.getEle(i));</b>
+&nbsp;            }
+<b class="fc">&nbsp;            sb.append(&#39;)&#39;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return sb.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static PointList fromLineString(LineString lineString) {
+<b class="nc">&nbsp;        final PointList pointList = new PointList();</b>
+<b class="nc">&nbsp;        for (Coordinate coordinate : lineString.getCoordinates()) {</b>
+<b class="nc">&nbsp;            pointList.add(new GHPoint(coordinate.y, coordinate.x));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return pointList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LineString toLineString(boolean includeElevation) {
+<b class="fc">&nbsp;        Coordinate[] coordinates = new Coordinate[size() == 1 ? 2 : size()];</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; size(); i++) {</b>
+<b class="fc">&nbsp;            coordinates[i] = includeElevation ?</b>
+<b class="fc">&nbsp;                    new Coordinate(</b>
+<b class="fc">&nbsp;                            round6(this.getLon(i)),</b>
+<b class="fc">&nbsp;                            round6(this.getLat(i)),</b>
+<b class="fc">&nbsp;                            round2(this.getEle(i))) :</b>
+<b class="fc">&nbsp;                    new Coordinate(</b>
+<b class="fc">&nbsp;                            round6(this.getLon(i)),</b>
+<b class="fc">&nbsp;                            round6(this.getLat(i)));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // special case as just 1 point is not supported in the specification #1412
+<b class="fc">&nbsp;        if (size() == 1)</b>
+<b class="fc">&nbsp;            coordinates[1] = coordinates[0];</b>
+<b class="fc">&nbsp;        return factory.createLineString(new PackedCoordinateSequence.Double(coordinates, includeElevation ? 3 : 2));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LineString getCachedLineString(boolean includeElevation) {
+<b class="pc">&nbsp;        if (cachedLineString != null)</b>
+<b class="nc">&nbsp;            return cachedLineString;</b>
+<b class="pc">&nbsp;        if (!isImmutable)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Make PointList immutable before calling getCachedLineString&quot;);</b>
+<b class="fc">&nbsp;        return cachedLineString = toLineString(includeElevation);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object obj) {
+<b class="pc">&nbsp;        if (obj == null)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        PointList other = (PointList) obj;</b>
+<b class="pc">&nbsp;        if (this.isEmpty() &amp;&amp; other.isEmpty())</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;
+<b class="pc">&nbsp;        if (size() != other.size() || this.is3D() != other.is3D())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        for (int i = 0; i &lt; size(); i++) {</b>
+<b class="fc">&nbsp;            if (!equalsEps(this.getLat(i), other.getLat(i)))</b>
+<b class="fc">&nbsp;                return false;</b>
+&nbsp;
+<b class="pc">&nbsp;            if (!equalsEps(this.getLon(i), other.getLon(i)))</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;
+<b class="pc">&nbsp;            if (this.is3D() &amp;&amp; !equalsEps(this.getEle(i), other.getEle(i), 0.01))</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private final static double DEFAULT_PRECISION = 1e-6;
+&nbsp;
+&nbsp;    public static boolean equalsEps(double d1, double d2) {
+<b class="fc">&nbsp;        return equalsEps(d1, d2, DEFAULT_PRECISION);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean equalsEps(double d1, double d2, double epsilon) {
+<b class="fc">&nbsp;        return Math.abs(d1 - d2) &lt; epsilon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clones this PointList. If this PointList was immutable, the cloned will be mutable. If this PointList was a
+&nbsp;     * {@link ShallowImmutablePointList}, the cloned PointList will be a regular PointList.
+&nbsp;     */
+&nbsp;    public PointList clone(boolean reverse) {
+<b class="fc">&nbsp;        PointList clonePL = new PointList(size(), is3D());</b>
+<b class="fc">&nbsp;        if (is3D())</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; size(); i++) {</b>
+<b class="fc">&nbsp;                clonePL.add(this.getLat(i), this.getLon(i), this.getEle(i));</b>
+&nbsp;            }
+&nbsp;        else
+<b class="fc">&nbsp;            for (int i = 0; i &lt; size(); i++) {</b>
+<b class="fc">&nbsp;                clonePL.add(this.getLat(i), this.getLon(i));</b>
+&nbsp;            }
+<b class="fc">&nbsp;        if (reverse)</b>
+<b class="fc">&nbsp;            clonePL.reverse();</b>
+<b class="fc">&nbsp;        return clonePL;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method does a deep copy of this object for the specified range.
+&nbsp;     *
+&nbsp;     * @param from the copying of the old PointList starts at this index
+&nbsp;     * @param end  the copying of the old PointList ends at the index before (i.e. end is exclusive)
+&nbsp;     */
+&nbsp;    public PointList copy(int from, int end) {
+<b class="pc">&nbsp;        if (from &gt; end)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;from must be smaller or equal to end&quot;);</b>
+<b class="pc">&nbsp;        if (from &lt; 0 || end &gt; size())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Illegal interval: &quot; + from + &quot;, &quot; + end + &quot;, size:&quot; + size());</b>
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;        PointList thisPL = this;</b>
+<b class="fc">&nbsp;        if (this instanceof ShallowImmutablePointList) {</b>
+<b class="fc">&nbsp;            ShallowImmutablePointList spl = (ShallowImmutablePointList) this;</b>
+<b class="fc">&nbsp;            thisPL = spl.wrappedPointList;</b>
+<b class="fc">&nbsp;            from = spl.fromOffset + from;</b>
+<b class="fc">&nbsp;            end = spl.fromOffset + end;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int len = end - from;</b>
+<b class="fc">&nbsp;        PointList copyPL = new PointList(len, is3D());</b>
+<b class="fc">&nbsp;        copyPL.size = len;</b>
+<b class="fc">&nbsp;        copyPL.isImmutable = isImmutable();</b>
+<b class="fc">&nbsp;        System.arraycopy(thisPL.latitudes, from, copyPL.latitudes, 0, len);</b>
+<b class="fc">&nbsp;        System.arraycopy(thisPL.longitudes, from, copyPL.longitudes, 0, len);</b>
+<b class="fc">&nbsp;        if (is3D())</b>
+<b class="fc">&nbsp;            System.arraycopy(thisPL.elevations, from, copyPL.elevations, 0, len);</b>
+<b class="fc">&nbsp;        return copyPL;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a shallow copy of this Pointlist from from to end, excluding end.
+&nbsp;     *
+&nbsp;     * @param makeImmutable makes this PointList immutable. If you don&#39;t ensure the consistency it might happen that due to changes of this
+&nbsp;     *                      object, the shallow copy might contain incorrect or corrupt data.
+&nbsp;     */
+&nbsp;    public PointList shallowCopy(final int from, final int end, boolean makeImmutable) {
+<b class="fc">&nbsp;        if (makeImmutable)</b>
+<b class="fc">&nbsp;            this.makeImmutable();</b>
+<b class="fc">&nbsp;        return new ShallowImmutablePointList(from, end, this);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        int hash = 5;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; size(); i++) {</b>
+<b class="nc">&nbsp;            hash = 73 * hash + (int) Math.round(this.getLat(i) * 1000000);</b>
+<b class="nc">&nbsp;            hash = 73 * hash + (int) Math.round(this.getLon(i) * 1000000);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        hash = 73 * hash + size();</b>
+<b class="nc">&nbsp;        return hash;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Takes the string from a json array ala [lon1,lat1], [lon2,lat2], ... and fills the list from
+&nbsp;     * it.
+&nbsp;     */
+&nbsp;    public void parse2DJSON(String str) {
+<b class="fc">&nbsp;        for (String latlon : str.split(&quot;\\[&quot;)) {</b>
+<b class="fc">&nbsp;            if (latlon.trim().length() == 0)</b>
+&nbsp;                continue;
+&nbsp;
+<b class="fc">&nbsp;            String[] ll = latlon.split(&quot;,&quot;);</b>
+<b class="fc">&nbsp;            String lat = ll[1].replace(&quot;]&quot;, &quot;&quot;).trim();</b>
+<b class="fc">&nbsp;            add(Double.parseDouble(lat), Double.parseDouble(ll[0].trim()), Double.NaN);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public GHPoint3D get(int index) {
+<b class="fc">&nbsp;        return new GHPoint3D(this.getLat(index), this.getLon(index), this.getEle(index));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    int getCapacity() {
+<b class="fc">&nbsp;        return latitudes.length;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Iterator&lt;GHPoint3D&gt; iterator() {
+<b class="fc">&nbsp;        return new Iterator&lt;GHPoint3D&gt;() {</b>
+<b class="fc">&nbsp;            int counter = 0;</b>
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public boolean hasNext() {
+<b class="fc">&nbsp;                return counter &lt; size();</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public GHPoint3D next() {
+<b class="pc">&nbsp;                if (counter &gt;= size())</b>
+<b class="nc">&nbsp;                    throw new NoSuchElementException();</b>
+&nbsp;
+<b class="fc">&nbsp;                GHPoint3D point = PointList.this.get(counter);</b>
+<b class="fc">&nbsp;                counter++;</b>
+<b class="fc">&nbsp;                return point;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public void remove() {
+<b class="nc">&nbsp;                throw new UnsupportedOperationException(&quot;Not supported.&quot;);</b>
+&nbsp;            }
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    public static PointList from(LineString lineString) {
+<b class="nc">&nbsp;        final PointList pointList = new PointList();</b>
+<b class="nc">&nbsp;        for (Coordinate coordinate : lineString.getCoordinates()) {</b>
+<b class="nc">&nbsp;            pointList.add(new GHPoint(coordinate.y, coordinate.x));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return pointList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isImmutable() {
+<b class="fc">&nbsp;        return this.isImmutable;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Once immutable, there is no way to make this object mutable again. This is done to ensure the consistency of
+&nbsp;     * shallow copies. If you need to modify this object again, you have to create a deep copy of it.
+&nbsp;     */
+&nbsp;    public PointList makeImmutable() {
+<b class="fc">&nbsp;        this.isImmutable = true;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void ensureMutability() {
+<b class="fc">&nbsp;        if (this.isImmutable()) {</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;You cannot change an immutable PointList&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

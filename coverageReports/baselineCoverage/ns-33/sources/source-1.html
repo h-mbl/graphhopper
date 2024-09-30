@@ -1,0 +1,452 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BBox</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util.shapes</a>
+</div>
+
+<h1>Coverage Summary for Class: BBox (com.graphhopper.util.shapes)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BBox</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (21/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.4%
+  </span>
+  <span class="absValue">
+    (70/98)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75.6%
+  </span>
+  <span class="absValue">
+    (93/123)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util.shapes;
+&nbsp;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.NumHelper;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;import org.locationtech.jts.algorithm.RectangleLineIntersector;
+&nbsp;import org.locationtech.jts.geom.Coordinate;
+&nbsp;import org.locationtech.jts.geom.Envelope;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * A simple bounding box defined as follows: minLon, maxLon followed by minLat which is south(!) and
+&nbsp; * maxLat. Equally to EX_GeographicBoundingBox in the ISO 19115 standard see
+&nbsp; * http://osgeo-org.1560.n6.nabble.com/Boundingbox-issue-for-discussion-td3875533.html
+&nbsp; * &lt;p&gt;
+&nbsp; * Nice German overview:
+&nbsp; * http://www.geoinf.uni-jena.de/fileadmin/Geoinformatik/Lehre/Diplomarbeiten/DA_Andres.pdf
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class BBox implements Shape, Cloneable {
+&nbsp;
+&nbsp;    private final boolean elevation;
+&nbsp;    // longitude (theta) = x, latitude (phi) = y, elevation = z
+&nbsp;    public double minLon;
+&nbsp;    public double maxLon;
+&nbsp;    public double minLat;
+&nbsp;    public double maxLat;
+&nbsp;    public double minEle;
+&nbsp;    public double maxEle;
+&nbsp;
+&nbsp;    public BBox(double[] coords) {
+<b class="nc">&nbsp;        this(coords[0], coords[2], coords[1], coords[3]);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BBox(double minLon, double maxLon, double minLat, double maxLat) {
+<b class="fc">&nbsp;        this(minLon, maxLon, minLat, maxLat, Double.NaN, Double.NaN, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BBox(double minLon, double maxLon, double minLat, double maxLat, double minEle, double maxEle) {
+<b class="fc">&nbsp;        this(minLon, maxLon, minLat, maxLat, minEle, maxEle, true);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public BBox(double minLon, double maxLon, double minLat, double maxLat, double minEle, double maxEle, boolean elevation) {</b>
+<b class="fc">&nbsp;        this.elevation = elevation;</b>
+<b class="fc">&nbsp;        this.maxLat = maxLat;</b>
+<b class="fc">&nbsp;        this.minLon = minLon;</b>
+<b class="fc">&nbsp;        this.minLat = minLat;</b>
+<b class="fc">&nbsp;        this.maxLon = maxLon;</b>
+<b class="fc">&nbsp;        this.minEle = minEle;</b>
+<b class="fc">&nbsp;        this.maxEle = maxEle;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Prefills BBox with minimum values so that it can increase.
+&nbsp;     */
+&nbsp;    public static BBox createInverse(boolean elevation) {
+<b class="fc">&nbsp;        if (elevation) {</b>
+<b class="fc">&nbsp;            return new BBox(Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE,</b>
+&nbsp;                    Double.MAX_VALUE, -Double.MAX_VALUE, true);
+&nbsp;        } else {
+<b class="fc">&nbsp;            return new BBox(Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE,</b>
+&nbsp;                    Double.NaN, Double.NaN, false);
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean hasElevation() {
+<b class="nc">&nbsp;        return elevation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void update(double lat, double lon) {
+<b class="fc">&nbsp;        if (lat &gt; maxLat) {</b>
+<b class="fc">&nbsp;            maxLat = lat;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (lat &lt; minLat) {</b>
+<b class="fc">&nbsp;            minLat = lat;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (lon &gt; maxLon) {</b>
+<b class="fc">&nbsp;            maxLon = lon;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (lon &lt; minLon) {</b>
+<b class="fc">&nbsp;            minLon = lon;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void update(double lat, double lon, double elev) {
+<b class="pc">&nbsp;        if (elevation) {</b>
+<b class="fc">&nbsp;            if (elev &gt; maxEle) {</b>
+<b class="fc">&nbsp;                maxEle = elev;</b>
+&nbsp;            }
+<b class="fc">&nbsp;            if (elev &lt; minEle) {</b>
+<b class="fc">&nbsp;                minEle = elev;</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;No BBox with elevation to update&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        update(lat, lon);</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the intersecting BBox between this and the specified BBox
+&nbsp;     *
+&nbsp;     * @return the intersecting BBox or null if not intersecting
+&nbsp;     */
+&nbsp;    public BBox calculateIntersection(BBox bBox) {
+<b class="fc">&nbsp;        if (!this.intersects(bBox))</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;
+<b class="fc">&nbsp;        double minLon = Math.max(this.minLon, bBox.minLon);</b>
+<b class="fc">&nbsp;        double maxLon = Math.min(this.maxLon, bBox.maxLon);</b>
+<b class="fc">&nbsp;        double minLat = Math.max(this.minLat, bBox.minLat);</b>
+<b class="fc">&nbsp;        double maxLat = Math.min(this.maxLat, bBox.maxLat);</b>
+&nbsp;
+<b class="fc">&nbsp;        return new BBox(minLon, maxLon, minLat, maxLat);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BBox clone() {
+<b class="fc">&nbsp;        return new BBox(minLon, maxLon, minLat, maxLat, minEle, maxEle, elevation);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean intersects(RectangleLineIntersector intersector, PointList pointList) {
+<b class="fc">&nbsp;        int len = pointList.size();</b>
+<b class="pc">&nbsp;        if (len == 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;PointList must not be empty&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        Coordinate coords = new Coordinate(pointList.getLon(0), pointList.getLat(0));</b>
+<b class="pc">&nbsp;        if (len == 1)</b>
+<b class="nc">&nbsp;            return intersector.intersects(coords, coords);</b>
+&nbsp;
+<b class="fc">&nbsp;        for (int pointIndex = 1; pointIndex &lt; len; pointIndex++) {</b>
+<b class="fc">&nbsp;            Coordinate nextCoords = new Coordinate(pointList.getLon(pointIndex), pointList.getLat(pointIndex));</b>
+<b class="fc">&nbsp;            if (intersector.intersects(coords, nextCoords))</b>
+<b class="fc">&nbsp;                return true;</b>
+<b class="fc">&nbsp;            coords = nextCoords;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean intersects(PointList pointList) {
+<b class="fc">&nbsp;        return intersects(new RectangleLineIntersector(toEnvelope(this)), pointList);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method calculates if this BBox intersects with the specified BBox
+&nbsp;     */
+&nbsp;    public boolean intersects(double minLon, double maxLon, double minLat, double maxLat) {
+<b class="nc">&nbsp;        return this.minLon &lt; maxLon &amp;&amp; this.minLat &lt; maxLat &amp;&amp; minLon &lt; this.maxLon &amp;&amp; minLat &lt; this.maxLat;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method calculates if this BBox intersects with the specified BBox
+&nbsp;     */
+&nbsp;    public boolean intersects(BBox o) {
+&nbsp;        // return (o.minLon &lt; minLon &amp;&amp; o.maxLon &gt; minLon || o.minLon &lt; maxLon &amp;&amp; o.minLon &gt;= minLon)
+&nbsp;        //  &amp;&amp; (o.maxLat &lt; maxLat &amp;&amp; o.maxLat &gt;= minLat || o.maxLat &gt;= maxLat &amp;&amp; o.minLat &lt; maxLat);
+<b class="fc">&nbsp;        return this.minLon &lt; o.maxLon &amp;&amp; this.minLat &lt; o.maxLat &amp;&amp; o.minLon &lt; this.maxLon &amp;&amp; o.minLat &lt; this.maxLat;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean contains(double lat, double lon) {
+<b class="fc">&nbsp;        return lat &lt;= maxLat &amp;&amp; lat &gt;= minLat &amp;&amp; lon &lt;= maxLon &amp;&amp; lon &gt;= minLon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean contains(BBox b) {
+<b class="fc">&nbsp;        return maxLat &gt;= b.maxLat &amp;&amp; minLat &lt;= b.minLat &amp;&amp; maxLon &gt;= b.maxLon &amp;&amp; minLon &lt;= b.minLon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        String str = minLon + &quot;,&quot; + maxLon + &quot;,&quot; + minLat + &quot;,&quot; + maxLat;</b>
+<b class="fc">&nbsp;        if (elevation)</b>
+<b class="fc">&nbsp;            str += &quot;,&quot; + minEle + &quot;,&quot; + maxEle;</b>
+&nbsp;
+<b class="fc">&nbsp;        return str;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toLessPrecisionString() {
+<b class="nc">&nbsp;        return (float) minLon + &quot;,&quot; + (float) maxLon + &quot;,&quot; + (float) minLat + &quot;,&quot; + (float) maxLat;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BBox getBounds() {
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object obj) {
+<b class="pc">&nbsp;        if (obj == null)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        BBox b = (BBox) obj;</b>
+&nbsp;        // equals within a very small range
+<b class="pc">&nbsp;        return NumHelper.equalsEps(minLat, b.minLat) &amp;&amp; NumHelper.equalsEps(maxLat, b.maxLat)</b>
+<b class="pc">&nbsp;                &amp;&amp; NumHelper.equalsEps(minLon, b.minLon) &amp;&amp; NumHelper.equalsEps(maxLon, b.maxLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        int hash = 3;</b>
+<b class="nc">&nbsp;        hash = 17 * hash + (int) (Double.doubleToLongBits(this.minLon) ^ (Double.doubleToLongBits(this.minLon) &gt;&gt;&gt; 32));</b>
+<b class="nc">&nbsp;        hash = 17 * hash + (int) (Double.doubleToLongBits(this.maxLon) ^ (Double.doubleToLongBits(this.maxLon) &gt;&gt;&gt; 32));</b>
+<b class="nc">&nbsp;        hash = 17 * hash + (int) (Double.doubleToLongBits(this.minLat) ^ (Double.doubleToLongBits(this.minLat) &gt;&gt;&gt; 32));</b>
+<b class="nc">&nbsp;        hash = 17 * hash + (int) (Double.doubleToLongBits(this.maxLat) ^ (Double.doubleToLongBits(this.maxLat) &gt;&gt;&gt; 32));</b>
+<b class="nc">&nbsp;        return hash;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isValid() {
+&nbsp;        // second longitude should be bigger than the first
+<b class="pc">&nbsp;        if (minLon &gt;= maxLon)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+&nbsp;        // second latitude should be smaller than the first
+<b class="fc">&nbsp;        if (minLat &gt;= maxLat)</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (elevation) {</b>
+&nbsp;            // equal elevation is okay
+<b class="pc">&nbsp;            if (minEle &gt; maxEle)</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;
+<b class="pc">&nbsp;            if (Double.compare(maxEle, -Double.MAX_VALUE) == 0</b>
+<b class="pc">&nbsp;                    || Double.compare(minEle, Double.MAX_VALUE) == 0)</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        return Double.compare(maxLat, -Double.MAX_VALUE) != 0</b>
+<b class="pc">&nbsp;                &amp;&amp; Double.compare(minLat, Double.MAX_VALUE) != 0</b>
+<b class="pc">&nbsp;                &amp;&amp; Double.compare(maxLon, -Double.MAX_VALUE) != 0</b>
+<b class="fc">&nbsp;                &amp;&amp; Double.compare(minLon, Double.MAX_VALUE) != 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return array containing this bounding box. Attention: GeoJson is lon,lat! If 3D is gets even
+&nbsp;     * worse: lon,lat,ele
+&nbsp;     */
+&nbsp;    public List&lt;Double&gt; toGeoJson() {
+<b class="nc">&nbsp;        List&lt;Double&gt; list = new ArrayList&lt;&gt;(4);</b>
+<b class="nc">&nbsp;        list.add(Helper.round6(minLon));</b>
+<b class="nc">&nbsp;        list.add(Helper.round6(minLat));</b>
+&nbsp;        // hmh
+<b class="nc">&nbsp;        if (elevation)</b>
+<b class="nc">&nbsp;            list.add(Helper.round2(minEle));</b>
+&nbsp;
+<b class="nc">&nbsp;        list.add(Helper.round6(maxLon));</b>
+<b class="nc">&nbsp;        list.add(Helper.round6(maxLat));</b>
+<b class="nc">&nbsp;        if (elevation)</b>
+<b class="nc">&nbsp;            list.add(Helper.round2(maxEle));</b>
+&nbsp;
+<b class="nc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static BBox fromEnvelope(Envelope envelope) {
+<b class="fc">&nbsp;        return new BBox(envelope.getMinX(), envelope.getMaxX(), envelope.getMinY(), envelope.getMaxY());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Envelope toEnvelope(BBox bbox) {
+<b class="fc">&nbsp;        return new Envelope(bbox.minLon, bbox.maxLon, bbox.minLat, bbox.maxLat);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method creates a BBox out of a string in format lat1,lon1,lat2,lon2
+&nbsp;     */
+&nbsp;    public static BBox parseTwoPoints(String objectAsString) {
+<b class="fc">&nbsp;        String[] splittedObject = objectAsString.split(&quot;,&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (splittedObject.length != 4)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;BBox should have 4 parts but was &quot; + objectAsString);</b>
+&nbsp;
+<b class="fc">&nbsp;        double minLat = Double.parseDouble(splittedObject[0]);</b>
+<b class="fc">&nbsp;        double minLon = Double.parseDouble(splittedObject[1]);</b>
+&nbsp;
+<b class="fc">&nbsp;        double maxLat = Double.parseDouble(splittedObject[2]);</b>
+<b class="fc">&nbsp;        double maxLon = Double.parseDouble(splittedObject[3]);</b>
+<b class="fc">&nbsp;        return BBox.fromPoints(minLat, minLon, maxLat, maxLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static BBox fromPoints(double lat1, double lon1, double lat2, double lon2) {
+<b class="fc">&nbsp;        if (lat1 &gt; lat2) {</b>
+<b class="fc">&nbsp;            double tmp = lat1;</b>
+<b class="fc">&nbsp;            lat1 = lat2;</b>
+<b class="fc">&nbsp;            lat2 = tmp;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (lon1 &gt; lon2) {</b>
+<b class="fc">&nbsp;            double tmp = lon1;</b>
+<b class="fc">&nbsp;            lon1 = lon2;</b>
+<b class="fc">&nbsp;            lon2 = tmp;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return new BBox(lon1, lon2, lat1, lat2);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method creates a BBox out of a string in format lon1,lon2,lat1,lat2
+&nbsp;     */
+&nbsp;    public static BBox parseBBoxString(String objectAsString) {
+<b class="fc">&nbsp;        String[] splittedObject = objectAsString.split(&quot;,&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (splittedObject.length != 4)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;BBox should have 4 parts but was &quot; + objectAsString);</b>
+&nbsp;
+<b class="fc">&nbsp;        double minLon = Double.parseDouble(splittedObject[0]);</b>
+<b class="fc">&nbsp;        double maxLon = Double.parseDouble(splittedObject[1]);</b>
+&nbsp;
+<b class="fc">&nbsp;        double minLat = Double.parseDouble(splittedObject[2]);</b>
+<b class="fc">&nbsp;        double maxLat = Double.parseDouble(splittedObject[3]);</b>
+&nbsp;
+<b class="fc">&nbsp;        return new BBox(minLon, maxLon, minLat, maxLat);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

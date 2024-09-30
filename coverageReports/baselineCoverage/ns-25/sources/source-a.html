@@ -1,0 +1,183 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > HeadingEdgeFilter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: HeadingEdgeFilter (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">HeadingEdgeFilter</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95%
+  </span>
+  <span class="absValue">
+    (19/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (32/32)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;public class HeadingEdgeFilter implements EdgeFilter {
+&nbsp;
+&nbsp;    private final double heading;
+&nbsp;    private final DirectedEdgeFilter directedEdgeFilter;
+&nbsp;    private final GHPoint pointNearHeading;
+&nbsp;
+<b class="fc">&nbsp;    public HeadingEdgeFilter(DirectedEdgeFilter directedEdgeFilter, double heading, GHPoint pointNearHeading) {</b>
+<b class="fc">&nbsp;        this.directedEdgeFilter = directedEdgeFilter;</b>
+<b class="fc">&nbsp;        this.heading = heading;</b>
+<b class="fc">&nbsp;        this.pointNearHeading = pointNearHeading;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean accept(EdgeIteratorState edgeState) {
+<b class="fc">&nbsp;        final double tolerance = 30;</b>
+&nbsp;        // we only accept edges that are not too far away. It might happen that only far away edges match the heading
+&nbsp;        // in which case we rather rely on the fallback snapping than return a match here.
+<b class="fc">&nbsp;        final double maxDistance = 20;</b>
+<b class="fc">&nbsp;        double headingOfEdge = getHeadingOfGeometryNearPoint(edgeState, pointNearHeading, maxDistance);</b>
+<b class="fc">&nbsp;        if (Double.isNaN(headingOfEdge))</b>
+&nbsp;            // this edge is too far away. we do not accept it.
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        // we accept the edge if either of the two directions roughly has the right heading
+<b class="pc">&nbsp;        return Math.abs(headingOfEdge - heading) &lt; tolerance &amp;&amp; directedEdgeFilter.accept(edgeState, false) ||</b>
+<b class="fc">&nbsp;                Math.abs((headingOfEdge + 180) % 360 - heading) &lt; tolerance &amp;&amp; directedEdgeFilter.accept(edgeState, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the heading (in degrees) of the given edge in fwd direction near the given point. If the point is
+&nbsp;     * too far away from the edge (according to the maxDistance parameter) it returns Double.NaN.
+&nbsp;     */
+&nbsp;    static double getHeadingOfGeometryNearPoint(EdgeIteratorState edgeState, GHPoint point, double maxDistance) {
+<b class="fc">&nbsp;        final DistanceCalc calcDist = DistanceCalcEarth.DIST_EARTH;</b>
+<b class="fc">&nbsp;        double closestDistance = Double.POSITIVE_INFINITY;</b>
+<b class="fc">&nbsp;        PointList points = edgeState.fetchWayGeometry(FetchMode.ALL);</b>
+<b class="fc">&nbsp;        int closestPoint = -1;</b>
+<b class="fc">&nbsp;        for (int i = 1; i &lt; points.size(); i++) {</b>
+<b class="fc">&nbsp;            double fromLat = points.getLat(i - 1), fromLon = points.getLon(i - 1);</b>
+<b class="fc">&nbsp;            double toLat = points.getLat(i), toLon = points.getLon(i);</b>
+&nbsp;            // the &#39;distance&#39; between the point and an edge segment is either the vertical distance to the segment or
+&nbsp;            // the distance to the closer one of the two endpoints. here we save one call to calcDist per segment,
+&nbsp;            // because each endpoint appears in two segments (except the first and last).
+<b class="fc">&nbsp;            double distance = calcDist.validEdgeDistance(point.lat, point.lon, fromLat, fromLon, toLat, toLon)</b>
+<b class="fc">&nbsp;                    ? calcDist.calcDenormalizedDist(calcDist.calcNormalizedEdgeDistance(point.lat, point.lon, fromLat, fromLon, toLat, toLon))</b>
+<b class="fc">&nbsp;                    : calcDist.calcDist(fromLat, fromLon, point.lat, point.lon);</b>
+<b class="fc">&nbsp;            if (i == points.size() - 1)</b>
+<b class="fc">&nbsp;                distance = Math.min(distance, calcDist.calcDist(toLat, toLon, point.lat, point.lon));</b>
+<b class="fc">&nbsp;            if (distance &gt; maxDistance)</b>
+&nbsp;                continue;
+<b class="fc">&nbsp;            if (distance &lt; closestDistance) {</b>
+<b class="fc">&nbsp;                closestDistance = distance;</b>
+<b class="fc">&nbsp;                closestPoint = i;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        if (closestPoint &lt; 0)</b>
+<b class="fc">&nbsp;            return Double.NaN;</b>
+&nbsp;
+<b class="fc">&nbsp;        double fromLat = points.getLat(closestPoint - 1), fromLon = points.getLon(closestPoint - 1);</b>
+<b class="fc">&nbsp;        double toLat = points.getLat(closestPoint), toLon = points.getLon(closestPoint);</b>
+<b class="fc">&nbsp;        return AngleCalc.ANGLE_CALC.calcAzimuth(fromLat, fromLon, toLat, toLon);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

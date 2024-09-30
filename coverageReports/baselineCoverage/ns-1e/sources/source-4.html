@@ -1,0 +1,354 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > IsochroneResource</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.resources</a>
+</div>
+
+<h1>Coverage Summary for Class: IsochroneResource (com.graphhopper.resources)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">IsochroneResource</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/91)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">IsochroneResource$ResponseType</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/92)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.resources;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+&nbsp;import com.fasterxml.jackson.databind.node.ObjectNode;
+&nbsp;import com.graphhopper.GraphHopper;
+&nbsp;import com.graphhopper.GraphHopperConfig;
+&nbsp;import com.graphhopper.config.Profile;
+&nbsp;import com.graphhopper.http.GHPointParam;
+&nbsp;import com.graphhopper.http.ProfileResolver;
+&nbsp;import com.graphhopper.isochrone.algorithm.ContourBuilder;
+&nbsp;import com.graphhopper.isochrone.algorithm.ShortestPathTree;
+&nbsp;import com.graphhopper.isochrone.algorithm.Triangulator;
+&nbsp;import com.graphhopper.jackson.ResponsePathSerializer;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.Subnetwork;
+&nbsp;import com.graphhopper.routing.querygraph.QueryGraph;
+&nbsp;import com.graphhopper.routing.util.DefaultSnapFilter;
+&nbsp;import com.graphhopper.routing.util.TraversalMode;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.BaseGraph;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.storage.index.Snap;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import org.hibernate.validator.constraints.Range;
+&nbsp;import org.locationtech.jts.geom.*;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.inject.Inject;
+&nbsp;import javax.validation.constraints.NotNull;
+&nbsp;import javax.ws.rs.*;
+&nbsp;import javax.ws.rs.core.Context;
+&nbsp;import javax.ws.rs.core.MediaType;
+&nbsp;import javax.ws.rs.core.Response;
+&nbsp;import javax.ws.rs.core.UriInfo;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.OptionalInt;
+&nbsp;import java.util.OptionalLong;
+&nbsp;import java.util.function.ToDoubleFunction;
+&nbsp;
+&nbsp;import static com.graphhopper.resources.IsochroneResource.ResponseType.geojson;
+&nbsp;import static com.graphhopper.resources.RouteResource.removeLegacyParameters;
+&nbsp;import static com.graphhopper.routing.util.TraversalMode.EDGE_BASED;
+&nbsp;import static com.graphhopper.routing.util.TraversalMode.NODE_BASED;
+&nbsp;
+&nbsp;@Path(&quot;isochrone&quot;)
+&nbsp;public class IsochroneResource {
+&nbsp;
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(IsochroneResource.class);</b>
+&nbsp;
+&nbsp;    private final GraphHopperConfig config;
+&nbsp;    private final GraphHopper graphHopper;
+&nbsp;    private final Triangulator triangulator;
+&nbsp;    private final ProfileResolver profileResolver;
+&nbsp;    private final String osmDate;
+&nbsp;
+&nbsp;    @Inject
+<b class="nc">&nbsp;    public IsochroneResource(GraphHopperConfig config, GraphHopper graphHopper, Triangulator triangulator, ProfileResolver profileResolver) {</b>
+<b class="nc">&nbsp;        this.config = config;</b>
+<b class="nc">&nbsp;        this.graphHopper = graphHopper;</b>
+<b class="nc">&nbsp;        this.triangulator = triangulator;</b>
+<b class="nc">&nbsp;        this.profileResolver = profileResolver;</b>
+<b class="nc">&nbsp;        this.osmDate = graphHopper.getProperties().get(&quot;datareader.data.date&quot;);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public enum ResponseType {json, geojson}</b>
+&nbsp;
+&nbsp;    @GET
+&nbsp;    @Produces(MediaType.APPLICATION_JSON)
+&nbsp;    public Response doGet(
+&nbsp;            @Context UriInfo uriInfo,
+&nbsp;            @QueryParam(&quot;profile&quot;) String profileName,
+&nbsp;            @QueryParam(&quot;buckets&quot;) @Range(min = 1, max = 20) @DefaultValue(&quot;1&quot;) OptionalInt nBuckets,
+&nbsp;            @QueryParam(&quot;reverse_flow&quot;) @DefaultValue(&quot;false&quot;) boolean reverseFlow,
+&nbsp;            @QueryParam(&quot;point&quot;) @NotNull GHPointParam point,
+&nbsp;            @QueryParam(&quot;time_limit&quot;) @DefaultValue(&quot;600&quot;) OptionalLong timeLimitInSeconds,
+&nbsp;            @QueryParam(&quot;distance_limit&quot;) @DefaultValue(&quot;-1&quot;) OptionalLong distanceLimitInMeter,
+&nbsp;            @QueryParam(&quot;weight_limit&quot;) @DefaultValue(&quot;-1&quot;) OptionalLong weightLimit,
+&nbsp;            @QueryParam(&quot;type&quot;) @DefaultValue(&quot;json&quot;) ResponseType respType,
+&nbsp;            @QueryParam(&quot;tolerance&quot;) @DefaultValue(&quot;0&quot;) double toleranceInMeter,
+&nbsp;            @QueryParam(&quot;full_geometry&quot;) @DefaultValue(&quot;false&quot;) boolean fullGeometry) {
+<b class="nc">&nbsp;        StopWatch sw = new StopWatch().start();</b>
+<b class="nc">&nbsp;        PMap hintsMap = new PMap();</b>
+<b class="nc">&nbsp;        RouteResource.initHints(hintsMap, uriInfo.getQueryParameters());</b>
+<b class="nc">&nbsp;        hintsMap.putObject(Parameters.CH.DISABLE, true);</b>
+<b class="nc">&nbsp;        hintsMap.putObject(Parameters.Landmark.DISABLE, true);</b>
+&nbsp;
+<b class="nc">&nbsp;        PMap profileResolverHints = new PMap(hintsMap);</b>
+<b class="nc">&nbsp;        profileResolverHints.putObject(&quot;profile&quot;, profileName);</b>
+<b class="nc">&nbsp;        profileName = profileResolver.resolveProfile(profileResolverHints);</b>
+<b class="nc">&nbsp;        removeLegacyParameters(hintsMap);</b>
+&nbsp;
+<b class="nc">&nbsp;        Profile profile = graphHopper.getProfile(profileName);</b>
+<b class="nc">&nbsp;        if (profile == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The requested profile &#39;&quot; + profileName + &quot;&#39; does not exist&quot;);</b>
+<b class="nc">&nbsp;        LocationIndex locationIndex = graphHopper.getLocationIndex();</b>
+<b class="nc">&nbsp;        BaseGraph graph = graphHopper.getBaseGraph();</b>
+<b class="nc">&nbsp;        Weighting weighting = graphHopper.createWeighting(profile, hintsMap);</b>
+<b class="nc">&nbsp;        BooleanEncodedValue inSubnetworkEnc = graphHopper.getEncodingManager().getBooleanEncodedValue(Subnetwork.key(profileName));</b>
+<b class="nc">&nbsp;        Snap snap = locationIndex.findClosest(point.get().lat, point.get().lon, new DefaultSnapFilter(weighting, inSubnetworkEnc));</b>
+<b class="nc">&nbsp;        if (!snap.isValid())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Point not found:&quot; + point);</b>
+<b class="nc">&nbsp;        QueryGraph queryGraph = QueryGraph.create(graph, snap);</b>
+<b class="nc">&nbsp;        TraversalMode traversalMode = profile.hasTurnCosts() ? EDGE_BASED : NODE_BASED;</b>
+<b class="nc">&nbsp;        ShortestPathTree shortestPathTree = new ShortestPathTree(queryGraph, queryGraph.wrapWeighting(weighting), reverseFlow, traversalMode);</b>
+&nbsp;
+&nbsp;        double limit;
+&nbsp;        ToDoubleFunction&lt;ShortestPathTree.IsoLabel&gt; fz;
+<b class="nc">&nbsp;        if (weightLimit.orElseThrow(() -&gt; new IllegalArgumentException(&quot;query param weight_limit is not a number.&quot;)) &gt; 0) {</b>
+<b class="nc">&nbsp;            limit = weightLimit.getAsLong();</b>
+<b class="nc">&nbsp;            shortestPathTree.setWeightLimit(limit + Math.max(limit * 0.14, 200));</b>
+<b class="nc">&nbsp;            fz = l -&gt; l.weight;</b>
+<b class="nc">&nbsp;        } else if (distanceLimitInMeter.orElseThrow(() -&gt; new IllegalArgumentException(&quot;query param distance_limit is not a number.&quot;)) &gt; 0) {</b>
+<b class="nc">&nbsp;            limit = distanceLimitInMeter.getAsLong();</b>
+<b class="nc">&nbsp;            shortestPathTree.setDistanceLimit(limit + Math.max(limit * 0.14, 2_000));</b>
+<b class="nc">&nbsp;            fz = l -&gt; l.distance;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            limit = timeLimitInSeconds.orElseThrow(() -&gt; new IllegalArgumentException(&quot;query param time_limit is not a number.&quot;)) * 1000d;</b>
+<b class="nc">&nbsp;            shortestPathTree.setTimeLimit(limit + Math.max(limit * 0.14, 200_000));</b>
+<b class="nc">&nbsp;            fz = l -&gt; l.time;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        ArrayList&lt;Double&gt; zs = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        double delta = limit / nBuckets.orElseThrow(() -&gt; new IllegalArgumentException(&quot;query param buckets is not a number.&quot;));</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; nBuckets.getAsInt(); i++) {</b>
+<b class="nc">&nbsp;            zs.add((i + 1) * delta);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Triangulator.Result result = triangulator.triangulate(snap, queryGraph, shortestPathTree, fz, degreesFromMeters(toleranceInMeter));</b>
+&nbsp;
+<b class="nc">&nbsp;        ContourBuilder contourBuilder = new ContourBuilder(result.triangulation);</b>
+<b class="nc">&nbsp;        ArrayList&lt;Geometry&gt; isochrones = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Double z : zs) {</b>
+<b class="nc">&nbsp;            logger.info(&quot;Building contour z={}&quot;, z);</b>
+<b class="nc">&nbsp;            MultiPolygon isochrone = contourBuilder.computeIsoline(z, result.seedEdges);</b>
+<b class="nc">&nbsp;            if (fullGeometry) {</b>
+<b class="nc">&nbsp;                isochrones.add(isochrone);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                Polygon maxPolygon = heuristicallyFindMainConnectedComponent(isochrone, isochrone.getFactory().createPoint(new Coordinate(point.get().lon, point.get().lat)));</b>
+<b class="nc">&nbsp;                isochrones.add(isochrone.getFactory().createPolygon(((LinearRing) maxPolygon.getExteriorRing())));</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        ArrayList&lt;JsonFeature&gt; features = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Geometry isochrone : isochrones) {</b>
+<b class="nc">&nbsp;            JsonFeature feature = new JsonFeature();</b>
+<b class="nc">&nbsp;            HashMap&lt;String, Object&gt; properties = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            properties.put(&quot;bucket&quot;, features.size());</b>
+<b class="nc">&nbsp;            if (respType == geojson) {</b>
+<b class="nc">&nbsp;                properties.put(&quot;copyrights&quot;, config.getCopyrights());</b>
+&nbsp;            }
+<b class="nc">&nbsp;            feature.setProperties(properties);</b>
+<b class="nc">&nbsp;            feature.setGeometry(isochrone);</b>
+<b class="nc">&nbsp;            features.add(feature);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        ObjectNode json = JsonNodeFactory.instance.objectNode();</b>
+&nbsp;
+<b class="nc">&nbsp;        sw.stop();</b>
+<b class="nc">&nbsp;        ObjectNode finalJson = null;</b>
+<b class="nc">&nbsp;        if (respType == geojson) {</b>
+<b class="nc">&nbsp;            json.put(&quot;type&quot;, &quot;FeatureCollection&quot;);</b>
+<b class="nc">&nbsp;            json.putPOJO(&quot;features&quot;, features);</b>
+<b class="nc">&nbsp;            finalJson = json;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            json.putPOJO(&quot;polygons&quot;, features);</b>
+<b class="nc">&nbsp;            final ObjectNode info = json.putObject(&quot;info&quot;);</b>
+<b class="nc">&nbsp;            info.putPOJO(&quot;copyrights&quot;, config.getCopyrights());</b>
+<b class="nc">&nbsp;            info.put(&quot;took&quot;, Math.round((float) sw.getMillis()));</b>
+<b class="nc">&nbsp;            if (!osmDate.isEmpty()) info.put(&quot;road_data_timestamp&quot;, osmDate);</b>
+<b class="nc">&nbsp;            finalJson = json;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        logger.info(&quot;took: &quot; + sw.getSeconds() + &quot;, visited nodes:&quot; + shortestPathTree.getVisitedNodes());</b>
+<b class="nc">&nbsp;        return Response.ok(finalJson).header(&quot;X-GH-Took&quot;, &quot;&quot; + sw.getSeconds() * 1000).</b>
+<b class="nc">&nbsp;                build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Polygon heuristicallyFindMainConnectedComponent(MultiPolygon multiPolygon, Point point) {
+<b class="nc">&nbsp;        int maxPoints = 0;</b>
+<b class="nc">&nbsp;        Polygon maxPolygon = null;</b>
+<b class="nc">&nbsp;        for (int j = 0; j &lt; multiPolygon.getNumGeometries(); j++) {</b>
+<b class="nc">&nbsp;            Polygon polygon = (Polygon) multiPolygon.getGeometryN(j);</b>
+<b class="nc">&nbsp;            if (polygon.contains(point)) {</b>
+<b class="nc">&nbsp;                return polygon;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (polygon.getNumPoints() &gt; maxPoints) {</b>
+<b class="nc">&nbsp;                maxPoints = polygon.getNumPoints();</b>
+<b class="nc">&nbsp;                maxPolygon = polygon;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return maxPolygon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * We want to specify a tolerance in something like meters, but we need it in unprojected lat/lon-space.
+&nbsp;     * This is more correct in some parts of the world, and in some directions, than in others.
+&nbsp;     *
+&nbsp;     * @param distanceInMeters distance in meters
+&nbsp;     * @return &quot;distance&quot; in degrees
+&nbsp;     */
+&nbsp;    static double degreesFromMeters(double distanceInMeters) {
+<b class="nc">&nbsp;        return distanceInMeters / DistanceCalcEarth.METERS_PER_DEGREE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

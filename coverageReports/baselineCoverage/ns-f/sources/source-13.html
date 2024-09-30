@@ -1,0 +1,620 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripFromLabel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.gtfs</a>
+</div>
+
+<h1>Coverage Summary for Class: TripFromLabel (com.graphhopper.gtfs)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripFromLabel</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/64)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/184)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TripFromLabel$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TripFromLabel$StopsFromBoardHopDwellEdges</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/64)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/85)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/249)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.gtfs;
+&nbsp;
+&nbsp;import com.conveyal.gtfs.GTFSFeed;
+&nbsp;import com.conveyal.gtfs.model.Stop;
+&nbsp;import com.conveyal.gtfs.model.StopTime;
+&nbsp;import com.google.common.collect.Iterables;
+&nbsp;import com.google.common.collect.Lists;
+&nbsp;import com.google.common.collect.Maps;
+&nbsp;import com.google.transit.realtime.GtfsRealtime;
+&nbsp;import com.graphhopper.ResponsePath;
+&nbsp;import com.graphhopper.Trip;
+&nbsp;import com.graphhopper.gtfs.fare.Fares;
+&nbsp;import com.graphhopper.routing.InstructionsFromEdges;
+&nbsp;import com.graphhopper.routing.Path;
+&nbsp;import com.graphhopper.routing.ev.EncodedValueLookup;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.details.PathDetail;
+&nbsp;import com.graphhopper.util.details.PathDetailsBuilderFactory;
+&nbsp;import com.graphhopper.util.details.PathDetailsFromEdges;
+&nbsp;import org.locationtech.jts.geom.Coordinate;
+&nbsp;import org.locationtech.jts.geom.Geometry;
+&nbsp;import org.locationtech.jts.geom.GeometryFactory;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.time.Duration;
+&nbsp;import java.time.Instant;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.*;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;import java.util.stream.Stream;
+&nbsp;import java.util.stream.StreamSupport;
+&nbsp;
+&nbsp;import static java.time.temporal.ChronoUnit.SECONDS;
+&nbsp;
+&nbsp;class TripFromLabel {
+&nbsp;
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(TripFromLabel.class);</b>
+&nbsp;
+&nbsp;    private final Graph graph;
+&nbsp;    private final EncodedValueLookup encodedValueLookup;
+&nbsp;    private final GtfsStorage gtfsStorage;
+&nbsp;    private final RealtimeFeed realtimeFeed;
+<b class="nc">&nbsp;    private final GeometryFactory geometryFactory = new GeometryFactory();</b>
+&nbsp;    private final PathDetailsBuilderFactory pathDetailsBuilderFactory;
+&nbsp;    private final double walkSpeedKmH;
+&nbsp;
+<b class="nc">&nbsp;    TripFromLabel(Graph graph, EncodedValueLookup encodedValueLookup, GtfsStorage gtfsStorage, RealtimeFeed realtimeFeed, PathDetailsBuilderFactory pathDetailsBuilderFactory, double walkSpeedKmH) {</b>
+<b class="nc">&nbsp;        this.graph = graph;</b>
+<b class="nc">&nbsp;        this.encodedValueLookup = encodedValueLookup;</b>
+<b class="nc">&nbsp;        this.gtfsStorage = gtfsStorage;</b>
+<b class="nc">&nbsp;        this.realtimeFeed = realtimeFeed;</b>
+<b class="nc">&nbsp;        this.pathDetailsBuilderFactory = pathDetailsBuilderFactory;</b>
+<b class="nc">&nbsp;        this.walkSpeedKmH = walkSpeedKmH;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    ResponsePath createResponsePath(Translation tr, PointList waypoints, Graph queryGraph, Weighting accessWeighting, Weighting egressWeighting, Weighting transferWeighting, List&lt;Label.Transition&gt; solution, List&lt;String&gt; requestedPathDetails) {
+<b class="nc">&nbsp;        final List&lt;List&lt;Label.Transition&gt;&gt; partitions = parsePathToPartitions(solution);</b>
+&nbsp;
+<b class="nc">&nbsp;        final List&lt;Trip.Leg&gt; legs = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; partitions.size(); i++) {</b>
+&nbsp;            Weighting weighting;
+<b class="nc">&nbsp;            if (i == 0)</b>
+<b class="nc">&nbsp;                weighting = accessWeighting;</b>
+<b class="nc">&nbsp;            else if (i == partitions.size() - 1)</b>
+<b class="nc">&nbsp;                weighting = egressWeighting;</b>
+&nbsp;            else
+<b class="nc">&nbsp;                weighting = transferWeighting;</b>
+<b class="nc">&nbsp;            legs.addAll(parsePartitionToLegs(partitions.get(i), queryGraph, encodedValueLookup, weighting, tr, requestedPathDetails));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (legs.size() &gt; 1 &amp;&amp; legs.get(0) instanceof Trip.WalkLeg) {</b>
+<b class="nc">&nbsp;            final Trip.WalkLeg accessLeg = (Trip.WalkLeg) legs.get(0);</b>
+<b class="nc">&nbsp;            legs.set(0, new Trip.WalkLeg(accessLeg.departureLocation, new Date(legs.get(1).getDepartureTime().getTime() - (accessLeg.getArrivalTime().getTime() - accessLeg.getDepartureTime().getTime())),</b>
+<b class="nc">&nbsp;                    accessLeg.geometry, accessLeg.distance, accessLeg.instructions, accessLeg.details, legs.get(1).getDepartureTime()));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (legs.size() &gt; 1 &amp;&amp; legs.get(legs.size() - 1) instanceof Trip.WalkLeg) {</b>
+<b class="nc">&nbsp;            final Trip.WalkLeg egressLeg = (Trip.WalkLeg) legs.get(legs.size() - 1);</b>
+<b class="nc">&nbsp;            legs.set(legs.size() - 1, new Trip.WalkLeg(egressLeg.departureLocation, legs.get(legs.size() - 2).getArrivalTime(),</b>
+&nbsp;                    egressLeg.geometry, egressLeg.distance, egressLeg.instructions,
+<b class="nc">&nbsp;                    egressLeg.details, new Date(legs.get(legs.size() - 2).getArrivalTime().getTime() + (egressLeg.getArrivalTime().getTime() - egressLeg.getDepartureTime().getTime()))));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        ResponsePath path = new ResponsePath();</b>
+<b class="nc">&nbsp;        path.setWaypoints(waypoints);</b>
+<b class="nc">&nbsp;        path.getLegs().addAll(legs);</b>
+&nbsp;
+<b class="nc">&nbsp;        final InstructionList instructions = new InstructionList(tr);</b>
+<b class="nc">&nbsp;        final PointList pointsList = new PointList();</b>
+<b class="nc">&nbsp;        Map&lt;String, List&lt;PathDetail&gt;&gt; pathDetails = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; path.getLegs().size(); ++i) {</b>
+<b class="nc">&nbsp;            Trip.Leg leg = path.getLegs().get(i);</b>
+<b class="nc">&nbsp;            if (leg instanceof Trip.WalkLeg) {</b>
+<b class="nc">&nbsp;                final Trip.WalkLeg walkLeg = ((Trip.WalkLeg) leg);</b>
+<b class="nc">&nbsp;                List&lt;Instruction&gt; theseInstructions = walkLeg.instructions.subList(0, i &lt; path.getLegs().size() - 1 ? walkLeg.instructions.size() - 1 : walkLeg.instructions.size());</b>
+<b class="nc">&nbsp;                int previousPointsCount = pointsList.size();</b>
+<b class="nc">&nbsp;                for (Instruction instruction : theseInstructions) {</b>
+<b class="nc">&nbsp;                    pointsList.add(instruction.getPoints());</b>
+&nbsp;                }
+<b class="nc">&nbsp;                instructions.addAll(theseInstructions);</b>
+<b class="nc">&nbsp;                Map&lt;String, List&lt;PathDetail&gt;&gt; shiftedLegPathDetails = shift(((Trip.WalkLeg) leg).details, previousPointsCount);</b>
+<b class="nc">&nbsp;                shiftedLegPathDetails.forEach((k, v) -&gt; pathDetails.merge(k, shiftedLegPathDetails.get(k), (a, b) -&gt; Lists.newArrayList(Iterables.concat(a, b))));</b>
+<b class="nc">&nbsp;            } else if (leg instanceof Trip.PtLeg) {</b>
+<b class="nc">&nbsp;                final Trip.PtLeg ptLeg = ((Trip.PtLeg) leg);</b>
+&nbsp;                final PointList pl;
+<b class="nc">&nbsp;                if (!ptLeg.isInSameVehicleAsPrevious) {</b>
+<b class="nc">&nbsp;                    pl = new PointList();</b>
+<b class="nc">&nbsp;                    final Instruction departureInstruction = new Instruction(Instruction.PT_START_TRIP, ptLeg.trip_headsign, pl);</b>
+<b class="nc">&nbsp;                    departureInstruction.setDistance(leg.getDistance());</b>
+<b class="nc">&nbsp;                    departureInstruction.setTime(ptLeg.travelTime);</b>
+<b class="nc">&nbsp;                    instructions.add(departureInstruction);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    pl = instructions.get(instructions.size() - 2).getPoints();</b>
+&nbsp;                }
+<b class="nc">&nbsp;                pl.add(ptLeg.stops.get(0).geometry.getY(), ptLeg.stops.get(0).geometry.getX());</b>
+<b class="nc">&nbsp;                pointsList.add(ptLeg.stops.get(0).geometry.getY(), ptLeg.stops.get(0).geometry.getX());</b>
+<b class="nc">&nbsp;                for (Trip.Stop stop : ptLeg.stops.subList(0, ptLeg.stops.size() - 1)) {</b>
+<b class="nc">&nbsp;                    pl.add(stop.geometry.getY(), stop.geometry.getX());</b>
+<b class="nc">&nbsp;                    pointsList.add(stop.geometry.getY(), stop.geometry.getX());</b>
+&nbsp;                }
+<b class="nc">&nbsp;                final PointList arrivalPointList = new PointList();</b>
+<b class="nc">&nbsp;                final Trip.Stop arrivalStop = ptLeg.stops.get(ptLeg.stops.size() - 1);</b>
+<b class="nc">&nbsp;                arrivalPointList.add(arrivalStop.geometry.getY(), arrivalStop.geometry.getX());</b>
+<b class="nc">&nbsp;                pointsList.add(arrivalStop.geometry.getY(), arrivalStop.geometry.getX());</b>
+<b class="nc">&nbsp;                Instruction arrivalInstruction = new Instruction(Instruction.PT_END_TRIP, arrivalStop.stop_name, arrivalPointList);</b>
+<b class="nc">&nbsp;                if (ptLeg.isInSameVehicleAsPrevious) {</b>
+<b class="nc">&nbsp;                    instructions.set(instructions.size() - 1, arrivalInstruction);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    instructions.add(arrivalInstruction);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        path.setInstructions(instructions);</b>
+<b class="nc">&nbsp;        path.setPoints(pointsList);</b>
+<b class="nc">&nbsp;        path.addPathDetails(pathDetails);</b>
+<b class="nc">&nbsp;        path.setDistance(path.getLegs().stream().mapToDouble(Trip.Leg::getDistance).sum());</b>
+<b class="nc">&nbsp;        path.setTime((legs.get(legs.size() - 1).getArrivalTime().toInstant().toEpochMilli() - legs.get(0).getDepartureTime().toInstant().toEpochMilli()));</b>
+<b class="nc">&nbsp;        path.setNumChanges((int) path.getLegs().stream()</b>
+<b class="nc">&nbsp;                .filter(l -&gt; l instanceof Trip.PtLeg)</b>
+<b class="nc">&nbsp;                .filter(l -&gt; !((Trip.PtLeg) l).isInSameVehicleAsPrevious)</b>
+<b class="nc">&nbsp;                .count() - 1);</b>
+<b class="nc">&nbsp;        com.graphhopper.gtfs.fare.Trip faresTrip = new com.graphhopper.gtfs.fare.Trip();</b>
+<b class="nc">&nbsp;        path.getLegs().stream()</b>
+<b class="nc">&nbsp;                .filter(leg -&gt; leg instanceof Trip.PtLeg)</b>
+<b class="nc">&nbsp;                .map(leg -&gt; (Trip.PtLeg) leg)</b>
+<b class="nc">&nbsp;                .findFirst()</b>
+<b class="nc">&nbsp;                .ifPresent(firstPtLeg -&gt; {</b>
+<b class="nc">&nbsp;                    LocalDateTime firstPtDepartureTime = GtfsHelper.localDateTimeFromDate(firstPtLeg.getDepartureTime());</b>
+<b class="nc">&nbsp;                    path.getLegs().stream()</b>
+<b class="nc">&nbsp;                            .filter(leg -&gt; leg instanceof Trip.PtLeg)</b>
+<b class="nc">&nbsp;                            .map(leg -&gt; (Trip.PtLeg) leg)</b>
+<b class="nc">&nbsp;                            .map(ptLeg -&gt; {</b>
+<b class="nc">&nbsp;                                final GTFSFeed gtfsFeed = gtfsStorage.getGtfsFeeds().get(ptLeg.feed_id);</b>
+<b class="nc">&nbsp;                                return new com.graphhopper.gtfs.fare.Trip.Segment(ptLeg.feed_id, ptLeg.route_id,</b>
+<b class="nc">&nbsp;                                        Duration.between(firstPtDepartureTime, GtfsHelper.localDateTimeFromDate(ptLeg.getDepartureTime())).getSeconds(),</b>
+<b class="nc">&nbsp;                                        gtfsFeed.stops.get(ptLeg.stops.get(0).stop_id).zone_id, gtfsFeed.stops.get(ptLeg.stops.get(ptLeg.stops.size() - 1).stop_id).zone_id,</b>
+<b class="nc">&nbsp;                                        ptLeg.stops.stream().map(s -&gt; gtfsFeed.stops.get(s.stop_id).zone_id).collect(Collectors.toSet()));</b>
+&nbsp;                            })
+<b class="nc">&nbsp;                            .forEach(faresTrip.segments::add);</b>
+<b class="nc">&nbsp;                    Fares.cheapestFare(gtfsStorage.getFares(), faresTrip)</b>
+<b class="nc">&nbsp;                            .ifPresent(amount -&gt; path.setFare(amount.getAmount()));</b>
+&nbsp;                });
+<b class="nc">&nbsp;        return path;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Map&lt;String, List&lt;PathDetail&gt;&gt; shift(Map&lt;String, List&lt;PathDetail&gt;&gt; pathDetailss, int previousPointsCount) {
+<b class="nc">&nbsp;        return Maps.transformEntries(pathDetailss, (s, pathDetails) -&gt; pathDetails.stream().map(p -&gt; {</b>
+<b class="nc">&nbsp;            PathDetail pathDetail = new PathDetail(p.getValue());</b>
+<b class="nc">&nbsp;            pathDetail.setFirst(p.getFirst() + previousPointsCount);</b>
+<b class="nc">&nbsp;            pathDetail.setLast(p.getLast() + previousPointsCount);</b>
+<b class="nc">&nbsp;            return pathDetail;</b>
+<b class="nc">&nbsp;        }).collect(Collectors.toList()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;List&lt;Label.Transition&gt;&gt; parsePathToPartitions(List&lt;Label.Transition&gt; path) {
+<b class="nc">&nbsp;        List&lt;List&lt;Label.Transition&gt;&gt; partitions = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        partitions.add(new ArrayList&lt;&gt;());</b>
+<b class="nc">&nbsp;        final Iterator&lt;Label.Transition&gt; iterator = path.iterator();</b>
+<b class="nc">&nbsp;        partitions.get(partitions.size() - 1).add(iterator.next());</b>
+<b class="nc">&nbsp;        iterator.forEachRemaining(transition -&gt; {</b>
+<b class="nc">&nbsp;            final List&lt;Label.Transition&gt; previous = partitions.get(partitions.size() - 1);</b>
+<b class="nc">&nbsp;            final GraphExplorer.MultiModalEdge previousEdge = previous.get(previous.size() - 1).edge;</b>
+<b class="nc">&nbsp;            if (previousEdge != null &amp;&amp; (transition.edge.getType() == GtfsStorage.EdgeType.ENTER_PT || previousEdge.getType() == GtfsStorage.EdgeType.EXIT_PT)) {</b>
+<b class="nc">&nbsp;                final ArrayList&lt;Label.Transition&gt; p = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;                p.add(new Label.Transition(previous.get(previous.size() - 1).label, null));</b>
+<b class="nc">&nbsp;                partitions.add(p);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            partitions.get(partitions.size() - 1).add(transition);</b>
+&nbsp;        });
+<b class="nc">&nbsp;        return partitions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private class StopsFromBoardHopDwellEdges {
+&nbsp;
+&nbsp;        private final GtfsRealtime.TripDescriptor tripDescriptor;
+<b class="nc">&nbsp;        private final List&lt;Trip.Stop&gt; stops = new ArrayList&lt;&gt;();</b>
+&nbsp;        private final GTFSFeed gtfsFeed;
+&nbsp;        private Instant boardTime;
+&nbsp;        private Instant arrivalTimeFromHopEdge;
+&nbsp;        private Optional&lt;Instant&gt; updatedArrival;
+<b class="nc">&nbsp;        private StopTime stopTime = null;</b>
+<b class="nc">&nbsp;        private GtfsReader.TripWithStopTimes tripUpdate = null;</b>
+<b class="nc">&nbsp;        private int stopSequence = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        StopsFromBoardHopDwellEdges(String feedId, GtfsRealtime.TripDescriptor tripDescriptor) {</b>
+<b class="nc">&nbsp;            this.tripDescriptor = tripDescriptor;</b>
+<b class="nc">&nbsp;            this.gtfsFeed = gtfsStorage.getGtfsFeeds().get(feedId);</b>
+<b class="nc">&nbsp;            if (this.tripUpdate != null) {</b>
+<b class="nc">&nbsp;                validateTripUpdate(this.tripUpdate);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        void next(Label.Transition t) {
+<b class="nc">&nbsp;            switch (t.edge.getType()) {</b>
+&nbsp;                case BOARD: {
+<b class="nc">&nbsp;                    boardTime = Instant.ofEpochMilli(t.label.currentTime);</b>
+<b class="nc">&nbsp;                    stopSequence = t.edge.getStopSequence();</b>
+<b class="nc">&nbsp;                    stopTime = realtimeFeed.getStopTime(gtfsFeed, tripDescriptor, t, boardTime, stopSequence);</b>
+<b class="nc">&nbsp;                    tripUpdate = realtimeFeed.getTripUpdate(gtfsFeed, tripDescriptor, boardTime).orElse(null);</b>
+<b class="nc">&nbsp;                    Instant plannedDeparture = Instant.ofEpochMilli(t.label.currentTime);</b>
+<b class="nc">&nbsp;                    Optional&lt;Instant&gt; updatedDeparture = getDepartureDelay(stopSequence).map(delay -&gt; plannedDeparture.plus(delay, SECONDS));</b>
+<b class="nc">&nbsp;                    Stop stop = gtfsFeed.stops.get(stopTime.stop_id);</b>
+<b class="nc">&nbsp;                    stops.add(new Trip.Stop(stop.stop_id, stop.stop_name, geometryFactory.createPoint(new Coordinate(stop.stop_lon, stop.stop_lat)),</b>
+<b class="nc">&nbsp;                            null, null, null, isArrivalCancelled(stopSequence),</b>
+<b class="nc">&nbsp;                            updatedDeparture.map(Date::from).orElse(Date.from(plannedDeparture)), Date.from(plannedDeparture),</b>
+<b class="nc">&nbsp;                            updatedDeparture.map(Date::from).orElse(null), isDepartureCancelled(stopSequence)));</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;                case HOP: {
+<b class="nc">&nbsp;                    stopSequence = t.edge.getStopSequence();</b>
+<b class="nc">&nbsp;                    stopTime = realtimeFeed.getStopTime(gtfsFeed, tripDescriptor, t, boardTime, stopSequence);</b>
+<b class="nc">&nbsp;                    arrivalTimeFromHopEdge = Instant.ofEpochMilli(t.label.currentTime);</b>
+<b class="nc">&nbsp;                    updatedArrival = getArrivalDelay(stopSequence).map(delay -&gt; arrivalTimeFromHopEdge.plus(delay, SECONDS));</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;                case DWELL: {
+<b class="nc">&nbsp;                    Instant plannedDeparture = Instant.ofEpochMilli(t.label.currentTime);</b>
+<b class="nc">&nbsp;                    Optional&lt;Instant&gt; updatedDeparture = getDepartureDelay(stopTime.stop_sequence).map(delay -&gt; plannedDeparture.plus(delay, SECONDS));</b>
+<b class="nc">&nbsp;                    Stop stop = gtfsFeed.stops.get(stopTime.stop_id);</b>
+<b class="nc">&nbsp;                    stops.add(new Trip.Stop(stop.stop_id, stop.stop_name, geometryFactory.createPoint(new Coordinate(stop.stop_lon, stop.stop_lat)),</b>
+<b class="nc">&nbsp;                            updatedArrival.map(Date::from).orElse(Date.from(arrivalTimeFromHopEdge)), Date.from(arrivalTimeFromHopEdge),</b>
+<b class="nc">&nbsp;                            updatedArrival.map(Date::from).orElse(null), isArrivalCancelled(stopSequence),</b>
+<b class="nc">&nbsp;                            updatedDeparture.map(Date::from).orElse(Date.from(plannedDeparture)), Date.from(plannedDeparture),</b>
+<b class="nc">&nbsp;                            updatedDeparture.map(Date::from).orElse(null), isDepartureCancelled(stopSequence)));</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;                default: {
+<b class="nc">&nbsp;                    throw new RuntimeException();</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private Optional&lt;Integer&gt; getArrivalDelay(int stopSequence) {
+<b class="nc">&nbsp;            if (tripUpdate != null) {</b>
+<b class="nc">&nbsp;                int arrival_time = tripUpdate.stopTimes.stream().filter(st -&gt; st.stop_sequence == stopSequence).findFirst().orElseThrow(() -&gt; new RuntimeException(&quot;Stop time not found.&quot;)).arrival_time;</b>
+<b class="nc">&nbsp;                logger.trace(&quot;stop_sequence {} scheduled arrival {} updated arrival {}&quot;, stopSequence, stopTime.arrival_time, arrival_time);</b>
+<b class="nc">&nbsp;                return Optional.of(arrival_time - stopTime.arrival_time);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return Optional.empty();</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private boolean isArrivalCancelled(int stopSequence) {
+<b class="nc">&nbsp;            if (tripUpdate != null) {</b>
+<b class="nc">&nbsp;                return tripUpdate.cancelledArrivals.contains(stopSequence);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private Optional&lt;Integer&gt; getDepartureDelay(int stopSequence) {
+<b class="nc">&nbsp;            if (tripUpdate != null) {</b>
+<b class="nc">&nbsp;                int departure_time = tripUpdate.stopTimes.stream().filter(st -&gt; st.stop_sequence == stopSequence).findFirst().orElseThrow(() -&gt; new RuntimeException(&quot;Stop time not found.&quot;)).departure_time;</b>
+<b class="nc">&nbsp;                logger.trace(&quot;stop_sequence {} scheduled departure {} updated departure {}&quot;, stopSequence, stopTime.departure_time, departure_time);</b>
+<b class="nc">&nbsp;                return Optional.of(departure_time - stopTime.departure_time);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return Optional.empty();</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private boolean isDepartureCancelled(int stopSequence) {
+<b class="nc">&nbsp;            if (tripUpdate != null) {</b>
+<b class="nc">&nbsp;                return tripUpdate.cancelledDeparture.contains(stopSequence);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        void finish() {
+<b class="nc">&nbsp;            Stop stop = gtfsFeed.stops.get(stopTime.stop_id);</b>
+<b class="nc">&nbsp;            stops.add(new Trip.Stop(stop.stop_id, stop.stop_name, geometryFactory.createPoint(new Coordinate(stop.stop_lon, stop.stop_lat)),</b>
+<b class="nc">&nbsp;                    updatedArrival.map(Date::from).orElse(Date.from(arrivalTimeFromHopEdge)), Date.from(arrivalTimeFromHopEdge),</b>
+<b class="nc">&nbsp;                    updatedArrival.map(Date::from).orElse(null), isArrivalCancelled(stopSequence), null,</b>
+<b class="nc">&nbsp;                    null, null, isDepartureCancelled(stopSequence)));</b>
+<b class="nc">&nbsp;            for (Trip.Stop tripStop : stops) {</b>
+<b class="nc">&nbsp;                logger.trace(&quot;{}&quot;, tripStop);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        private void validateTripUpdate(GtfsReader.TripWithStopTimes tripUpdate) {
+&nbsp;            try {
+<b class="nc">&nbsp;                Iterable&lt;StopTime&gt; interpolatedStopTimesForTrip = gtfsFeed.getInterpolatedStopTimesForTrip(tripUpdate.trip.trip_id);</b>
+<b class="nc">&nbsp;                long nStopTimes = StreamSupport.stream(interpolatedStopTimesForTrip.spliterator(), false).count();</b>
+<b class="nc">&nbsp;                logger.trace(&quot;Original stop times: {} Updated stop times: {}&quot;, nStopTimes, tripUpdate.stopTimes.size());</b>
+<b class="nc">&nbsp;                if (nStopTimes != tripUpdate.stopTimes.size()) {</b>
+<b class="nc">&nbsp;                    logger.error(&quot;Original stop times: {} Updated stop times: {}&quot;, nStopTimes, tripUpdate.stopTimes.size());</b>
+&nbsp;                }
+<b class="nc">&nbsp;            } catch (GTFSFeed.FirstAndLastStopsDoNotHaveTimes firstAndLastStopsDoNotHaveTimes) {</b>
+<b class="nc">&nbsp;                throw new RuntimeException(firstAndLastStopsDoNotHaveTimes);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    // We are parsing a string of edges into a hierarchical trip.
+&nbsp;    // One could argue that one should never write a parser
+&nbsp;    // by hand, because it is always ugly, but use a parser library.
+&nbsp;    // The code would then read like a specification of what paths through the graph mean.
+&nbsp;    private List&lt;Trip.Leg&gt; parsePartitionToLegs(List&lt;Label.Transition&gt; path, Graph graph, EncodedValueLookup encodedValueLookup, Weighting weighting, Translation tr, List&lt;String&gt; requestedPathDetails) {
+<b class="nc">&nbsp;        if (path.size() &lt;= 1) {</b>
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (GtfsStorage.EdgeType.ENTER_PT == path.get(1).edge.getType()) {</b>
+<b class="nc">&nbsp;            String feedId = path.get(1).edge.getPlatformDescriptor().feed_id;</b>
+<b class="nc">&nbsp;            List&lt;Trip.Leg&gt; result = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            long boardTime = -1;</b>
+<b class="nc">&nbsp;            List&lt;Label.Transition&gt; partition = null;</b>
+<b class="nc">&nbsp;            for (int i = 1; i &lt; path.size(); i++) {</b>
+<b class="nc">&nbsp;                Label.Transition transition = path.get(i);</b>
+<b class="nc">&nbsp;                GraphExplorer.MultiModalEdge edge = path.get(i).edge;</b>
+<b class="nc">&nbsp;                if (edge.getType() == GtfsStorage.EdgeType.BOARD) {</b>
+<b class="nc">&nbsp;                    boardTime = transition.label.currentTime;</b>
+<b class="nc">&nbsp;                    partition = new ArrayList&lt;&gt;();</b>
+&nbsp;                }
+<b class="nc">&nbsp;                if (partition != null) {</b>
+<b class="nc">&nbsp;                    partition.add(path.get(i));</b>
+&nbsp;                }
+<b class="nc">&nbsp;                if (EnumSet.of(GtfsStorage.EdgeType.TRANSFER, GtfsStorage.EdgeType.LEAVE_TIME_EXPANDED_NETWORK).contains(edge.getType())) {</b>
+<b class="nc">&nbsp;                    GtfsRealtime.TripDescriptor tripDescriptor = partition.get(0).edge.getTripDescriptor();</b>
+<b class="nc">&nbsp;                    final StopsFromBoardHopDwellEdges stopsFromBoardHopDwellEdges = new StopsFromBoardHopDwellEdges(feedId, tripDescriptor);</b>
+<b class="nc">&nbsp;                    partition.stream()</b>
+<b class="nc">&nbsp;                            .filter(e -&gt; EnumSet.of(GtfsStorage.EdgeType.HOP, GtfsStorage.EdgeType.BOARD, GtfsStorage.EdgeType.DWELL).contains(e.edge.getType()))</b>
+<b class="nc">&nbsp;                            .forEach(stopsFromBoardHopDwellEdges::next);</b>
+<b class="nc">&nbsp;                    stopsFromBoardHopDwellEdges.finish();</b>
+<b class="nc">&nbsp;                    List&lt;Trip.Stop&gt; stops = stopsFromBoardHopDwellEdges.stops;</b>
+&nbsp;
+<b class="nc">&nbsp;                    result.add(new Trip.PtLeg(</b>
+<b class="nc">&nbsp;                            feedId, partition.get(0).edge.getTransfers() == 0,</b>
+<b class="nc">&nbsp;                            tripDescriptor.getTripId(),</b>
+<b class="nc">&nbsp;                            tripDescriptor.getRouteId(),</b>
+<b class="nc">&nbsp;                            Optional.ofNullable(gtfsStorage.getGtfsFeeds().get(feedId).trips.get(tripDescriptor.getTripId())).map(t -&gt; t.trip_headsign).orElse(&quot;extra&quot;),</b>
+&nbsp;                            stops,
+<b class="nc">&nbsp;                            partition.stream().mapToDouble(t -&gt; t.edge.getDistance()).sum(),</b>
+<b class="nc">&nbsp;                            path.get(i - 1).label.currentTime - boardTime,</b>
+<b class="nc">&nbsp;                            geometryFactory.createLineString(stops.stream().map(s -&gt; s.geometry.getCoordinate()).toArray(Coordinate[]::new))));</b>
+<b class="nc">&nbsp;                    partition = null;</b>
+<b class="nc">&nbsp;                    if (edge.getType() == GtfsStorage.EdgeType.TRANSFER) {</b>
+<b class="nc">&nbsp;                        feedId = edge.getPlatformDescriptor().feed_id;</b>
+<b class="nc">&nbsp;                        int[] skippedEdgesForTransfer = gtfsStorage.getSkippedEdgesForTransfer().get(edge.getId());</b>
+<b class="nc">&nbsp;                        if (skippedEdgesForTransfer != null) {</b>
+<b class="nc">&nbsp;                            List&lt;Trip.Leg&gt; legs = parsePartitionToLegs(transferPath(skippedEdgesForTransfer, weighting, path.get(i - 1).label.currentTime), graph, encodedValueLookup, weighting, tr, requestedPathDetails);</b>
+<b class="nc">&nbsp;                            result.add(legs.get(0));</b>
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return result;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            InstructionList instructions = new InstructionList(tr);</b>
+<b class="nc">&nbsp;            InstructionsFromEdges instructionsFromEdges = new InstructionsFromEdges(graph,</b>
+&nbsp;                    weighting, encodedValueLookup, instructions);
+<b class="nc">&nbsp;            int prevEdgeId = -1;</b>
+<b class="nc">&nbsp;            for (int i = 1; i &lt; path.size(); i++) {</b>
+<b class="nc">&nbsp;                if (path.get(i).edge.getType() != GtfsStorage.EdgeType.HIGHWAY) {</b>
+<b class="nc">&nbsp;                    throw new IllegalStateException(&quot;Got a transit edge where I think I must be on a road.&quot;);</b>
+&nbsp;                }
+<b class="nc">&nbsp;                EdgeIteratorState edge = graph.getEdgeIteratorState(path.get(i).edge.getId(), path.get(i).label.node.streetNode);</b>
+<b class="nc">&nbsp;                instructionsFromEdges.next(edge, i, prevEdgeId);</b>
+<b class="nc">&nbsp;                prevEdgeId = edge.getEdge();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            instructionsFromEdges.finish();</b>
+&nbsp;
+<b class="nc">&nbsp;            Path pathh = new Path(graph);</b>
+<b class="nc">&nbsp;            for (Label.Transition transition : path) {</b>
+<b class="nc">&nbsp;                if (transition.edge != null)</b>
+<b class="nc">&nbsp;                    pathh.addEdge(transition.edge.getId());</b>
+&nbsp;            }
+<b class="nc">&nbsp;            pathh.setFromNode(path.get(0).label.node.streetNode);</b>
+<b class="nc">&nbsp;            pathh.setEndNode(path.get(path.size() - 1).label.node.streetNode);</b>
+<b class="nc">&nbsp;            pathh.setFound(true);</b>
+<b class="nc">&nbsp;            Map&lt;String, List&lt;PathDetail&gt;&gt; pathDetails = PathDetailsFromEdges.calcDetails(pathh, encodedValueLookup, weighting, requestedPathDetails, pathDetailsBuilderFactory, 0, graph);</b>
+&nbsp;
+<b class="nc">&nbsp;            final Instant departureTime = Instant.ofEpochMilli(path.get(0).label.currentTime);</b>
+<b class="nc">&nbsp;            final Instant arrivalTime = Instant.ofEpochMilli(path.get(path.size() - 1).label.currentTime);</b>
+<b class="nc">&nbsp;            return Collections.singletonList(new Trip.WalkLeg(</b>
+&nbsp;                    &quot;Walk&quot;,
+<b class="nc">&nbsp;                    Date.from(departureTime),</b>
+<b class="nc">&nbsp;                    lineStringFromInstructions(instructions),</b>
+<b class="nc">&nbsp;                    edges(path).mapToDouble(edgeLabel -&gt; edgeLabel.getDistance()).sum(),</b>
+&nbsp;                    instructions,
+&nbsp;                    pathDetails,
+<b class="nc">&nbsp;                    Date.from(arrivalTime)));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Label.Transition&gt; transferPath(int[] skippedEdgesForTransfer, Weighting transferWeighting, long currentTime) {
+<b class="nc">&nbsp;        GraphExplorer graphExplorer = new GraphExplorer(graph, gtfsStorage.getPtGraph(), transferWeighting, gtfsStorage, realtimeFeed, false, true, false, walkSpeedKmH, false, 0);</b>
+<b class="nc">&nbsp;        return graphExplorer.walkPath(skippedEdgesForTransfer, currentTime);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Stream&lt;GraphExplorer.MultiModalEdge&gt; edges(List&lt;Label.Transition&gt; path) {
+<b class="nc">&nbsp;        return path.stream().filter(t -&gt; t.edge != null).map(t -&gt; t.edge);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Geometry lineStringFromInstructions(InstructionList instructions) {
+<b class="nc">&nbsp;        final PointList pointsList = new PointList();</b>
+<b class="nc">&nbsp;        for (Instruction instruction : instructions) {</b>
+<b class="nc">&nbsp;            pointsList.add(instruction.getPoints());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return pointsList.toLineString(false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

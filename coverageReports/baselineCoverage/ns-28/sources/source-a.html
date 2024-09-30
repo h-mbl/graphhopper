@@ -1,0 +1,296 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CarAccessParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: CarAccessParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CarAccessParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (72/78)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.8%
+  </span>
+  <span class="absValue">
+    (81/82)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.util.FerrySpeedCalculator;
+&nbsp;import com.graphhopper.routing.util.TransportationMode;
+&nbsp;import com.graphhopper.routing.util.WayAccess;
+&nbsp;import com.graphhopper.util.PMap;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.util.parsers.OSMTemporalAccessParser.hasTemporalRestriction;
+&nbsp;
+&nbsp;public class CarAccessParser extends AbstractAccessParser implements TagParser {
+&nbsp;
+<b class="fc">&nbsp;    protected final Set&lt;String&gt; trackTypeValues = new HashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;    protected final Set&lt;String&gt; highwayValues = new HashSet&lt;&gt;();</b>
+&nbsp;    protected final BooleanEncodedValue roundaboutEnc;
+&nbsp;
+&nbsp;    public CarAccessParser(EncodedValueLookup lookup, PMap properties) {
+<b class="fc">&nbsp;        this(</b>
+<b class="fc">&nbsp;                lookup.getBooleanEncodedValue(VehicleAccess.key(&quot;car&quot;)),</b>
+<b class="fc">&nbsp;                lookup.getBooleanEncodedValue(Roundabout.KEY),</b>
+&nbsp;                properties,
+&nbsp;                TransportationMode.CAR
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    public CarAccessParser(BooleanEncodedValue accessEnc,
+&nbsp;                           BooleanEncodedValue roundaboutEnc, PMap properties,
+&nbsp;                           TransportationMode transportationMode) {
+<b class="fc">&nbsp;        super(accessEnc, transportationMode);</b>
+<b class="fc">&nbsp;        this.roundaboutEnc = roundaboutEnc;</b>
+<b class="fc">&nbsp;        restrictedValues.add(&quot;agricultural&quot;);</b>
+<b class="fc">&nbsp;        restrictedValues.add(&quot;forestry&quot;);</b>
+<b class="fc">&nbsp;        restrictedValues.add(&quot;delivery&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        blockPrivate(properties.getBool(&quot;block_private&quot;, true));</b>
+<b class="fc">&nbsp;        blockFords(properties.getBool(&quot;block_fords&quot;, false));</b>
+&nbsp;
+<b class="fc">&nbsp;        barriers.add(&quot;kissing_gate&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;fence&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;bollard&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;stile&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;turnstile&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;cycle_barrier&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;motorcycle_barrier&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;block&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;bus_trap&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;sump_buster&quot;);</b>
+<b class="fc">&nbsp;        barriers.add(&quot;jersey_barrier&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        highwayValues.addAll(Arrays.asList(&quot;motorway&quot;, &quot;motorway_link&quot;, &quot;trunk&quot;, &quot;trunk_link&quot;,</b>
+&nbsp;                &quot;primary&quot;, &quot;primary_link&quot;, &quot;secondary&quot;, &quot;secondary_link&quot;, &quot;tertiary&quot;, &quot;tertiary_link&quot;,
+&nbsp;                &quot;unclassified&quot;, &quot;residential&quot;, &quot;living_street&quot;, &quot;service&quot;, &quot;road&quot;, &quot;track&quot;));
+&nbsp;
+<b class="fc">&nbsp;        trackTypeValues.addAll(Arrays.asList(&quot;grade1&quot;, &quot;grade2&quot;, &quot;grade3&quot;, null));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public WayAccess getAccess(ReaderWay way) {
+&nbsp;        // TODO: Ferries have conditionals, like opening hours or are closed during some time in the year
+<b class="fc">&nbsp;        String highwayValue = way.getTag(&quot;highway&quot;);</b>
+<b class="fc">&nbsp;        int firstIndex = way.getFirstIndex(restrictionKeys);</b>
+<b class="fc">&nbsp;        String firstValue = firstIndex &lt; 0 ? &quot;&quot; : way.getTag(restrictionKeys.get(firstIndex), &quot;&quot;);</b>
+<b class="fc">&nbsp;        if (highwayValue == null) {</b>
+<b class="fc">&nbsp;            if (FerrySpeedCalculator.isFerry(way)) {</b>
+<b class="fc">&nbsp;                if (restrictedValues.contains(firstValue))</b>
+<b class="fc">&nbsp;                    return WayAccess.CAN_SKIP;</b>
+<b class="fc">&nbsp;                if (intendedValues.contains(firstValue) ||</b>
+&nbsp;                        // implied default is allowed only if foot and bicycle is not specified:
+<b class="pc">&nbsp;                        firstValue.isEmpty() &amp;&amp; !way.hasTag(&quot;foot&quot;) &amp;&amp; !way.hasTag(&quot;bicycle&quot;) ||</b>
+&nbsp;                        // if hgv is allowed then smaller trucks and cars are allowed too
+<b class="pc">&nbsp;                        way.hasTag(&quot;hgv&quot;, &quot;yes&quot;))</b>
+<b class="fc">&nbsp;                    return WayAccess.FERRY;</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (&quot;service&quot;.equals(highwayValue) &amp;&amp; &quot;emergency_access&quot;.equals(way.getTag(&quot;service&quot;)))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (&quot;track&quot;.equals(highwayValue) &amp;&amp; !trackTypeValues.contains(way.getTag(&quot;tracktype&quot;)))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!highwayValues.contains(highwayValue))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+&nbsp;        // this is a very rare tagging which we should/could remove (the status key itself is described as &quot;vague&quot;)
+<b class="pc">&nbsp;        if (way.hasTag(&quot;impassable&quot;, &quot;yes&quot;) || way.hasTag(&quot;status&quot;, &quot;impassable&quot;))</b>
+<b class="nc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+&nbsp;        // multiple restrictions needs special handling
+<b class="fc">&nbsp;        if (firstIndex &gt;= 0) {</b>
+<b class="fc">&nbsp;            String[] restrict = firstValue.split(&quot;;&quot;);</b>
+<b class="fc">&nbsp;            for (String value : restrict) {</b>
+<b class="fc">&nbsp;                if (restrictedValues.contains(value) &amp;&amp; !hasTemporalRestriction(way, firstIndex, restrictionKeys))</b>
+<b class="fc">&nbsp;                    return WayAccess.CAN_SKIP;</b>
+<b class="fc">&nbsp;                if (intendedValues.contains(value))</b>
+<b class="fc">&nbsp;                    return WayAccess.WAY;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (isBlockFords() &amp;&amp; (&quot;ford&quot;.equals(highwayValue) || way.hasTag(&quot;ford&quot;)))</b>
+<b class="fc">&nbsp;            return WayAccess.CAN_SKIP;</b>
+&nbsp;
+<b class="fc">&nbsp;        return WayAccess.WAY;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way) {
+<b class="fc">&nbsp;        WayAccess access = getAccess(way);</b>
+<b class="fc">&nbsp;        if (access.canSkip())</b>
+&nbsp;            return;
+&nbsp;
+<b class="fc">&nbsp;        if (!access.isFerry()) {</b>
+<b class="fc">&nbsp;            boolean isRoundabout = roundaboutEnc.getBool(false, edgeId, edgeIntAccess);</b>
+<b class="fc">&nbsp;            if (isOneway(way) || isRoundabout) {</b>
+<b class="fc">&nbsp;                if (isForwardOneway(way))</b>
+<b class="fc">&nbsp;                    accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;                if (isBackwardOneway(way))</b>
+<b class="fc">&nbsp;                    accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;                accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        } else {
+<b class="fc">&nbsp;            accessEnc.setBool(false, edgeId, edgeIntAccess, true);</b>
+<b class="fc">&nbsp;            accessEnc.setBool(true, edgeId, edgeIntAccess, true);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (way.hasTag(&quot;gh:barrier_edge&quot;)) {</b>
+<b class="fc">&nbsp;            List&lt;Map&lt;String, Object&gt;&gt; nodeTags = way.getTag(&quot;node_tags&quot;, Collections.emptyList());</b>
+<b class="fc">&nbsp;            handleBarrierEdge(edgeId, edgeIntAccess, nodeTags.get(0));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * make sure that isOneway is called before
+&nbsp;     */
+&nbsp;    protected boolean isBackwardOneway(ReaderWay way) {
+<b class="fc">&nbsp;        return way.hasTag(&quot;oneway&quot;, &quot;-1&quot;)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;vehicle:forward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;motor_vehicle:forward&quot;, restrictedValues);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * make sure that isOneway is called before
+&nbsp;     */
+&nbsp;    protected boolean isForwardOneway(ReaderWay way) {
+<b class="fc">&nbsp;        return !way.hasTag(&quot;oneway&quot;, &quot;-1&quot;)</b>
+<b class="fc">&nbsp;                &amp;&amp; !way.hasTag(&quot;vehicle:forward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                &amp;&amp; !way.hasTag(&quot;motor_vehicle:forward&quot;, restrictedValues);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isOneway(ReaderWay way) {
+<b class="fc">&nbsp;        return way.hasTag(&quot;oneway&quot;, ONEWAYS)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;vehicle:backward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;vehicle:forward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;motor_vehicle:backward&quot;, restrictedValues)</b>
+<b class="fc">&nbsp;                || way.hasTag(&quot;motor_vehicle:forward&quot;, restrictedValues);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

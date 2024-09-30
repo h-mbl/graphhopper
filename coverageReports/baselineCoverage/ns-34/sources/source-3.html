@@ -1,0 +1,821 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > VectorTileEncoder</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">no.ecc.vectortile</a>
+</div>
+
+<h1>Coverage Summary for Class: VectorTileEncoder (no.ecc.vectortile)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">VectorTileEncoder</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/164)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/213)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">VectorTileEncoder$Feature</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">VectorTileEncoder$Layer</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/168)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/231)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*****************************************************************
+&nbsp; *  Licensed to the Apache Software Foundation (ASF) under one
+&nbsp; *  or more contributor license agreements.  See the NOTICE file
+&nbsp; *  distributed with this work for additional information
+&nbsp; *  regarding copyright ownership.  The ASF licenses this file
+&nbsp; *  to you under the Apache License, Version 2.0 (the
+&nbsp; *  &quot;License&quot;); you may not use this file except in compliance
+&nbsp; *  with the License.  You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *    http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing,
+&nbsp; *  software distributed under the License is distributed on an
+&nbsp; *  &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+&nbsp; *  KIND, either express or implied.  See the License for the
+&nbsp; *  specific language governing permissions and limitations
+&nbsp; *  under the License.
+&nbsp; ****************************************************************/
+&nbsp;package no.ecc.vectortile;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;import org.locationtech.jts.algorithm.Area;
+&nbsp;import org.locationtech.jts.geom.Coordinate;
+&nbsp;import org.locationtech.jts.geom.Envelope;
+&nbsp;import org.locationtech.jts.geom.Geometry;
+&nbsp;import org.locationtech.jts.geom.GeometryCollection;
+&nbsp;import org.locationtech.jts.geom.GeometryFactory;
+&nbsp;import org.locationtech.jts.geom.LineString;
+&nbsp;import org.locationtech.jts.geom.LinearRing;
+&nbsp;import org.locationtech.jts.geom.MultiLineString;
+&nbsp;import org.locationtech.jts.geom.MultiPoint;
+&nbsp;import org.locationtech.jts.geom.MultiPolygon;
+&nbsp;import org.locationtech.jts.geom.Point;
+&nbsp;import org.locationtech.jts.geom.Polygon;
+&nbsp;import org.locationtech.jts.geom.TopologyException;
+&nbsp;import org.locationtech.jts.geom.prep.PreparedGeometry;
+&nbsp;import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+&nbsp;import org.locationtech.jts.io.ParseException;
+&nbsp;import org.locationtech.jts.io.WKTReader;
+&nbsp;import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
+&nbsp;import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
+&nbsp;
+&nbsp;import vector_tile.VectorTile;
+&nbsp;import vector_tile.VectorTile.Tile.GeomType;
+&nbsp;
+&nbsp;/**
+&nbsp; * This is a copy of https://github.com/ElectronicChartCentre/java-vector-tile/commit/15e2e9b127729a00c52ced3a11fd1e9a45b462b1
+&nbsp; * We use this copy because we want to avoid the non-standard no.ecc Maven repository
+&nbsp; */
+&nbsp;public class VectorTileEncoder {
+&nbsp;
+<b class="nc">&nbsp;    private final Map&lt;String, Layer&gt; layers = new LinkedHashMap&lt;String, Layer&gt;();</b>
+&nbsp;
+&nbsp;    private final int extent;
+&nbsp;    
+&nbsp;    private final double minimumLength;
+&nbsp;    
+&nbsp;    private final double minimumArea;
+&nbsp;
+&nbsp;    protected final Geometry clipGeometry;
+&nbsp;    
+&nbsp;    protected final Envelope clipEnvelope;
+&nbsp;    
+&nbsp;    protected final PreparedGeometry clipGeometryPrepared;
+&nbsp;
+&nbsp;    private final boolean autoScale;
+&nbsp;
+&nbsp;    private long autoincrement;
+&nbsp;
+&nbsp;    private final boolean autoincrementIds;
+&nbsp;    
+&nbsp;    private final double simplificationDistanceTolerance;
+&nbsp;    
+<b class="nc">&nbsp;    private final GeometryFactory gf = new GeometryFactory();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a {@link VectorTileEncoder} with the default extent of 4096 and
+&nbsp;     * clip buffer of 8.
+&nbsp;     */
+&nbsp;    public VectorTileEncoder() {
+<b class="nc">&nbsp;        this(4096, 8, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a {@link VectorTileEncoder} with the given extent and a clip
+&nbsp;     * buffer of 8.
+&nbsp;     * 
+&nbsp;     * @param extent a int to specify vector tile extent. 4096 is a good value.
+&nbsp;     */
+&nbsp;    public VectorTileEncoder(int extent) {
+<b class="nc">&nbsp;        this(extent, 8, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public VectorTileEncoder(int extent, int clipBuffer, boolean autoScale) {
+<b class="nc">&nbsp;        this(extent, clipBuffer, autoScale, false);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public VectorTileEncoder(int extent, int clipBuffer, boolean autoScale, boolean autoincrementIds) {
+<b class="nc">&nbsp;        this(extent, clipBuffer, autoScale, autoincrementIds, -1.0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a {@link VectorTileEncoder} with the given extent value.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * The extent value control how detailed the coordinates are encoded in the
+&nbsp;     * vector tile. 4096 is a good default, 256 can be used to reduce density.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * The clip buffer value control how large the clipping area is outside of the
+&nbsp;     * tile for geometries. 0 means that the clipping is done at the tile border. 8
+&nbsp;     * is a good default.
+&nbsp;     *
+&nbsp;     * @param extent
+&nbsp;     *            a int with extent value. 4096 is a good value.
+&nbsp;     * @param clipBuffer
+&nbsp;     *            a int with clip buffer size for geometries. 8 is a good value.
+&nbsp;     * @param autoScale
+&nbsp;     *            when true, the encoder expects coordinates in the 0..255 range and
+&nbsp;     *            will scale them automatically to the 0..extent-1 range before
+&nbsp;     *            encoding. when false, the encoder expects coordinates in the
+&nbsp;     *            0..extent-1 range.
+&nbsp;     * @param autoincrementIds 
+&nbsp;     *            when true the vector tile feature id is auto incremented when using 
+&nbsp;     *            {@link #addFeature(String, Map, Geometry)}
+&nbsp;     * @param simplificationDistanceTolerance
+&nbsp;     *            a positive double representing the distance tolerance to be used
+&nbsp;     *            for non-points before (optional) scaling and encoding. A value
+&nbsp;     *            &amp;lt;=0 will prevent simplifying geometry. 0.1 seems to be a good
+&nbsp;     *            value when {@code autoScale} is turned on.
+&nbsp;     */
+<b class="nc">&nbsp;    public VectorTileEncoder(int extent, int clipBuffer, boolean autoScale, boolean autoincrementIds, double simplificationDistanceTolerance) {</b>
+<b class="nc">&nbsp;        this.extent = extent;</b>
+<b class="nc">&nbsp;        this.autoScale = autoScale;</b>
+<b class="nc">&nbsp;        this.minimumLength = autoScale ? (256.0 / extent) : 1.0;</b>
+<b class="nc">&nbsp;        this.minimumArea = this.minimumLength * this.minimumLength;</b>
+<b class="nc">&nbsp;        this.autoincrementIds = autoincrementIds;</b>
+<b class="nc">&nbsp;        this.autoincrement = 1;</b>
+<b class="nc">&nbsp;        this.simplificationDistanceTolerance = simplificationDistanceTolerance;</b>
+&nbsp;
+<b class="nc">&nbsp;        final int size = autoScale ? 256 : extent;</b>
+<b class="nc">&nbsp;        clipGeometry = createTileEnvelope(clipBuffer, size);</b>
+<b class="nc">&nbsp;        clipEnvelope = clipGeometry.getEnvelopeInternal();</b>
+<b class="nc">&nbsp;        clipGeometryPrepared = PreparedGeometryFactory.prepare(clipGeometry);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Geometry createTileEnvelope(int buffer, int size) {
+<b class="nc">&nbsp;        Coordinate[] coords = new Coordinate[5];</b>
+<b class="nc">&nbsp;        coords[0] = new Coordinate(0 - buffer, size + buffer);</b>
+<b class="nc">&nbsp;        coords[1] = new Coordinate(size + buffer, size + buffer);</b>
+<b class="nc">&nbsp;        coords[2] = new Coordinate(size + buffer, 0 - buffer);</b>
+<b class="nc">&nbsp;        coords[3] = new Coordinate(0 - buffer, 0 - buffer);</b>
+<b class="nc">&nbsp;        coords[4] = coords[0];</b>
+<b class="nc">&nbsp;        return new GeometryFactory().createPolygon(coords);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addFeature(String layerName, Map&lt;String, ?&gt; attributes, Geometry geometry) {
+<b class="nc">&nbsp;        this.addFeature(layerName, attributes, geometry, this.autoincrementIds ? this.autoincrement++ : -1);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Add a feature with layer name (typically feature type name), some attributes
+&nbsp;     * and a Geometry. The Geometry must be in &quot;pixel&quot; space 0,0 upper left and
+&nbsp;     * 256,256 lower right.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * For optimization, geometries will be clipped and simplified. Features with
+&nbsp;     * geometries outside of the tile will be skipped.
+&nbsp;     *
+&nbsp;     * @param layerName a {@link String} with the vector tile layer name.
+&nbsp;     * @param attributes a {@link Map} with the vector tile feature attributes.
+&nbsp;     * @param geometry a {@link Geometry} for the vector tile feature.
+&nbsp;     * @param id a long with the vector tile feature id field.
+&nbsp;     */
+&nbsp;    public void addFeature(String layerName, Map&lt;String, ?&gt; attributes, Geometry geometry, long id) {
+&nbsp;
+&nbsp;        // skip small Polygon/LineString.
+<b class="nc">&nbsp;        if (geometry instanceof MultiPolygon &amp;&amp; geometry.getArea() &lt; minimumArea) {</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof Polygon &amp;&amp; geometry.getArea() &lt; minimumArea) {</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof LineString &amp;&amp; geometry.getLength() &lt; minimumLength) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // special handling of GeometryCollection. subclasses are not handled here.
+<b class="nc">&nbsp;        if (geometry.getClass().equals(GeometryCollection.class)) {</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; geometry.getNumGeometries(); i++) {</b>
+<b class="nc">&nbsp;                Geometry subGeometry = geometry.getGeometryN(i);</b>
+&nbsp;                // keeping the id. any better suggestion?
+<b class="nc">&nbsp;                addFeature(layerName, attributes, subGeometry, id);</b>
+&nbsp;            }
+&nbsp;            return;
+&nbsp;        }
+&nbsp;        
+&nbsp;        // About to simplify and clip. Looks like simplification before clipping is
+&nbsp;        // faster than clipping before simplification
+&nbsp;        
+&nbsp;        // simplify non-points
+<b class="nc">&nbsp;        if (simplificationDistanceTolerance &gt; 0.0 &amp;&amp; !(geometry instanceof Point)) {</b>
+<b class="nc">&nbsp;            if (geometry instanceof LineString || geometry instanceof MultiLineString) {</b>
+<b class="nc">&nbsp;                geometry = DouglasPeuckerSimplifier.simplify(geometry, simplificationDistanceTolerance);</b>
+<b class="nc">&nbsp;            } else if (geometry instanceof Polygon || geometry instanceof MultiPolygon) {</b>
+<b class="nc">&nbsp;                Geometry simplified = DouglasPeuckerSimplifier.simplify(geometry, simplificationDistanceTolerance);</b>
+&nbsp;                // extra check to prevent polygon converted to line
+<b class="nc">&nbsp;                if (simplified instanceof Polygon || simplified instanceof MultiPolygon) {</b>
+<b class="nc">&nbsp;                    geometry = simplified;</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    geometry = TopologyPreservingSimplifier.simplify(geometry, simplificationDistanceTolerance);</b>
+&nbsp;                }
+&nbsp;            } else {
+<b class="nc">&nbsp;                geometry = TopologyPreservingSimplifier.simplify(geometry, simplificationDistanceTolerance);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;        
+&nbsp;        // clip geometry
+<b class="nc">&nbsp;        if (geometry instanceof Point) {</b>
+<b class="nc">&nbsp;            if (!clipCovers(geometry)) {</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            geometry = clipGeometry(geometry);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // no need to add empty geometry
+<b class="nc">&nbsp;        if (geometry == null || geometry.isEmpty()) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Layer layer = layers.get(layerName);</b>
+<b class="nc">&nbsp;        if (layer == null) {</b>
+<b class="nc">&nbsp;            layer = new Layer();</b>
+<b class="nc">&nbsp;            layers.put(layerName, layer);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Feature feature = new Feature();</b>
+<b class="nc">&nbsp;        feature.geometry = geometry;</b>
+<b class="nc">&nbsp;        feature.id = id;</b>
+<b class="nc">&nbsp;        this.autoincrement = Math.max(this.autoincrement, id + 1);</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, ?&gt; e : attributes.entrySet()) {</b>
+&nbsp;            // skip attribute without value
+<b class="nc">&nbsp;            if (e.getValue() == null) {</b>
+&nbsp;                continue;
+&nbsp;            }
+<b class="nc">&nbsp;            feature.tags.add(layer.key(e.getKey()));</b>
+<b class="nc">&nbsp;            feature.tags.add(layer.value(e.getValue()));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        layer.features.add(feature);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * A short circuit clip to the tile extent (tile boundary + buffer) for
+&nbsp;     * points to improve performance. This method can be overridden to change
+&nbsp;     * clipping behavior. See also {@link #clipGeometry(Geometry)}.
+&nbsp;     * 
+&nbsp;     * @param geom a {@link Geometry} to check for &quot;covers&quot;
+&nbsp;     * @return a boolean true when the current clip geometry covers the given geom.
+&nbsp;     */
+&nbsp;    protected boolean clipCovers(Geometry geom) {
+<b class="nc">&nbsp;        if (geom instanceof Point) {</b>
+<b class="nc">&nbsp;            Point p = (Point) geom;</b>
+<b class="nc">&nbsp;            return clipGeometry.getEnvelopeInternal().covers(p.getCoordinate());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return clipEnvelope.covers(geom.getEnvelopeInternal());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clip geometry according to buffer given at construct time. This method
+&nbsp;     * can be overridden to change clipping behavior. See also
+&nbsp;     * {@link #clipCovers(Geometry)}.
+&nbsp;     *
+&nbsp;     * @param geometry a {@link Geometry} to check for intersection with the current clip geometry
+&nbsp;     * @return a boolean true when current clip geometry intersects with the given geometry.
+&nbsp;     */
+&nbsp;    protected Geometry clipGeometry(Geometry geometry) {
+&nbsp;        try {
+<b class="nc">&nbsp;            if (clipEnvelope.contains(geometry.getEnvelopeInternal())) {</b>
+<b class="nc">&nbsp;                return geometry;</b>
+&nbsp;            }
+&nbsp;            
+<b class="nc">&nbsp;            Geometry original = geometry;</b>
+<b class="nc">&nbsp;            geometry = clipGeometry.intersection(original);</b>
+&nbsp;
+&nbsp;            // some times a intersection is returned as an empty geometry.
+&nbsp;            // going via wkt fixes the problem.
+<b class="nc">&nbsp;            if (geometry.isEmpty() &amp;&amp; clipGeometryPrepared.intersects(original)) {</b>
+<b class="nc">&nbsp;                Geometry originalViaWkt = new WKTReader().read(original.toText());</b>
+<b class="nc">&nbsp;                geometry = clipGeometry.intersection(originalViaWkt);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            return geometry;</b>
+<b class="nc">&nbsp;        } catch (TopologyException e) {</b>
+&nbsp;            // could not intersect. original geometry will be used instead.
+<b class="nc">&nbsp;            return geometry;</b>
+<b class="nc">&nbsp;        } catch (ParseException e1) {</b>
+&nbsp;            // could not encode/decode WKT. original geometry will be used
+&nbsp;            // instead.
+<b class="nc">&nbsp;            return geometry;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return a byte array with the vector tile
+&nbsp;     */
+&nbsp;    public byte[] encode() {
+&nbsp;        
+<b class="nc">&nbsp;        VectorTile.Tile.Builder tile = VectorTile.Tile.newBuilder();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, Layer&gt; e : layers.entrySet()) {</b>
+<b class="nc">&nbsp;            String layerName = e.getKey();</b>
+<b class="nc">&nbsp;            Layer layer = e.getValue();</b>
+&nbsp;
+<b class="nc">&nbsp;            VectorTile.Tile.Layer.Builder tileLayer = VectorTile.Tile.Layer.newBuilder();</b>
+&nbsp;            
+<b class="nc">&nbsp;            tileLayer.setVersion(2);</b>
+<b class="nc">&nbsp;            tileLayer.setName(layerName);</b>
+&nbsp;
+<b class="nc">&nbsp;            tileLayer.addAllKeys(layer.keys());</b>
+&nbsp;
+<b class="nc">&nbsp;            for (Object value : layer.values()) {</b>
+<b class="nc">&nbsp;                VectorTile.Tile.Value.Builder tileValue = VectorTile.Tile.Value.newBuilder();</b>
+<b class="nc">&nbsp;                if (value instanceof String) {</b>
+<b class="nc">&nbsp;                    tileValue.setStringValue((String) value);</b>
+<b class="nc">&nbsp;                } else if (value instanceof Integer) {</b>
+<b class="nc">&nbsp;                    tileValue.setSintValue(((Integer) value).intValue());</b>
+<b class="nc">&nbsp;                } else if (value instanceof Long) {</b>
+<b class="nc">&nbsp;                    tileValue.setSintValue(((Long) value).longValue());</b>
+<b class="nc">&nbsp;                } else if (value instanceof Float) {</b>
+<b class="nc">&nbsp;                    tileValue.setFloatValue(((Float) value).floatValue());</b>
+<b class="nc">&nbsp;                } else if (value instanceof Double) {</b>
+<b class="nc">&nbsp;                    tileValue.setDoubleValue(((Double) value).doubleValue());</b>
+<b class="nc">&nbsp;                } else if (value instanceof BigDecimal) {</b>
+<b class="nc">&nbsp;                    tileValue.setStringValue(value.toString());</b>
+<b class="nc">&nbsp;                } else if (value instanceof Number) {</b>
+<b class="nc">&nbsp;                    tileValue.setDoubleValue(((Number) value).doubleValue());</b>
+<b class="nc">&nbsp;                } else if (value instanceof Boolean) {</b>
+<b class="nc">&nbsp;                    tileValue.setBoolValue(((Boolean) value).booleanValue());</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    tileValue.setStringValue(value.toString());</b>
+&nbsp;                }
+<b class="nc">&nbsp;                tileLayer.addValues(tileValue.build());</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            tileLayer.setExtent(extent);</b>
+&nbsp;
+<b class="nc">&nbsp;            for (Feature feature : layer.features) {</b>
+&nbsp;
+<b class="nc">&nbsp;                Geometry geometry = feature.geometry;</b>
+&nbsp;
+<b class="nc">&nbsp;                VectorTile.Tile.Feature.Builder featureBuilder = VectorTile.Tile.Feature.newBuilder();</b>
+&nbsp;
+<b class="nc">&nbsp;                featureBuilder.addAllTags(feature.tags);</b>
+<b class="nc">&nbsp;                if (feature.id &gt;= 0) {</b>
+<b class="nc">&nbsp;                    featureBuilder.setId(feature.id);</b>
+&nbsp;                }
+&nbsp;                
+<b class="nc">&nbsp;                GeomType geomType = toGeomType(geometry);</b>
+<b class="nc">&nbsp;                x = 0;</b>
+<b class="nc">&nbsp;                y = 0;</b>
+<b class="nc">&nbsp;                List&lt;Integer&gt; commands = commands(geometry);</b>
+&nbsp;
+&nbsp;                // skip features with no geometry commands
+<b class="nc">&nbsp;                if (commands.isEmpty()) {</b>
+&nbsp;                    continue;
+&nbsp;                }
+&nbsp;
+&nbsp;                // Extra step to parse and check validity and try to repair. Probably expensive.
+<b class="nc">&nbsp;                if (simplificationDistanceTolerance &gt; 0.0 &amp;&amp; geomType == GeomType.POLYGON) {</b>
+<b class="nc">&nbsp;                    double scale = autoScale ? (extent / 256.0) : 1.0;</b>
+<b class="nc">&nbsp;                    Geometry decodedGeometry = VectorTileDecoder.decodeGeometry(gf, geomType, commands, scale);</b>
+<b class="nc">&nbsp;                    if (!isValid(decodedGeometry)) {</b>
+&nbsp;                        // Invalid. Try more simplification and without preserving topology.
+<b class="nc">&nbsp;                        geometry = DouglasPeuckerSimplifier.simplify(geometry, simplificationDistanceTolerance * 2.0);</b>
+<b class="nc">&nbsp;                        if (geometry.isEmpty()) {</b>
+&nbsp;                            continue;
+&nbsp;                        }
+<b class="nc">&nbsp;                        geomType = toGeomType(geometry);</b>
+<b class="nc">&nbsp;                        x = 0;</b>
+<b class="nc">&nbsp;                        y = 0;</b>
+<b class="nc">&nbsp;                        commands = commands(geometry);</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;                
+<b class="nc">&nbsp;                featureBuilder.setType(geomType);</b>
+<b class="nc">&nbsp;                featureBuilder.addAllGeometry(commands);</b>
+&nbsp;
+<b class="nc">&nbsp;                tileLayer.addFeatures(featureBuilder.build());</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            tile.addLayers(tileLayer.build());</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return tile.build().toByteArray();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static final boolean isValid(Geometry geometry) {
+&nbsp;        try {
+<b class="nc">&nbsp;            return geometry.isValid();</b>
+<b class="nc">&nbsp;        } catch (RuntimeException e) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    static VectorTile.Tile.GeomType toGeomType(Geometry geometry) {
+<b class="nc">&nbsp;        if (geometry instanceof Point) {</b>
+<b class="nc">&nbsp;            return VectorTile.Tile.GeomType.POINT;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof MultiPoint) {</b>
+<b class="nc">&nbsp;            return VectorTile.Tile.GeomType.POINT;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof LineString) {</b>
+<b class="nc">&nbsp;            return VectorTile.Tile.GeomType.LINESTRING;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof MultiLineString) {</b>
+<b class="nc">&nbsp;            return VectorTile.Tile.GeomType.LINESTRING;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof Polygon) {</b>
+<b class="nc">&nbsp;            return VectorTile.Tile.GeomType.POLYGON;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof MultiPolygon) {</b>
+<b class="nc">&nbsp;            return VectorTile.Tile.GeomType.POLYGON;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return VectorTile.Tile.GeomType.UNKNOWN;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static boolean shouldClosePath(Geometry geometry) {
+<b class="nc">&nbsp;        return (geometry instanceof Polygon) || (geometry instanceof LinearRing);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    List&lt;Integer&gt; commands(Geometry geometry) {
+&nbsp;        
+<b class="nc">&nbsp;        if (geometry instanceof MultiLineString) {</b>
+<b class="nc">&nbsp;            return commands((MultiLineString) geometry);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof Polygon) {</b>
+<b class="nc">&nbsp;            return commands((Polygon) geometry);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (geometry instanceof MultiPolygon) {</b>
+<b class="nc">&nbsp;            return commands((MultiPolygon) geometry);</b>
+&nbsp;        }        
+&nbsp;        
+<b class="nc">&nbsp;        return commands(geometry.getCoordinates(), shouldClosePath(geometry), geometry instanceof MultiPoint);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    List&lt;Integer&gt; commands(MultiLineString mls) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; commands = new ArrayList&lt;Integer&gt;();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; mls.getNumGeometries(); i++) {</b>
+<b class="nc">&nbsp;            final List&lt;Integer&gt; geomCommands =</b>
+<b class="nc">&nbsp;                    commands(mls.getGeometryN(i).getCoordinates(), false);</b>
+<b class="nc">&nbsp;            if (geomCommands.size() &gt; 3) {</b>
+&nbsp;                // if the geometry consists of all identical points (after Math.round()) commands
+&nbsp;                // returns a single move_to command, which is not valid according to the vector tile
+&nbsp;                // specifications.
+&nbsp;                // (https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4343-linestring-geometry-type)
+<b class="nc">&nbsp;                commands.addAll(geomCommands);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return commands;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    List&lt;Integer&gt; commands(MultiPolygon mp) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; commands = new ArrayList&lt;Integer&gt;();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; mp.getNumGeometries(); i++) {</b>
+<b class="nc">&nbsp;            Polygon polygon = (Polygon) mp.getGeometryN(i);</b>
+<b class="nc">&nbsp;            commands.addAll(commands(polygon));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return commands;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    List&lt;Integer&gt; commands(Polygon polygon) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; commands = new ArrayList&lt;Integer&gt;();</b>
+&nbsp;
+&nbsp;        // According to the vector tile specification, the exterior ring of a polygon
+&nbsp;        // must be in clockwise order, while the interior ring in counter-clockwise order.
+&nbsp;        // In the tile coordinate system, Y axis is positive down.
+&nbsp;        //
+&nbsp;        // However, in geographic coordinate system, Y axis is positive up.
+&nbsp;        // Therefore, we must reverse the coordinates.
+&nbsp;        // So, the code below will make sure that exterior ring is in counter-clockwise order
+&nbsp;        // and interior ring in clockwise order.
+<b class="nc">&nbsp;        LineString exteriorRing = polygon.getExteriorRing();</b>
+<b class="nc">&nbsp;        if (Area.ofRingSigned(exteriorRing.getCoordinates()) &gt; 0) {</b>
+<b class="nc">&nbsp;            exteriorRing = exteriorRing.reverse();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        commands.addAll(commands(exteriorRing.getCoordinates(), true));</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int i = 0; i &lt; polygon.getNumInteriorRing(); i++) {</b>
+<b class="nc">&nbsp;            LineString interiorRing = polygon.getInteriorRingN(i);</b>
+<b class="nc">&nbsp;            if (Area.ofRingSigned(interiorRing.getCoordinates()) &lt; 0) {</b>
+<b class="nc">&nbsp;                interiorRing = interiorRing.reverse();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            commands.addAll(commands(interiorRing.getCoordinates(), true));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return commands;</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private int x = 0;</b>
+<b class="nc">&nbsp;    private int y = 0;</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * // // // Ex.: MoveTo(3, 6), LineTo(8, 12), LineTo(20, 34), ClosePath //
+&nbsp;     * Encoded as: [ 9 3 6 18 5 6 12 22 15 ] // == command type 7 (ClosePath),
+&nbsp;     * length 1 // ===== relative LineTo(+12, +22) == LineTo(20, 34) // ===
+&nbsp;     * relative LineTo(+5, +6) == LineTo(8, 12) // == [00010 010] = command type
+&nbsp;     * 2 (LineTo), length 2 // === relative MoveTo(+3, +6) // == [00001 001] =
+&nbsp;     * command type 1 (MoveTo), length 1 // Commands are encoded as uint32
+&nbsp;     * varints, vertex parameters are // encoded as sint32 varints (zigzag).
+&nbsp;     * Vertex parameters are // also encoded as deltas to the previous position.
+&nbsp;     * The original // position is (0,0)
+&nbsp;     *
+&nbsp;     * @param cs
+&nbsp;     * @return
+&nbsp;     */
+&nbsp;    List&lt;Integer&gt; commands(Coordinate[] cs, boolean closePathAtEnd) {
+<b class="nc">&nbsp;        return commands(cs, closePathAtEnd, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    List&lt;Integer&gt; commands(Coordinate[] cs, boolean closePathAtEnd, boolean multiPoint) {
+&nbsp;
+<b class="nc">&nbsp;        if (cs.length == 0) {</b>
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Integer&gt; r = new ArrayList&lt;Integer&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        int lineToIndex = 0;</b>
+<b class="nc">&nbsp;        int lineToLength = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        double scale = autoScale ? (extent / 256.0) : 1.0;</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int i = 0; i &lt; cs.length; i++) {</b>
+<b class="nc">&nbsp;            Coordinate c = cs[i];</b>
+&nbsp;
+<b class="nc">&nbsp;            if (i == 0) {</b>
+<b class="nc">&nbsp;                r.add(commandAndLength(Command.MoveTo, multiPoint ? cs.length : 1));</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            int _x = (int) Math.round(c.x * scale);</b>
+<b class="nc">&nbsp;            int _y = (int) Math.round(c.y * scale);</b>
+&nbsp;
+&nbsp;            // prevent point equal to the previous
+<b class="nc">&nbsp;            if (i &gt; 0 &amp;&amp; _x == x &amp;&amp; _y == y) {</b>
+<b class="nc">&nbsp;                lineToLength--;</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;
+&nbsp;            // prevent double closing
+<b class="nc">&nbsp;            if (closePathAtEnd &amp;&amp; cs.length &gt; 1 &amp;&amp; i == (cs.length - 1) &amp;&amp; cs[0].equals(c)) {</b>
+<b class="nc">&nbsp;                lineToLength--;</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;
+&nbsp;            // delta, then zigzag
+<b class="nc">&nbsp;            r.add(zigZagEncode(_x - x));</b>
+<b class="nc">&nbsp;            r.add(zigZagEncode(_y - y));</b>
+&nbsp;
+<b class="nc">&nbsp;            x = _x;</b>
+<b class="nc">&nbsp;            y = _y;</b>
+&nbsp;
+<b class="nc">&nbsp;            if (i == 0 &amp;&amp; cs.length &gt; 1 &amp;&amp; !multiPoint) {</b>
+&nbsp;                // can length be too long?
+<b class="nc">&nbsp;                lineToIndex = r.size();</b>
+<b class="nc">&nbsp;                lineToLength = cs.length - 1;</b>
+<b class="nc">&nbsp;                r.add(commandAndLength(Command.LineTo, lineToLength));</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        // update LineTo length
+<b class="nc">&nbsp;        if (lineToIndex &gt; 0) {</b>
+<b class="nc">&nbsp;            if (lineToLength == 0) {</b>
+&nbsp;                // remove empty LineTo
+<b class="nc">&nbsp;                r.remove(lineToIndex);</b>
+&nbsp;            } else {
+&nbsp;                // update LineTo with new length
+<b class="nc">&nbsp;                r.set(lineToIndex, commandAndLength(Command.LineTo, lineToLength));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (closePathAtEnd) {</b>
+<b class="nc">&nbsp;            r.add(commandAndLength(Command.ClosePath, 1));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return r;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static int commandAndLength(int command, int repeat) {
+<b class="nc">&nbsp;        return repeat &lt;&lt; 3 | command;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static int zigZagEncode(int n) {
+&nbsp;        // https://developers.google.com/protocol-buffers/docs/encoding#types
+<b class="nc">&nbsp;        return (n &lt;&lt; 1) ^ (n &gt;&gt; 31);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private static final class Layer {</b>
+&nbsp;
+<b class="nc">&nbsp;        final List&lt;Feature&gt; features = new ArrayList&lt;VectorTileEncoder.Feature&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        private final Map&lt;String, Integer&gt; keys = new LinkedHashMap&lt;String, Integer&gt;();</b>
+<b class="nc">&nbsp;        private final Map&lt;Object, Integer&gt; values = new LinkedHashMap&lt;Object, Integer&gt;();</b>
+&nbsp;
+&nbsp;        public Integer key(String key) {
+<b class="nc">&nbsp;            Integer i = keys.get(key);</b>
+<b class="nc">&nbsp;            if (i == null) {</b>
+<b class="nc">&nbsp;                i = Integer.valueOf(keys.size());</b>
+<b class="nc">&nbsp;                keys.put(key, i);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return i;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public List&lt;String&gt; keys() {
+<b class="nc">&nbsp;            return new ArrayList&lt;String&gt;(keys.keySet());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Integer value(Object value) {
+<b class="nc">&nbsp;            Integer i = values.get(value);</b>
+<b class="nc">&nbsp;            if (i == null) {</b>
+<b class="nc">&nbsp;                i = Integer.valueOf(values.size());</b>
+<b class="nc">&nbsp;                values.put(value, i);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return i;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public List&lt;Object&gt; values() {
+<b class="nc">&nbsp;            return Collections.unmodifiableList(new ArrayList&lt;Object&gt;(values.keySet()));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private static final class Feature {</b>
+&nbsp;        long id;
+&nbsp;        Geometry geometry;
+<b class="nc">&nbsp;        final List&lt;Integer&gt; tags = new ArrayList&lt;Integer&gt;();</b>
+&nbsp;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

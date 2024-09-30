@@ -1,0 +1,314 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TurnCostsConfig</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: TurnCostsConfig (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TurnCostsConfig</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (25/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (12/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.3%
+  </span>
+  <span class="absValue">
+    (51/62)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonProperty;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;public class TurnCostsConfig {
+&nbsp;    public static final int INFINITE_U_TURN_COSTS = -1;
+&nbsp;    private double leftCosts; // in seconds
+&nbsp;    private double leftSharpCosts; // in seconds
+&nbsp;    private double straightCosts;
+&nbsp;    private double rightCosts;
+&nbsp;    private double rightSharpCosts;
+&nbsp;
+&nbsp;    // The &quot;right&quot; and &quot;left&quot; turns are symmetric and the negative values are used for &quot;left&quot;.
+&nbsp;    // From 0 to minAngle no turn costs are added.
+&nbsp;    // From minAngle to minSharpAngle the rightCosts (or leftCosts) are added.
+&nbsp;    // From minSharpAngle to minUTurnAngle the rightSharpCosts (or leftSharpCosts) are added.
+&nbsp;    // And beyond minUTurnAngle the uTurnCosts are added.
+<b class="fc">&nbsp;    private double minAngle = 25, minSharpAngle = 80, minUTurnAngle = 180;</b>
+&nbsp;
+<b class="fc">&nbsp;    private int uTurnCosts = INFINITE_U_TURN_COSTS;</b>
+&nbsp;    private List&lt;String&gt; vehicleTypes;
+&nbsp;    // ensure that no typos can occur like motor_car vs motorcar or bike vs bicycle
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; ALL_SUPPORTED = Set.of(</b>
+&nbsp;            &quot;agricultural&quot;, &quot;atv&quot;, &quot;auto_rickshaw&quot;,
+&nbsp;            &quot;bdouble&quot;, &quot;bicycle&quot;, &quot;bus&quot;, &quot;caravan&quot;, &quot;carpool&quot;, &quot;coach&quot;, &quot;delivery&quot;, &quot;destination&quot;,
+&nbsp;            &quot;emergency&quot;, &quot;foot&quot;, &quot;golf_cart&quot;, &quot;goods&quot;, &quot;hazmat&quot;, &quot;hgv&quot;, &quot;hgv:trailer&quot;, &quot;hov&quot;,
+&nbsp;            &quot;minibus&quot;, &quot;mofa&quot;, &quot;moped&quot;, &quot;motorcar&quot;, &quot;motorcycle&quot;, &quot;motor_vehicle&quot;, &quot;motorhome&quot;,
+&nbsp;            &quot;nev&quot;, &quot;ohv&quot;, &quot;psv&quot;, &quot;residents&quot;,
+&nbsp;            &quot;share_taxi&quot;, &quot;small_electric_vehicle&quot;, &quot;speed_pedelec&quot;,
+&nbsp;            &quot;taxi&quot;, &quot;trailer&quot;, &quot;tourist_bus&quot;);
+&nbsp;
+&nbsp;    public static TurnCostsConfig car() {
+<b class="fc">&nbsp;        return new TurnCostsConfig(List.of(&quot;motorcar&quot;, &quot;motor_vehicle&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static TurnCostsConfig bike() {
+<b class="nc">&nbsp;        return new TurnCostsConfig(List.of(&quot;bicycle&quot;));</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public TurnCostsConfig() {</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public TurnCostsConfig(TurnCostsConfig copy) {</b>
+<b class="fc">&nbsp;        leftCosts = copy.leftCosts;</b>
+<b class="fc">&nbsp;        leftSharpCosts = copy.leftSharpCosts;</b>
+<b class="fc">&nbsp;        straightCosts = copy.straightCosts;</b>
+<b class="fc">&nbsp;        rightCosts = copy.rightCosts;</b>
+<b class="fc">&nbsp;        rightSharpCosts = copy.rightSharpCosts;</b>
+<b class="fc">&nbsp;        uTurnCosts = copy.uTurnCosts;</b>
+&nbsp;
+<b class="fc">&nbsp;        minAngle = copy.minAngle;</b>
+<b class="fc">&nbsp;        minSharpAngle = copy.minSharpAngle;</b>
+<b class="fc">&nbsp;        minUTurnAngle = copy.minUTurnAngle;</b>
+<b class="fc">&nbsp;        if (copy.vehicleTypes != null)</b>
+<b class="fc">&nbsp;            vehicleTypes = new ArrayList&lt;&gt;(copy.vehicleTypes);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public TurnCostsConfig(List&lt;String&gt; vehicleTypes) {</b>
+<b class="fc">&nbsp;        this.vehicleTypes = check(vehicleTypes);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public TurnCostsConfig(List&lt;String&gt; vehicleTypes, int uTurnCost) {</b>
+<b class="fc">&nbsp;        this.vehicleTypes = check(vehicleTypes);</b>
+<b class="fc">&nbsp;        this.uTurnCosts = uTurnCost;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    List&lt;String&gt; check(List&lt;String&gt; restrictions) {
+<b class="pc">&nbsp;        if (restrictions == null || restrictions.isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;turn_costs cannot have empty vehicle_types&quot;);</b>
+<b class="fc">&nbsp;        for (String r : restrictions) {</b>
+<b class="pc">&nbsp;            if (!ALL_SUPPORTED.contains(r))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Currently we do not support the restriction: &quot; + r);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return restrictions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostsConfig setVehicleTypes(List&lt;String&gt; vehicleTypes) {
+<b class="fc">&nbsp;        this.vehicleTypes = check(vehicleTypes);</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;vehicle_types&quot;)
+&nbsp;    public List&lt;String&gt; getVehicleTypes() {
+<b class="fc">&nbsp;        check(vehicleTypes);</b>
+<b class="fc">&nbsp;        return vehicleTypes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param uTurnCosts the costs of an u-turn in seconds, for {@link TurnCostsConfig#INFINITE_U_TURN_COSTS}
+&nbsp;     *                   the u-turn costs will be infinite
+&nbsp;     */
+&nbsp;    public TurnCostsConfig setUTurnCosts(int uTurnCosts) {
+<b class="fc">&nbsp;        this.uTurnCosts = uTurnCosts;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;u_turn_costs&quot;)
+&nbsp;    public int getUTurnCosts() {
+<b class="fc">&nbsp;        return uTurnCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean hasLeftRightStraightCosts() {
+<b class="pc">&nbsp;        return leftCosts != 0 || leftSharpCosts != 0 || straightCosts != 0 || rightCosts != 0 || rightSharpCosts != 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostsConfig setLeftCosts(double leftCosts) {
+<b class="fc">&nbsp;        this.leftCosts = leftCosts;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;left_costs&quot;)
+&nbsp;    public double getLeftCosts() {
+<b class="fc">&nbsp;        return leftCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostsConfig setLeftSharpCosts(double leftSharpCosts) {
+<b class="fc">&nbsp;        this.leftSharpCosts = leftSharpCosts;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;left_sharp_costs&quot;)
+&nbsp;    public double getLeftSharpCosts() {
+<b class="fc">&nbsp;        return leftSharpCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostsConfig setRightCosts(double rightCosts) {
+<b class="fc">&nbsp;        this.rightCosts = rightCosts;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;right_costs&quot;)
+&nbsp;    public double getRightCosts() {
+<b class="fc">&nbsp;        return rightCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostsConfig setRightSharpCosts(double rightSharpCosts) {
+<b class="fc">&nbsp;        this.rightSharpCosts = rightSharpCosts;</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;right_sharp_costs&quot;)
+&nbsp;    public double getRightSharpCosts() {
+<b class="fc">&nbsp;        return rightSharpCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostsConfig setStraightCosts(double straightCosts) {
+<b class="nc">&nbsp;        this.straightCosts = straightCosts;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;straight_costs&quot;)
+&nbsp;    public double getStraightCosts() {
+<b class="fc">&nbsp;        return straightCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;min_angle&quot;)
+&nbsp;    public TurnCostsConfig setMinAngle(double minAngle) {
+<b class="nc">&nbsp;        this.minAngle = minAngle;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getMinAngle() {
+<b class="fc">&nbsp;        return minAngle;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;min_sharp_angle&quot;)
+&nbsp;    public TurnCostsConfig setMinSharpAngle(double minSharpAngle) {
+<b class="nc">&nbsp;        this.minSharpAngle = minSharpAngle;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getMinSharpAngle() {
+<b class="fc">&nbsp;        return minSharpAngle;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;min_u_turn_angle&quot;)
+&nbsp;    public TurnCostsConfig setMinUTurnAngle(double minUTurnAngle) {
+<b class="nc">&nbsp;        this.minUTurnAngle = minUTurnAngle;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getMinUTurnAngle() {
+<b class="fc">&nbsp;        return minUTurnAngle;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return &quot;left=&quot; + leftCosts + &quot;, leftSharp=&quot; + leftSharpCosts</b>
+&nbsp;                + &quot;, straight=&quot; + straightCosts
+&nbsp;                + &quot;, right=&quot; + rightCosts + &quot;, rightSharp=&quot; + rightSharpCosts
+&nbsp;                + &quot;, minAngle=&quot; + minAngle + &quot;, minSharpAngle=&quot; + minSharpAngle + &quot;, minUTurnAngle=&quot; + minUTurnAngle
+&nbsp;                + &quot;, uTurnCosts=&quot; + uTurnCosts + &quot;, vehicleTypes=&quot; + vehicleTypes;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>

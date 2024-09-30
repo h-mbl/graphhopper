@@ -1,0 +1,274 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GraphHopperGeocoding</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.api</a>
+</div>
+
+<h1>Coverage Summary for Class: GraphHopperGeocoding (com.graphhopper.api)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GraphHopperGeocoding</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/54)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.api;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.graphhopper.api.model.GHGeocodingRequest;
+&nbsp;import com.graphhopper.api.model.GHGeocodingResponse;
+&nbsp;import okhttp3.OkHttpClient;
+&nbsp;import okhttp3.Request;
+&nbsp;import okhttp3.Response;
+&nbsp;import okhttp3.ResponseBody;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.UnsupportedEncodingException;
+&nbsp;import java.net.URLEncoder;
+&nbsp;import java.util.concurrent.TimeUnit;
+&nbsp;
+&nbsp;import static com.graphhopper.api.GraphHopperWeb.X_GH_CLIENT_VERSION;
+&nbsp;import static com.graphhopper.api.Version.GH_VERSION_FROM_MAVEN;
+&nbsp;
+&nbsp;/**
+&nbsp; * Client implementation for the GraphHopper Directions API Geocoding. For details on how to use it, please consult
+&nbsp; * the documentation at: https://graphhopper.com/api/1/docs/geocoding/.
+&nbsp; * &lt;p&gt;
+&nbsp; * Signup for a free API key at: https://graphhopper.com
+&nbsp; *
+&nbsp; * @author Robin Boldt
+&nbsp; */
+&nbsp;public class GraphHopperGeocoding {
+&nbsp;
+&nbsp;    private final ObjectMapper objectMapper;
+&nbsp;    private OkHttpClient downloader;
+&nbsp;    private String routeServiceUrl;
+<b class="nc">&nbsp;    private String key = &quot;&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;    private final long DEFAULT_TIMEOUT = 5000;</b>
+&nbsp;
+&nbsp;    public GraphHopperGeocoding() {
+<b class="nc">&nbsp;        this(&quot;https://graphhopper.com/api/1/geocode&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method allows you to point the client to a different URL than the default one.
+&nbsp;     *
+&nbsp;     * @param serviceUrl Geocoding endpoint that is compatible with the GraphHopper geocoding API
+&nbsp;     */
+<b class="nc">&nbsp;    public GraphHopperGeocoding(String serviceUrl) {</b>
+<b class="nc">&nbsp;        this.routeServiceUrl = serviceUrl;</b>
+<b class="nc">&nbsp;        downloader = new OkHttpClient.Builder().</b>
+<b class="nc">&nbsp;                connectTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS).</b>
+<b class="nc">&nbsp;                readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS).</b>
+<b class="nc">&nbsp;                build();</b>
+&nbsp;
+<b class="nc">&nbsp;        objectMapper = new ObjectMapper();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Perform a geocoding request. Both forward and revers are possible, just configure the &lt;code&gt;request&lt;/code&gt;
+&nbsp;     * accordingly.
+&nbsp;     *
+&nbsp;     * @param request the request to send to the API
+&nbsp;     * @return found results for your request
+&nbsp;     */
+&nbsp;    public GHGeocodingResponse geocode(GHGeocodingRequest request) {
+<b class="nc">&nbsp;        String url = buildUrl(request);</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            Request okRequest = new Request.Builder().url(url)</b>
+<b class="nc">&nbsp;                    .header(X_GH_CLIENT_VERSION, GH_VERSION_FROM_MAVEN)</b>
+<b class="nc">&nbsp;                    .build();</b>
+<b class="nc">&nbsp;            Response rsp = getClientForRequest(request).newCall(okRequest).execute();</b>
+<b class="nc">&nbsp;            ResponseBody rspBody = rsp.body();</b>
+<b class="nc">&nbsp;            if (!rsp.isSuccessful())</b>
+<b class="nc">&nbsp;                throw new RuntimeException(rspBody.string());</b>
+<b class="nc">&nbsp;            GHGeocodingResponse geoRsp = objectMapper.readValue(rspBody.bytes(), GHGeocodingResponse.class);</b>
+<b class="nc">&nbsp;            return geoRsp;</b>
+<b class="nc">&nbsp;        } catch (IOException ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;IO problem for geocoding URL &quot; + url + &quot;: &quot; + ex.getMessage(), ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public GraphHopperGeocoding setDownloader(OkHttpClient downloader) {
+<b class="nc">&nbsp;        this.downloader = downloader;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setKey(String key) {
+<b class="nc">&nbsp;        this.key = key;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OkHttpClient getDownloader() {
+<b class="nc">&nbsp;        return downloader;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private OkHttpClient getClientForRequest(GHGeocodingRequest request) {
+<b class="nc">&nbsp;        OkHttpClient client = this.downloader;</b>
+<b class="nc">&nbsp;        if (request.hasTimeout()) {</b>
+<b class="nc">&nbsp;            long timeout = request.getTimeout();</b>
+<b class="nc">&nbsp;            client = client.newBuilder()</b>
+<b class="nc">&nbsp;                    .connectTimeout(timeout, TimeUnit.MILLISECONDS)</b>
+<b class="nc">&nbsp;                    .readTimeout(timeout, TimeUnit.MILLISECONDS)</b>
+<b class="nc">&nbsp;                    .build();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return client;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String buildUrl(GHGeocodingRequest request) {
+<b class="nc">&nbsp;        String url = routeServiceUrl + &quot;?&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (request.isReverse()) {</b>
+<b class="nc">&nbsp;            if (!request.getPoint().isValid())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;For reverse geocoding you have to pass valid lat and long values&quot;);</b>
+<b class="nc">&nbsp;            url += &quot;reverse=true&quot;;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            if (request.getQuery() == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;For forward geocoding you have to a string for the query&quot;);</b>
+<b class="nc">&nbsp;            url += &quot;reverse=false&quot;;</b>
+<b class="nc">&nbsp;            url += &quot;&amp;q=&quot; + encodeURL(request.getQuery());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (request.getPoint().isValid())</b>
+<b class="nc">&nbsp;            url += &quot;&amp;point=&quot; + request.getPoint().getLat() + &quot;,&quot; + request.getPoint().getLon();</b>
+&nbsp;
+<b class="nc">&nbsp;        url += &quot;&amp;limit=&quot; + request.getLimit();</b>
+<b class="nc">&nbsp;        url += &quot;&amp;locale=&quot; + encodeURL(request.getLocale());</b>
+<b class="nc">&nbsp;        url += &quot;&amp;provider=&quot; + encodeURL(request.getProvider());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!key.isEmpty()) {</b>
+<b class="nc">&nbsp;            url += &quot;&amp;key=&quot; + encodeURL(key);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return url;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String encodeURL(String str) {
+&nbsp;        try {
+<b class="nc">&nbsp;            return URLEncoder.encode(str, &quot;UTF-8&quot;);</b>
+<b class="nc">&nbsp;        } catch (UnsupportedEncodingException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-30 17:20</div>
+</div>
+</body>
+</html>
