@@ -78,6 +78,7 @@ public class HelperTest {
         assertEquals("_test_case", Helper.camelCaseToUnderScore("TestCase"));
 
         assertEquals("_test_case", Helper.camelCaseToUnderScore("_test_case"));
+        assertEquals("", Helper.camelCaseToUnderScore(""));
     }
 
     @Test
@@ -85,6 +86,7 @@ public class HelperTest {
         assertEquals("testCase", Helper.underScoreToCamelCase("test_case"));
         assertEquals("testCaseTBD", Helper.underScoreToCamelCase("test_case_t_b_d"));
         assertEquals("TestCase_", Helper.underScoreToCamelCase("_test_case_"));
+        assertEquals("", Helper.underScoreToCamelCase(""));
     }
 
     @Test
