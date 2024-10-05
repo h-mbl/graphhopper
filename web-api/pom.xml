@@ -32,7 +32,42 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
+        <!-- Add JUnit 5 dependency -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Add PIT JUnit 5 plugin -->
+        <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.1.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- new -->
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>LATEST</version>
+                    <configuration>
+                        <outputFormats>
+                            <outputFormat>HTML</outputFormat>
+                            <outputFormat>XML</outputFormat>
+                        </outputFormats>
+                        <verbosity>VERBOSE</verbosity>
+                        <reportsDirectory>${project.build.directory}/pit-reports</reportsDirectory>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
 </project>
 
