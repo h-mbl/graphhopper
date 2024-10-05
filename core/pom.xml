@@ -124,6 +124,12 @@
     <build>
         <pluginManagement>
             <plugins>
+                <!-- new -->
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>LATEST</version>
+                </plugin>
                 <!-- create jar with test classes to be reused in other projects -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
