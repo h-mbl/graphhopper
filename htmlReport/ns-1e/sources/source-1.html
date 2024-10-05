@@ -1,0 +1,688 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > KVStorage</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.search</a>
+</div>
+
+<h1>Coverage Summary for Class: KVStorage (com.graphhopper.search)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">KVStorage</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/267)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">KVStorage$KValue</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/291)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.search;
+&nbsp;
+&nbsp;import com.graphhopper.storage.DataAccess;
+&nbsp;import com.graphhopper.storage.Directory;
+&nbsp;import com.graphhopper.util.BitUtil;
+&nbsp;import com.graphhopper.util.Constants;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;import java.util.concurrent.atomic.AtomicInteger;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class stores key-value pairs in an append-only manner.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="nc">&nbsp;public class KVStorage {</b>
+&nbsp;
+&nbsp;    private static final long EMPTY_POINTER = 0, START_POINTER = 1;
+&nbsp;    // Store the key index in 2 bytes. Use first 2 bits for marking fwd+bwd existence.
+&nbsp;    static final int MAX_UNIQUE_KEYS = (1 &lt;&lt; 14);
+&nbsp;    // Store string value as byte array and store the length into 1 byte
+&nbsp;    private static final int MAX_LENGTH = (1 &lt;&lt; 8) - 1;
+&nbsp;
+&nbsp;    private final Directory dir;
+&nbsp;    // It stores the mapping of &quot;key to index&quot; in the keys DataAccess. E.g. if your first key is &quot;some&quot; then we will
+&nbsp;    // store the mapping &quot;1-&gt;some&quot; there (the 0th index is skipped on purpose). As this map is &#39;small&#39; the keys
+&nbsp;    // DataAccess is only used for long term storage, i.e. only in loadExisting and flush. For add and getAll we use
+&nbsp;    // keyToIndex, indexToClass and indexToClass.
+&nbsp;    private final DataAccess keys;
+&nbsp;
+&nbsp;    // The storage layout in the vals DataAccess for one Map of key-value pairs. For example the map:
+&nbsp;    // map = new HashMap(); map.put(&quot;some&quot;, &quot;value&quot;); map.put(&quot;some2&quot;, &quot;value2&quot;); is added via the method add, then we store:
+&nbsp;    // 2 (the size of the Map, 1 byte)
+&nbsp;    // --- now the first key-value pair:
+&nbsp;    // 1 (the keys index for &quot;some&quot;, 2 byte)
+&nbsp;    // 4 (the length of the bytes from &quot;some&quot;)
+&nbsp;    // &quot;some&quot; (the bytes from &quot;some&quot;)
+&nbsp;    // --- second key-value pair:
+&nbsp;    // 2 (the keys index for &quot;some2&quot;)
+&nbsp;    // 5 (the length of the bytes from &quot;some2&quot;)
+&nbsp;    // &quot;some2&quot; (the bytes from &quot;some2&quot;)
+&nbsp;
+&nbsp;    // So more generic: the values could be of dynamic length, fixed length like int or be duplicates:
+&nbsp;    // vals count      (1 byte)
+&nbsp;    // --- 1. key-value pair (store String or byte[] with dynamic length)
+&nbsp;    // key_idx_0       (2 byte, of which the first 2bits are to know if this is valid for fwd and/or bwd direction)
+&nbsp;    // val_length_0    (1 byte)
+&nbsp;    // val_0 (x bytes)
+&nbsp;    // --- 2. key-value pair (store int with fixed length)
+&nbsp;    // key_idx_1       (2 byte)
+&nbsp;    // int             (4 byte)
+&nbsp;    //
+&nbsp;    // Notes:
+&nbsp;    // 1. The key strings are limited MAX_UNIQUE_KEYS. A dynamic value has a maximum byte length of 255.
+&nbsp;    // 2. Every key can store values only of the same type
+&nbsp;    // 3. We need to loop through X entries to get the start val_x.
+&nbsp;    // 4. The key index (14 bits) is stored along with the availability (2 bits), i.e. whether they KeyValue is available in forward and/or backward directions
+&nbsp;    private final DataAccess vals;
+<b class="nc">&nbsp;    private final Map&lt;String, Integer&gt; keyToIndex = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    private final List&lt;Class&lt;?&gt;&gt; indexToClass = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;    private final List&lt;String&gt; indexToKey = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;    private final BitUtil bitUtil = BitUtil.LITTLE;</b>
+<b class="nc">&nbsp;    private long bytePointer = START_POINTER;</b>
+<b class="nc">&nbsp;    private long lastEntryPointer = -1;</b>
+&nbsp;    private Map&lt;String, KValue&gt; lastEntries;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Specify a larger cacheSize to reduce disk usage. Note that this increases the memory usage of this object.
+&nbsp;     */
+<b class="nc">&nbsp;    public KVStorage(Directory dir, boolean edge) {</b>
+<b class="nc">&nbsp;        this.dir = dir;</b>
+<b class="nc">&nbsp;        if (edge) {</b>
+<b class="nc">&nbsp;            this.keys = dir.create(&quot;edgekv_keys&quot;, 10 * 1024);</b>
+<b class="nc">&nbsp;            this.vals = dir.create(&quot;edgekv_vals&quot;);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            this.keys = dir.create(&quot;nodekv_keys&quot;, 10 * 1024);</b>
+<b class="nc">&nbsp;            this.vals = dir.create(&quot;nodekv_vals&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public KVStorage create(long initBytes) {
+<b class="nc">&nbsp;        keys.create(initBytes);</b>
+<b class="nc">&nbsp;        vals.create(initBytes);</b>
+&nbsp;        // add special empty case to have a reliable duplicate detection via negative keyIndex
+<b class="nc">&nbsp;        keyToIndex.put(&quot;&quot;, 0);</b>
+<b class="nc">&nbsp;        indexToKey.add(&quot;&quot;);</b>
+<b class="nc">&nbsp;        indexToClass.add(String.class);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean loadExisting() {
+<b class="nc">&nbsp;        if (vals.loadExisting()) {</b>
+<b class="nc">&nbsp;            if (!keys.loadExisting())</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Loaded values but cannot load keys&quot;);</b>
+<b class="nc">&nbsp;            bytePointer = bitUtil.toLong(vals.getHeader(0), vals.getHeader(4));</b>
+<b class="nc">&nbsp;            GHUtility.checkDAVersion(vals.getName(), Constants.VERSION_KV_STORAGE, vals.getHeader(8));</b>
+<b class="nc">&nbsp;            GHUtility.checkDAVersion(keys.getName(), Constants.VERSION_KV_STORAGE, keys.getHeader(0));</b>
+&nbsp;
+&nbsp;            // load keys into memory
+<b class="nc">&nbsp;            int count = keys.getShort(0);</b>
+<b class="nc">&nbsp;            long keyBytePointer = 2;</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; count; i++) {</b>
+<b class="nc">&nbsp;                int keyLength = keys.getShort(keyBytePointer);</b>
+<b class="nc">&nbsp;                keyBytePointer += 2;</b>
+<b class="nc">&nbsp;                byte[] keyBytes = new byte[keyLength];</b>
+<b class="nc">&nbsp;                keys.getBytes(keyBytePointer, keyBytes, keyLength);</b>
+<b class="nc">&nbsp;                String valueStr = new String(keyBytes, Helper.UTF_CS);</b>
+<b class="nc">&nbsp;                keyBytePointer += keyLength;</b>
+&nbsp;
+<b class="nc">&nbsp;                keyToIndex.put(valueStr, keyToIndex.size());</b>
+<b class="nc">&nbsp;                indexToKey.add(valueStr);</b>
+&nbsp;
+<b class="nc">&nbsp;                int shortClassNameLength = 1;</b>
+<b class="nc">&nbsp;                byte[] classBytes = new byte[shortClassNameLength];</b>
+<b class="nc">&nbsp;                keys.getBytes(keyBytePointer, classBytes, shortClassNameLength);</b>
+<b class="nc">&nbsp;                keyBytePointer += shortClassNameLength;</b>
+<b class="nc">&nbsp;                indexToClass.add(shortNameToClass(new String(classBytes, Helper.UTF_CS)));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    Collection&lt;String&gt; getKeys() {
+<b class="nc">&nbsp;        return indexToKey;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long setKVList(long currentPointer, final Map&lt;String, KValue&gt; entries) {
+<b class="nc">&nbsp;        if (currentPointer == EMPTY_POINTER) return currentPointer;</b>
+<b class="nc">&nbsp;        currentPointer += 1; // skip stored count</b>
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, KValue&gt; entry : entries.entrySet()) {</b>
+<b class="nc">&nbsp;            if (entry.getValue().fwdBwdEqual) {</b>
+<b class="nc">&nbsp;                currentPointer = add(currentPointer, entry.getKey(), entry.getValue().fwdValue, true, true);</b>
+&nbsp;            } else {
+&nbsp;                // potentially add two internal values
+<b class="nc">&nbsp;                if (entry.getValue().fwdValue != null)</b>
+<b class="nc">&nbsp;                    currentPointer = add(currentPointer, entry.getKey(), entry.getValue().fwdValue, true, false);</b>
+<b class="nc">&nbsp;                if (entry.getValue().bwdValue != null)</b>
+<b class="nc">&nbsp;                    currentPointer = add(currentPointer, entry.getKey(), entry.getValue().bwdValue, false, true);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return currentPointer;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long add(long currentPointer, String key, Object value, boolean fwd, boolean bwd) {
+<b class="nc">&nbsp;        if (key == null) throw new IllegalArgumentException(&quot;key cannot be null&quot;);</b>
+<b class="nc">&nbsp;        if (value == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;value for key &quot; + key + &quot; cannot be null&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        Integer keyIndex = keyToIndex.get(key);</b>
+&nbsp;        Class&lt;?&gt; clazz;
+<b class="nc">&nbsp;        if (keyIndex == null) {</b>
+<b class="nc">&nbsp;            keyIndex = keyToIndex.size();</b>
+<b class="nc">&nbsp;            if (keyIndex &gt;= MAX_UNIQUE_KEYS)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Cannot store more than &quot; + MAX_UNIQUE_KEYS + &quot; unique keys&quot;);</b>
+<b class="nc">&nbsp;            keyToIndex.put(key, keyIndex);</b>
+<b class="nc">&nbsp;            indexToKey.add(key);</b>
+<b class="nc">&nbsp;            indexToClass.add(clazz = value.getClass());</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            clazz = indexToClass.get(keyIndex);</b>
+<b class="nc">&nbsp;            if (clazz != value.getClass())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Class of value for key &quot; + key + &quot; must be &quot; + clazz.getSimpleName() + &quot; but was &quot; + value.getClass().getSimpleName());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        boolean hasDynLength = hasDynLength(clazz);</b>
+<b class="nc">&nbsp;        if (hasDynLength) {</b>
+&nbsp;            // optimization for empty string or empty byte array
+<b class="nc">&nbsp;            if (clazz.equals(String.class) &amp;&amp; ((String) value).isEmpty()</b>
+<b class="nc">&nbsp;                    || clazz.equals(byte[].class) &amp;&amp; ((byte[]) value).length == 0) {</b>
+<b class="nc">&nbsp;                vals.ensureCapacity(currentPointer + 3);</b>
+<b class="nc">&nbsp;                vals.setShort(currentPointer, keyIndex.shortValue());</b>
+&nbsp;                // ensure that also in case of MMap value is set to 0
+<b class="nc">&nbsp;                vals.setByte(currentPointer + 2, (byte) 0);</b>
+<b class="nc">&nbsp;                return currentPointer + 3;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        final byte[] valueBytes = getBytesForValue(clazz, value);</b>
+<b class="nc">&nbsp;        vals.ensureCapacity(currentPointer + 2 + 1 + valueBytes.length);</b>
+<b class="nc">&nbsp;        vals.setShort(currentPointer, (short) (keyIndex &lt;&lt; 2 | (fwd ? 2 : 0) | (bwd ? 1 : 0)));</b>
+<b class="nc">&nbsp;        currentPointer += 2;</b>
+<b class="nc">&nbsp;        if (hasDynLength) {</b>
+<b class="nc">&nbsp;            vals.setByte(currentPointer, (byte) valueBytes.length);</b>
+<b class="nc">&nbsp;            currentPointer++;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        vals.setBytes(currentPointer, valueBytes, valueBytes.length);</b>
+<b class="nc">&nbsp;        return currentPointer + valueBytes.length;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method writes the specified entryMap (key-value pairs) into the storage. Please note that null keys or null
+&nbsp;     * values are rejected. The Class of a value can be only: byte[], String, int, long, float or double
+&nbsp;     * (or more precisely, their wrapper equivalent). For all other types an exception is thrown. The first call of add
+&nbsp;     * assigns a Class to every key in the Map and future calls of add will throw an exception if this Class differs.
+&nbsp;     *
+&nbsp;     * @return entryPointer with which you can later fetch the entryMap via the get or getAll method
+&nbsp;     */
+&nbsp;    public long add(final Map&lt;String, KValue&gt; entries) {
+<b class="nc">&nbsp;        if (entries == null) throw new IllegalArgumentException(&quot;specified List must not be null&quot;);</b>
+<b class="nc">&nbsp;        if (entries.isEmpty()) return EMPTY_POINTER;</b>
+<b class="nc">&nbsp;        else if (entries.size() &gt; 200)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot store more than 200 entries per entry&quot;);</b>
+&nbsp;
+&nbsp;        // This is a very important &quot;compression&quot; mechanism because one OSM way is split into multiple edges and so we
+&nbsp;        // can often re-use the serialized key-value pairs of the previous edge.
+<b class="nc">&nbsp;        if (entries.equals(lastEntries)) return lastEntryPointer;</b>
+&nbsp;
+<b class="nc">&nbsp;        int entryCount = 0;</b>
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, KValue&gt; kv : entries.entrySet()) {</b>
+&nbsp;
+<b class="nc">&nbsp;            if (kv.getValue().fwdBwdEqual) {</b>
+<b class="nc">&nbsp;                entryCount++;</b>
+&nbsp;            } else {
+&nbsp;                // note, if fwd and bwd are different we create two internal entries!
+<b class="nc">&nbsp;                if (kv.getValue().getFwd() != null) entryCount++;</b>
+<b class="nc">&nbsp;                if (kv.getValue().getBwd() != null) entryCount++;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // If the Class of a value is unknown it should already fail here, before we modify internal data. (see #2597#discussion_r896469840)
+<b class="nc">&nbsp;            if (keyToIndex.get(kv.getKey()) != null) {</b>
+<b class="nc">&nbsp;                if (kv.getValue().fwdValue != null)</b>
+<b class="nc">&nbsp;                    getBytesForValue(indexToClass.get(keyToIndex.get(kv.getKey())), kv.getValue().fwdValue);</b>
+<b class="nc">&nbsp;                if (kv.getValue().bwdValue != null)</b>
+<b class="nc">&nbsp;                    getBytesForValue(indexToClass.get(keyToIndex.get(kv.getKey())), kv.getValue().bwdValue);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        lastEntries = entries;</b>
+<b class="nc">&nbsp;        lastEntryPointer = bytePointer;</b>
+<b class="nc">&nbsp;        vals.ensureCapacity(bytePointer + 1);</b>
+<b class="nc">&nbsp;        vals.setByte(bytePointer, (byte) entryCount);</b>
+<b class="nc">&nbsp;        bytePointer = setKVList(bytePointer, entries);</b>
+<b class="nc">&nbsp;        if (bytePointer &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Negative bytePointer in KVStorage&quot;);</b>
+<b class="nc">&nbsp;        return lastEntryPointer;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Map&lt;String, KValue&gt; getAll(final long entryPointer) {
+<b class="nc">&nbsp;        if (entryPointer &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Pointer to access KVStorage cannot be negative:&quot; + entryPointer);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (entryPointer == EMPTY_POINTER) return Collections.emptyMap();</b>
+&nbsp;
+<b class="nc">&nbsp;        int keyCount = vals.getByte(entryPointer) &amp; 0xFF;</b>
+<b class="nc">&nbsp;        if (keyCount == 0) return Collections.emptyMap();</b>
+&nbsp;
+<b class="nc">&nbsp;        Map&lt;String, KValue&gt; map = new LinkedHashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        long tmpPointer = entryPointer + 1;</b>
+<b class="nc">&nbsp;        AtomicInteger sizeOfObject = new AtomicInteger();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; keyCount; i++) {</b>
+<b class="nc">&nbsp;            int currentKeyIndexRaw = vals.getShort(tmpPointer);</b>
+<b class="nc">&nbsp;            boolean bwd = (currentKeyIndexRaw &amp; 1) == 1;</b>
+<b class="nc">&nbsp;            boolean fwd = (currentKeyIndexRaw &amp; 2) == 2;</b>
+<b class="nc">&nbsp;            int currentKeyIndex = currentKeyIndexRaw &gt;&gt;&gt; 2;</b>
+<b class="nc">&nbsp;            tmpPointer += 2;</b>
+&nbsp;
+<b class="nc">&nbsp;            Object object = deserializeObj(sizeOfObject, tmpPointer, indexToClass.get(currentKeyIndex));</b>
+<b class="nc">&nbsp;            tmpPointer += sizeOfObject.get();</b>
+<b class="nc">&nbsp;            String key = indexToKey.get(currentKeyIndex);</b>
+<b class="nc">&nbsp;            KValue oldValue = map.get(key);</b>
+<b class="nc">&nbsp;            if (oldValue != null)</b>
+<b class="nc">&nbsp;                map.put(key, new KValue(fwd ? object : oldValue.fwdValue, bwd ? object : oldValue.bwdValue));</b>
+<b class="nc">&nbsp;            else if (fwd &amp;&amp; bwd)</b>
+<b class="nc">&nbsp;                map.put(key, new KValue(object));</b>
+&nbsp;            else
+<b class="nc">&nbsp;                map.put(key, new KValue(fwd ? object : null, bwd ? object : null));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return map;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Please note that this method ignores potentially different tags for forward and backward direction. To avoid this
+&nbsp;     * use {@link #getAll(long)} instead.
+&nbsp;     */
+&nbsp;    public Map&lt;String, Object&gt; getMap(final long entryPointer) {
+<b class="nc">&nbsp;        if (entryPointer &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Pointer to access KVStorage cannot be negative:&quot; + entryPointer);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (entryPointer == EMPTY_POINTER) return Collections.emptyMap();</b>
+&nbsp;
+<b class="nc">&nbsp;        int keyCount = vals.getByte(entryPointer) &amp; 0xFF;</b>
+<b class="nc">&nbsp;        if (keyCount == 0) return Collections.emptyMap();</b>
+&nbsp;
+<b class="nc">&nbsp;        HashMap&lt;String, Object&gt; map = new HashMap&lt;&gt;(keyCount);</b>
+<b class="nc">&nbsp;        long tmpPointer = entryPointer + 1;</b>
+<b class="nc">&nbsp;        AtomicInteger sizeOfObject = new AtomicInteger();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; keyCount; i++) {</b>
+<b class="nc">&nbsp;            int currentKeyIndexRaw = vals.getShort(tmpPointer);</b>
+<b class="nc">&nbsp;            int currentKeyIndex = currentKeyIndexRaw &gt;&gt;&gt; 2;</b>
+<b class="nc">&nbsp;            tmpPointer += 2;</b>
+&nbsp;
+<b class="nc">&nbsp;            Object object = deserializeObj(sizeOfObject, tmpPointer, indexToClass.get(currentKeyIndex));</b>
+<b class="nc">&nbsp;            tmpPointer += sizeOfObject.get();</b>
+<b class="nc">&nbsp;            String key = indexToKey.get(currentKeyIndex);</b>
+<b class="nc">&nbsp;            map.put(key, object);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return map;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean hasDynLength(Class&lt;?&gt; clazz) {
+<b class="nc">&nbsp;        return clazz.equals(String.class) || clazz.equals(byte[].class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getFixLength(Class&lt;?&gt; clazz) {
+<b class="nc">&nbsp;        if (clazz.equals(Integer.class) || clazz.equals(Float.class)) return 4;</b>
+<b class="nc">&nbsp;        else if (clazz.equals(Long.class) || clazz.equals(Double.class)) return 8;</b>
+<b class="nc">&nbsp;        else throw new IllegalArgumentException(&quot;unknown class &quot; + clazz);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private byte[] getBytesForValue(Class&lt;?&gt; clazz, Object value) {
+&nbsp;        byte[] bytes;
+<b class="nc">&nbsp;        if (clazz.equals(String.class)) {</b>
+<b class="nc">&nbsp;            bytes = ((String) value).getBytes(Helper.UTF_CS);</b>
+<b class="nc">&nbsp;            if (bytes.length &gt; MAX_LENGTH)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;bytes.length cannot be &gt; &quot; + MAX_LENGTH + &quot; but was &quot; + bytes.length + &quot;. String:&quot; + value);</b>
+<b class="nc">&nbsp;        } else if (clazz.equals(byte[].class)) {</b>
+<b class="nc">&nbsp;            bytes = (byte[]) value;</b>
+<b class="nc">&nbsp;            if (bytes.length &gt; MAX_LENGTH)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;bytes.length cannot be &gt; &quot; + MAX_LENGTH + &quot; but was &quot; + bytes.length);</b>
+<b class="nc">&nbsp;        } else if (clazz.equals(Integer.class)) {</b>
+<b class="nc">&nbsp;            return bitUtil.fromInt((int) value);</b>
+<b class="nc">&nbsp;        } else if (clazz.equals(Long.class)) {</b>
+<b class="nc">&nbsp;            return bitUtil.fromLong((long) value);</b>
+<b class="nc">&nbsp;        } else if (clazz.equals(Float.class)) {</b>
+<b class="nc">&nbsp;            return bitUtil.fromFloat((float) value);</b>
+<b class="nc">&nbsp;        } else if (clazz.equals(Double.class)) {</b>
+<b class="nc">&nbsp;            return bitUtil.fromDouble((double) value);</b>
+&nbsp;        } else
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The Class of a value was &quot; + clazz.getSimpleName() + &quot;, currently supported: byte[], String, int, long, float and double&quot;);</b>
+<b class="nc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String classToShortName(Class&lt;?&gt; clazz) {
+<b class="nc">&nbsp;        if (clazz.equals(String.class)) return &quot;S&quot;;</b>
+<b class="nc">&nbsp;        else if (clazz.equals(Integer.class)) return &quot;i&quot;;</b>
+<b class="nc">&nbsp;        else if (clazz.equals(Long.class)) return &quot;l&quot;;</b>
+<b class="nc">&nbsp;        else if (clazz.equals(Float.class)) return &quot;f&quot;;</b>
+<b class="nc">&nbsp;        else if (clazz.equals(Double.class)) return &quot;d&quot;;</b>
+<b class="nc">&nbsp;        else if (clazz.equals(byte[].class)) return &quot;[&quot;;</b>
+<b class="nc">&nbsp;        else throw new IllegalArgumentException(&quot;Cannot find short name. Unknown class &quot; + clazz);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Class&lt;?&gt; shortNameToClass(String name) {
+<b class="nc">&nbsp;        if (name.equals(&quot;S&quot;)) return String.class;</b>
+<b class="nc">&nbsp;        else if (name.equals(&quot;i&quot;)) return Integer.class;</b>
+<b class="nc">&nbsp;        else if (name.equals(&quot;l&quot;)) return Long.class;</b>
+<b class="nc">&nbsp;        else if (name.equals(&quot;f&quot;)) return Float.class;</b>
+<b class="nc">&nbsp;        else if (name.equals(&quot;d&quot;)) return Double.class;</b>
+<b class="nc">&nbsp;        else if (name.equals(&quot;[&quot;)) return byte[].class;</b>
+<b class="nc">&nbsp;        else throw new IllegalArgumentException(&quot;Cannot find class. Unknown short name &quot; + name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method creates an Object (type Class) which is located at the specified pointer
+&nbsp;     */
+&nbsp;    private Object deserializeObj(AtomicInteger sizeOfObject, long pointer, Class&lt;?&gt; clazz) {
+<b class="nc">&nbsp;        if (hasDynLength(clazz)) {</b>
+<b class="nc">&nbsp;            int valueLength = vals.getByte(pointer) &amp; 0xFF;</b>
+<b class="nc">&nbsp;            pointer++;</b>
+<b class="nc">&nbsp;            byte[] valueBytes = new byte[valueLength];</b>
+<b class="nc">&nbsp;            vals.getBytes(pointer, valueBytes, valueBytes.length);</b>
+<b class="nc">&nbsp;            if (sizeOfObject != null)</b>
+<b class="nc">&nbsp;                sizeOfObject.set(1 + valueLength); // For String and byte[] we store the length and the value</b>
+<b class="nc">&nbsp;            if (clazz.equals(String.class)) return new String(valueBytes, Helper.UTF_CS);</b>
+<b class="nc">&nbsp;            else if (clazz.equals(byte[].class)) return valueBytes;</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException();</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            byte[] valueBytes = new byte[getFixLength(clazz)];</b>
+<b class="nc">&nbsp;            vals.getBytes(pointer, valueBytes, valueBytes.length);</b>
+<b class="nc">&nbsp;            if (clazz.equals(Integer.class)) {</b>
+<b class="nc">&nbsp;                if (sizeOfObject != null) sizeOfObject.set(4);</b>
+<b class="nc">&nbsp;                return bitUtil.toInt(valueBytes, 0);</b>
+<b class="nc">&nbsp;            } else if (clazz.equals(Long.class)) {</b>
+<b class="nc">&nbsp;                if (sizeOfObject != null) sizeOfObject.set(8);</b>
+<b class="nc">&nbsp;                return bitUtil.toLong(valueBytes, 0);</b>
+<b class="nc">&nbsp;            } else if (clazz.equals(Float.class)) {</b>
+<b class="nc">&nbsp;                if (sizeOfObject != null) sizeOfObject.set(4);</b>
+<b class="nc">&nbsp;                return bitUtil.toFloat(valueBytes, 0);</b>
+<b class="nc">&nbsp;            } else if (clazz.equals(Double.class)) {</b>
+<b class="nc">&nbsp;                if (sizeOfObject != null) sizeOfObject.set(8);</b>
+<b class="nc">&nbsp;                return bitUtil.toDouble(valueBytes, 0);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;unknown class &quot; + clazz);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public Object get(final long entryPointer, String key, boolean reverse) {
+<b class="nc">&nbsp;        if (entryPointer &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Pointer to access KVStorage cannot be negative:&quot; + entryPointer);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (entryPointer == EMPTY_POINTER) return null;</b>
+&nbsp;
+<b class="nc">&nbsp;        Integer keyIndex = keyToIndex.get(key);</b>
+<b class="nc">&nbsp;        if (keyIndex == null) return null; // key wasn&#39;t stored before</b>
+&nbsp;
+<b class="nc">&nbsp;        int keyCount = vals.getByte(entryPointer) &amp; 0xFF;</b>
+<b class="nc">&nbsp;        if (keyCount == 0) return null; // no entries</b>
+&nbsp;
+<b class="nc">&nbsp;        long tmpPointer = entryPointer + 1;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; keyCount; i++) {</b>
+<b class="nc">&nbsp;            int currentKeyIndexRaw = vals.getShort(tmpPointer);</b>
+<b class="nc">&nbsp;            boolean bwd = (currentKeyIndexRaw &amp; 1) == 1;</b>
+<b class="nc">&nbsp;            boolean fwd = (currentKeyIndexRaw &amp; 2) == 2;</b>
+<b class="nc">&nbsp;            int currentKeyIndex = currentKeyIndexRaw &gt;&gt;&gt; 2;</b>
+&nbsp;
+<b class="nc">&nbsp;            assert currentKeyIndex &lt; indexToKey.size() : &quot;invalid key index &quot; + currentKeyIndex + &quot;&gt;=&quot; + indexToKey.size() + &quot;, entryPointer=&quot; + entryPointer + &quot;, max=&quot; + bytePointer;</b>
+<b class="nc">&nbsp;            tmpPointer += 2;</b>
+<b class="nc">&nbsp;            if ((!reverse &amp;&amp; fwd || reverse &amp;&amp; bwd) &amp;&amp; currentKeyIndex == keyIndex) {</b>
+<b class="nc">&nbsp;                return deserializeObj(null, tmpPointer, indexToClass.get(keyIndex));</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // skip to next entry of same edge via skipping the real value
+<b class="nc">&nbsp;            Class&lt;?&gt; clazz = indexToClass.get(currentKeyIndex);</b>
+<b class="nc">&nbsp;            int valueLength = hasDynLength(clazz) ? 1 + vals.getByte(tmpPointer) &amp; 0xFF : getFixLength(clazz);</b>
+<b class="nc">&nbsp;            tmpPointer += valueLength;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // value for specified key does not exist for the specified pointer
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void flush() {
+<b class="nc">&nbsp;        keys.ensureCapacity(2);</b>
+<b class="nc">&nbsp;        keys.setShort(0, (short) keyToIndex.size());</b>
+<b class="nc">&nbsp;        long keyBytePointer = 2;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; indexToKey.size(); i++) {</b>
+<b class="nc">&nbsp;            String key = indexToKey.get(i);</b>
+<b class="nc">&nbsp;            byte[] keyBytes = getBytesForValue(String.class, key);</b>
+<b class="nc">&nbsp;            keys.ensureCapacity(keyBytePointer + 2 + keyBytes.length);</b>
+<b class="nc">&nbsp;            keys.setShort(keyBytePointer, (short) keyBytes.length);</b>
+<b class="nc">&nbsp;            keyBytePointer += 2;</b>
+&nbsp;
+<b class="nc">&nbsp;            keys.setBytes(keyBytePointer, keyBytes, keyBytes.length);</b>
+<b class="nc">&nbsp;            keyBytePointer += keyBytes.length;</b>
+&nbsp;
+<b class="nc">&nbsp;            Class&lt;?&gt; clazz = indexToClass.get(i);</b>
+<b class="nc">&nbsp;            byte[] clazzBytes = getBytesForValue(String.class, classToShortName(clazz));</b>
+<b class="nc">&nbsp;            if (clazzBytes.length != 1)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;class name byte length must be 1 but was &quot; + clazzBytes.length);</b>
+<b class="nc">&nbsp;            keys.ensureCapacity(keyBytePointer + 1);</b>
+<b class="nc">&nbsp;            keys.setBytes(keyBytePointer, clazzBytes, 1);</b>
+<b class="nc">&nbsp;            keyBytePointer += 1;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        keys.setHeader(0, Constants.VERSION_KV_STORAGE);</b>
+<b class="nc">&nbsp;        keys.flush();</b>
+&nbsp;
+<b class="nc">&nbsp;        vals.setHeader(0, bitUtil.getIntLow(bytePointer));</b>
+<b class="nc">&nbsp;        vals.setHeader(4, bitUtil.getIntHigh(bytePointer));</b>
+<b class="nc">&nbsp;        vals.setHeader(8, Constants.VERSION_KV_STORAGE);</b>
+<b class="nc">&nbsp;        vals.flush();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void clear() {
+<b class="nc">&nbsp;        dir.remove(keys.getName());</b>
+<b class="nc">&nbsp;        dir.remove(vals.getName());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close() {
+<b class="nc">&nbsp;        keys.close();</b>
+<b class="nc">&nbsp;        vals.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isClosed() {
+<b class="nc">&nbsp;        return vals.isClosed() &amp;&amp; keys.isClosed();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getCapacity() {
+<b class="nc">&nbsp;        return vals.getCapacity() + keys.getCapacity();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class KValue {
+&nbsp;        private final Object fwdValue;
+&nbsp;        private final Object bwdValue;
+&nbsp;        final boolean fwdBwdEqual;
+&nbsp;
+<b class="nc">&nbsp;        public KValue(Object obj) {</b>
+<b class="nc">&nbsp;            if (obj == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Object cannot be null if forward and backward is both true&quot;);</b>
+<b class="nc">&nbsp;            fwdValue = bwdValue = obj;</b>
+<b class="nc">&nbsp;            fwdBwdEqual = true;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        public KValue(Object fwd, Object bwd) {</b>
+<b class="nc">&nbsp;            fwdValue = fwd;</b>
+<b class="nc">&nbsp;            bwdValue = bwd;</b>
+<b class="nc">&nbsp;            if (fwdValue != null &amp;&amp; bwdValue != null &amp;&amp; fwd.getClass() != bwd.getClass())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;If both values are not null they have to be they same class but was: &quot;</b>
+<b class="nc">&nbsp;                        + fwdValue.getClass() + &quot; vs &quot; + bwdValue.getClass());</b>
+<b class="nc">&nbsp;            if (fwdValue == null &amp;&amp; bwdValue == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;If both values are null just do not store them&quot;);</b>
+<b class="nc">&nbsp;            fwdBwdEqual = false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Object getFwd() {
+<b class="nc">&nbsp;            return fwdValue;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Object getBwd() {
+<b class="nc">&nbsp;            return bwdValue;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean equals(Object o) {
+<b class="nc">&nbsp;            if (this == o) return true;</b>
+<b class="nc">&nbsp;            if (o == null || getClass() != o.getClass()) return false;</b>
+<b class="nc">&nbsp;            KValue value = (KValue) o;</b>
+&nbsp;            // due to check in constructor we can assume that fwdValue and bwdValue are of same type.
+&nbsp;            // I.e. if one is a byte array the other is too.
+<b class="nc">&nbsp;            if (fwdValue instanceof byte[] || bwdValue instanceof byte[])</b>
+<b class="nc">&nbsp;                return fwdBwdEqual == value.fwdBwdEqual &amp;&amp; (Arrays.equals((byte[]) fwdValue, (byte[]) value.fwdValue) || Arrays.equals((byte[]) bwdValue, (byte[]) value.bwdValue));</b>
+&nbsp;
+<b class="nc">&nbsp;            return fwdBwdEqual == value.fwdBwdEqual &amp;&amp; Objects.equals(fwdValue, value.fwdValue) &amp;&amp; Objects.equals(bwdValue, value.bwdValue);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int hashCode() {
+<b class="nc">&nbsp;            return Objects.hash(fwdValue, bwdValue, fwdBwdEqual);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            return fwdBwdEqual ? fwdValue.toString() : fwdValue + &quot; | &quot; + bwdValue;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method limits the specified String value to the length currently accepted for values in the KVStorage.
+&nbsp;     */
+&nbsp;    public static String cutString(String value) {
+<b class="nc">&nbsp;        byte[] bytes = value.getBytes(Helper.UTF_CS);</b>
+&nbsp;        // See #2609 and test why we use a value &lt; 255
+<b class="nc">&nbsp;        return bytes.length &gt; 250 ? new String(bytes, 0, 250, Helper.UTF_CS) : value;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

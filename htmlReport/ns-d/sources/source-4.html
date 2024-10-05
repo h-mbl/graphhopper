@@ -1,0 +1,797 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > OSMReader</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMReader (com.graphhopper.reader.osm)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMReader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/29)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/327)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.reader.osm;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.BitSet;
+&nbsp;import com.carrotsearch.hppc.LongArrayList;
+&nbsp;import com.graphhopper.coll.GHLongLongHashMap;
+&nbsp;import com.graphhopper.reader.ReaderElement;
+&nbsp;import com.graphhopper.reader.ReaderNode;
+&nbsp;import com.graphhopper.reader.ReaderRelation;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.reader.dem.EdgeElevationSmoothingMovingAverage;
+&nbsp;import com.graphhopper.reader.dem.EdgeElevationSmoothingRamer;
+&nbsp;import com.graphhopper.reader.dem.EdgeSampling;
+&nbsp;import com.graphhopper.reader.dem.ElevationProvider;
+&nbsp;import com.graphhopper.routing.OSMReaderConfig;
+&nbsp;import com.graphhopper.routing.ev.Country;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.ev.State;
+&nbsp;import com.graphhopper.routing.util.AreaIndex;
+&nbsp;import com.graphhopper.routing.util.CustomArea;
+&nbsp;import com.graphhopper.routing.util.FerrySpeedCalculator;
+&nbsp;import com.graphhopper.routing.util.OSMParsers;
+&nbsp;import com.graphhopper.routing.util.countryrules.CountryRule;
+&nbsp;import com.graphhopper.routing.util.countryrules.CountryRuleFactory;
+&nbsp;import com.graphhopper.routing.util.parsers.RestrictionSetter;
+&nbsp;import com.graphhopper.search.KVStorage;
+&nbsp;import com.graphhopper.storage.BaseGraph;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;import com.graphhopper.storage.NodeAccess;
+&nbsp;import com.graphhopper.storage.TurnCostStorage;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;import com.graphhopper.util.shapes.GHPoint3D;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.LongToIntFunction;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import static com.graphhopper.search.KVStorage.KValue;
+&nbsp;import static com.graphhopper.util.GHUtility.OSM_WARNING_LOGGER;
+&nbsp;import static com.graphhopper.util.Helper.nf;
+&nbsp;import static com.graphhopper.util.Parameters.Details.*;
+&nbsp;import static java.util.Collections.emptyList;
+&nbsp;
+&nbsp;/**
+&nbsp; * Parses an OSM file (xml, zipped xml or pbf) and creates a graph from it. The OSM file is actually read twice.
+&nbsp; * During the first scan we determine the &#39;type&#39; of each node, i.e. we check whether a node only appears in a single way
+&nbsp; * or represents an intersection of multiple ways, or connects two ways. We also scan the relations and store them for
+&nbsp; * each way ID in memory.
+&nbsp; * During the second scan we store the coordinates of the nodes that belong to ways in memory and then split each way
+&nbsp; * into several segments that are divided by intersections or barrier nodes. Each segment is added as an edge of the
+&nbsp; * resulting graph. Afterwards we scan the relations again to determine turn restrictions.
+&nbsp; **/
+&nbsp;public class OSMReader {
+<b class="nc">&nbsp;    private static final Logger LOGGER = LoggerFactory.getLogger(OSMReader.class);</b>
+&nbsp;
+<b class="nc">&nbsp;    private static final Pattern WAY_NAME_PATTERN = Pattern.compile(&quot;; *&quot;);</b>
+&nbsp;
+&nbsp;    private final OSMReaderConfig config;
+&nbsp;    private final BaseGraph baseGraph;
+&nbsp;    private final EdgeIntAccess edgeIntAccess;
+&nbsp;    private final NodeAccess nodeAccess;
+&nbsp;    private final TurnCostStorage turnCostStorage;
+&nbsp;    private final OSMParsers osmParsers;
+<b class="nc">&nbsp;    private final DistanceCalc distCalc = DistanceCalcEarth.DIST_EARTH;</b>
+&nbsp;    private final RestrictionSetter restrictionSetter;
+<b class="nc">&nbsp;    private ElevationProvider eleProvider = ElevationProvider.NOOP;</b>
+&nbsp;    private AreaIndex&lt;CustomArea&gt; areaIndex;
+<b class="nc">&nbsp;    private CountryRuleFactory countryRuleFactory = null;</b>
+&nbsp;    private File osmFile;
+<b class="nc">&nbsp;    private final RamerDouglasPeucker simplifyAlgo = new RamerDouglasPeucker();</b>
+<b class="nc">&nbsp;    private int bugCounter = 0;</b>
+&nbsp;    private final IntsRef tempRelFlags;
+&nbsp;    private Date osmDataDate;
+<b class="nc">&nbsp;    private long zeroCounter = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;    private GHLongLongHashMap osmWayIdToRelationFlagsMap = new GHLongLongHashMap(200, .5f);</b>
+<b class="nc">&nbsp;    private WayToEdgesMap restrictedWaysToEdgesMap = new WayToEdgesMap();</b>
+<b class="nc">&nbsp;    private List&lt;ReaderRelation&gt; restrictionRelations = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;    public OSMReader(BaseGraph baseGraph, OSMParsers osmParsers, OSMReaderConfig config) {</b>
+<b class="nc">&nbsp;        this.baseGraph = baseGraph;</b>
+<b class="nc">&nbsp;        this.edgeIntAccess = baseGraph.getEdgeAccess();</b>
+<b class="nc">&nbsp;        this.config = config;</b>
+<b class="nc">&nbsp;        this.nodeAccess = baseGraph.getNodeAccess();</b>
+<b class="nc">&nbsp;        this.osmParsers = osmParsers;</b>
+<b class="nc">&nbsp;        this.restrictionSetter = new RestrictionSetter(baseGraph, osmParsers.getRestrictionTagParsers().stream().map(RestrictionTagParser::getTurnRestrictionEnc).toList());</b>
+&nbsp;
+<b class="nc">&nbsp;        simplifyAlgo.setMaxDistance(config.getMaxWayPointDistance());</b>
+<b class="nc">&nbsp;        simplifyAlgo.setElevationMaxDistance(config.getElevationMaxWayPointDistance());</b>
+<b class="nc">&nbsp;        turnCostStorage = baseGraph.getTurnCostStorage();</b>
+&nbsp;
+<b class="nc">&nbsp;        tempRelFlags = osmParsers.createRelationFlags();</b>
+<b class="nc">&nbsp;        if (tempRelFlags.length != 2)</b>
+&nbsp;            // we use a long to store relation flags currently, so the relation flags ints ref must have length 2
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;OSMReader cannot use relation flags with != 2 integers&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the OSM file to be read.  Supported formats include .osm.xml, .osm.gz and .xml.pbf
+&nbsp;     */
+&nbsp;    public OSMReader setFile(File osmFile) {
+<b class="nc">&nbsp;        this.osmFile = osmFile;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The area index is queried for each OSM way and the associated areas are added to the way&#39;s tags
+&nbsp;     */
+&nbsp;    public OSMReader setAreaIndex(AreaIndex&lt;CustomArea&gt; areaIndex) {
+<b class="nc">&nbsp;        this.areaIndex = areaIndex;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OSMReader setElevationProvider(ElevationProvider eleProvider) {
+<b class="nc">&nbsp;        if (eleProvider == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Use the NOOP elevation provider instead of null or don&#39;t call setElevationProvider&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!nodeAccess.is3D() &amp;&amp; ElevationProvider.NOOP != eleProvider)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Make sure you graph accepts 3D data&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        this.eleProvider = eleProvider;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OSMReader setCountryRuleFactory(CountryRuleFactory countryRuleFactory) {
+<b class="nc">&nbsp;        this.countryRuleFactory = countryRuleFactory;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void readGraph() throws IOException {
+<b class="nc">&nbsp;        if (osmParsers == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Tag parsers were not set.&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (osmFile == null)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;No OSM file specified&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!osmFile.exists())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Your specified OSM file does not exist:&quot; + osmFile.getAbsolutePath());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!baseGraph.isInitialized())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;BaseGraph must be initialize before we can read OSM&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        WaySegmentParser waySegmentParser = new WaySegmentParser.Builder(baseGraph.getNodeAccess(), baseGraph.getDirectory())</b>
+<b class="nc">&nbsp;                .setElevationProvider(this::getElevation)</b>
+<b class="nc">&nbsp;                .setWayFilter(this::acceptWay)</b>
+<b class="nc">&nbsp;                .setSplitNodeFilter(this::isBarrierNode)</b>
+<b class="nc">&nbsp;                .setWayPreprocessor(this::preprocessWay)</b>
+<b class="nc">&nbsp;                .setRelationPreprocessor(this::preprocessRelations)</b>
+<b class="nc">&nbsp;                .setRelationProcessor(this::processRelation)</b>
+<b class="nc">&nbsp;                .setEdgeHandler(this::addEdge)</b>
+<b class="nc">&nbsp;                .setWorkerThreads(config.getWorkerThreads())</b>
+<b class="nc">&nbsp;                .build();</b>
+<b class="nc">&nbsp;        waySegmentParser.readOSM(osmFile);</b>
+<b class="nc">&nbsp;        osmDataDate = waySegmentParser.getTimestamp();</b>
+<b class="nc">&nbsp;        if (baseGraph.getNodes() == 0)</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Graph after reading OSM must not be empty&quot;);</b>
+<b class="nc">&nbsp;        releaseEverythingExceptRestrictionData();</b>
+<b class="nc">&nbsp;        addRestrictionsToGraph();</b>
+<b class="nc">&nbsp;        releaseRestrictionData();</b>
+<b class="nc">&nbsp;        LOGGER.info(&quot;Finished reading OSM file: {}, nodes: {}, edges: {}, zero distance edges: {}&quot;,</b>
+<b class="nc">&nbsp;                osmFile.getAbsolutePath(), nf(baseGraph.getNodes()), nf(baseGraph.getEdges()), nf(zeroCounter));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the timestamp given in the OSM file header or null if not found
+&nbsp;     */
+&nbsp;    public Date getDataDate() {
+<b class="nc">&nbsp;        return osmDataDate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected double getElevation(ReaderNode node) {
+<b class="nc">&nbsp;        double ele = eleProvider.getEle(node);</b>
+<b class="nc">&nbsp;        return Double.isNaN(ele) ? config.getDefaultElevation() : ele;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is called for each way during the first and second pass of the {@link WaySegmentParser}. All OSM
+&nbsp;     * ways that are not accepted here and all nodes that are not referenced by any such way will be ignored.
+&nbsp;     */
+&nbsp;    protected boolean acceptWay(ReaderWay way) {
+&nbsp;        // ignore broken geometry
+<b class="nc">&nbsp;        if (way.getNodes().size() &lt; 2)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+&nbsp;        // ignore multipolygon geometry
+<b class="nc">&nbsp;        if (!way.hasTags())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        return osmParsers.acceptWay(way);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if the given node should be duplicated to create an artificial edge. If the node turns out to be a
+&nbsp;     * junction between different ways this will be ignored and no artificial edge will be created.
+&nbsp;     */
+&nbsp;    protected boolean isBarrierNode(ReaderNode node) {
+<b class="nc">&nbsp;        return node.hasTag(&quot;barrier&quot;) || node.hasTag(&quot;ford&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if the length of the way shall be calculated and added as an artificial way tag
+&nbsp;     */
+&nbsp;    protected boolean isCalculateWayDistance(ReaderWay way) {
+<b class="nc">&nbsp;        return isFerry(way);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isFerry(ReaderWay way) {
+<b class="nc">&nbsp;        return FerrySpeedCalculator.isFerry(way);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is called during the second pass of {@link WaySegmentParser} and provides an entry point to enrich
+&nbsp;     * the given OSM way with additional tags before it is passed on to the tag parsers.
+&nbsp;     */
+&nbsp;    protected void setArtificialWayTags(PointList pointList, ReaderWay way, double distance, List&lt;Map&lt;String, Object&gt;&gt; nodeTags) {
+<b class="nc">&nbsp;        way.setTag(&quot;node_tags&quot;, nodeTags);</b>
+<b class="nc">&nbsp;        way.setTag(&quot;edge_distance&quot;, distance);</b>
+<b class="nc">&nbsp;        way.setTag(&quot;point_list&quot;, pointList);</b>
+&nbsp;
+&nbsp;        // we have to remove existing artificial tags, because we modify the way even though there can be multiple edges
+&nbsp;        // per way. sooner or later we should separate the artificial (&#39;edge&#39;) tags from the way, see discussion here:
+&nbsp;        // https://github.com/graphhopper/graphhopper/pull/2457#discussion_r751155404
+<b class="nc">&nbsp;        way.removeTag(&quot;country&quot;);</b>
+<b class="nc">&nbsp;        way.removeTag(&quot;country_rule&quot;);</b>
+<b class="nc">&nbsp;        way.removeTag(&quot;custom_areas&quot;);</b>
+&nbsp;
+&nbsp;        List&lt;CustomArea&gt; customAreas;
+<b class="nc">&nbsp;        if (areaIndex != null) {</b>
+&nbsp;            double middleLat;
+&nbsp;            double middleLon;
+<b class="nc">&nbsp;            if (pointList.size() &gt; 2) {</b>
+<b class="nc">&nbsp;                middleLat = pointList.getLat(pointList.size() / 2);</b>
+<b class="nc">&nbsp;                middleLon = pointList.getLon(pointList.size() / 2);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                double firstLat = pointList.getLat(0), firstLon = pointList.getLon(0);</b>
+<b class="nc">&nbsp;                double lastLat = pointList.getLat(pointList.size() - 1), lastLon = pointList.getLon(pointList.size() - 1);</b>
+<b class="nc">&nbsp;                middleLat = (firstLat + lastLat) / 2;</b>
+<b class="nc">&nbsp;                middleLon = (firstLon + lastLon) / 2;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            customAreas = areaIndex.query(middleLat, middleLon);</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            customAreas = emptyList();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // special handling for countries: since they are built-in with GraphHopper they are always fed to the EncodingManager
+<b class="nc">&nbsp;        Country country = Country.MISSING;</b>
+<b class="nc">&nbsp;        State state = State.MISSING;</b>
+<b class="nc">&nbsp;        double countryArea = Double.POSITIVE_INFINITY;</b>
+<b class="nc">&nbsp;        for (CustomArea customArea : customAreas) {</b>
+&nbsp;            // ignore areas that aren&#39;t countries
+<b class="nc">&nbsp;            if (customArea.getProperties() == null) continue;</b>
+<b class="nc">&nbsp;            String alpha2WithSubdivision = (String) customArea.getProperties().get(State.ISO_3166_2);</b>
+<b class="nc">&nbsp;            if (alpha2WithSubdivision == null)</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;
+&nbsp;            // the country string must be either something like US-CA (including subdivision) or just DE
+<b class="nc">&nbsp;            String[] strs = alpha2WithSubdivision.split(&quot;-&quot;);</b>
+<b class="nc">&nbsp;            if (strs.length == 0 || strs.length &gt; 2)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Invalid alpha2: &quot; + alpha2WithSubdivision);</b>
+<b class="nc">&nbsp;            Country c = Country.find(strs[0]);</b>
+<b class="nc">&nbsp;            if (c == null)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Unknown country: &quot; + strs[0]);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (</b>
+&nbsp;                // countries with subdivision overrule those without subdivision as well as bigger ones with subdivision
+<b class="nc">&nbsp;                    strs.length == 2 &amp;&amp; (state == State.MISSING || customArea.getArea() &lt; countryArea)</b>
+&nbsp;                            // countries without subdivision only overrule bigger ones without subdivision
+<b class="nc">&nbsp;                            || strs.length == 1 &amp;&amp; (state == State.MISSING &amp;&amp; customArea.getArea() &lt; countryArea)) {</b>
+<b class="nc">&nbsp;                country = c;</b>
+<b class="nc">&nbsp;                state = State.find(alpha2WithSubdivision);</b>
+<b class="nc">&nbsp;                countryArea = customArea.getArea();</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        way.setTag(&quot;country&quot;, country);</b>
+<b class="nc">&nbsp;        way.setTag(&quot;country_state&quot;, state);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (countryRuleFactory != null) {</b>
+<b class="nc">&nbsp;            CountryRule countryRule = countryRuleFactory.getCountryRule(country);</b>
+<b class="nc">&nbsp;            if (countryRule != null)</b>
+<b class="nc">&nbsp;                way.setTag(&quot;country_rule&quot;, countryRule);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // also add all custom areas as artificial tag
+<b class="nc">&nbsp;        way.setTag(&quot;custom_areas&quot;, customAreas);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is called for each segment an OSM way is split into during the second pass of {@link WaySegmentParser}.
+&nbsp;     *
+&nbsp;     * @param fromIndex a unique integer id for the first node of this segment
+&nbsp;     * @param toIndex   a unique integer id for the last node of this segment
+&nbsp;     * @param pointList coordinates of this segment
+&nbsp;     * @param way       the OSM way this segment was taken from
+&nbsp;     * @param nodeTags  node tags of this segment. there is one map of tags for each point.
+&nbsp;     */
+&nbsp;    protected void addEdge(int fromIndex, int toIndex, PointList pointList, ReaderWay way, List&lt;Map&lt;String, Object&gt;&gt; nodeTags) {
+&nbsp;        // sanity checks
+<b class="nc">&nbsp;        if (fromIndex &lt; 0 || toIndex &lt; 0)</b>
+<b class="nc">&nbsp;            throw new AssertionError(&quot;to or from index is invalid for this edge &quot; + fromIndex + &quot;-&gt;&quot; + toIndex + &quot;, points:&quot; + pointList);</b>
+<b class="nc">&nbsp;        if (pointList.getDimension() != nodeAccess.getDimension())</b>
+<b class="nc">&nbsp;            throw new AssertionError(&quot;Dimension does not match for pointList vs. nodeAccess &quot; + pointList.getDimension() + &quot; &lt;-&gt; &quot; + nodeAccess.getDimension());</b>
+<b class="nc">&nbsp;        if (pointList.size() != nodeTags.size())</b>
+<b class="nc">&nbsp;            throw new AssertionError(&quot;there should be as many maps of node tags as there are points. node tags: &quot; + nodeTags.size() + &quot;, points: &quot; + pointList.size());</b>
+&nbsp;
+&nbsp;        // todo: in principle it should be possible to delay elevation calculation so we do not need to store
+&nbsp;        // elevations during import (saves memory in pillar info during import). also note that we already need to
+&nbsp;        // to do some kind of elevation processing (bridge+tunnel interpolation in GraphHopper class, maybe this can
+&nbsp;        // go together
+&nbsp;
+<b class="nc">&nbsp;        if (pointList.is3D()) {</b>
+&nbsp;            // sample points along long edges
+<b class="nc">&nbsp;            if (config.getLongEdgeSamplingDistance() &lt; Double.MAX_VALUE)</b>
+<b class="nc">&nbsp;                pointList = EdgeSampling.sample(pointList, config.getLongEdgeSamplingDistance(), distCalc, eleProvider);</b>
+&nbsp;
+&nbsp;            // smooth the elevation before calculating the distance because the distance will be incorrect if calculated afterwards
+<b class="nc">&nbsp;            if (config.getElevationSmoothing().equals(&quot;ramer&quot;))</b>
+<b class="nc">&nbsp;                EdgeElevationSmoothingRamer.smooth(pointList, config.getElevationSmoothingRamerMax());</b>
+<b class="nc">&nbsp;            else if (config.getElevationSmoothing().equals(&quot;moving_average&quot;))</b>
+<b class="nc">&nbsp;                EdgeElevationSmoothingMovingAverage.smooth(pointList, config.getSmoothElevationAverageWindowSize());</b>
+<b class="nc">&nbsp;            else if (!config.getElevationSmoothing().isEmpty())</b>
+<b class="nc">&nbsp;                throw new AssertionError(&quot;Unsupported elevation smoothing algorithm: &#39;&quot; + config.getElevationSmoothing() + &quot;&#39;&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (config.getMaxWayPointDistance() &gt; 0 &amp;&amp; pointList.size() &gt; 2)</b>
+<b class="nc">&nbsp;            simplifyAlgo.simplify(pointList);</b>
+&nbsp;
+<b class="nc">&nbsp;        double distance = distCalc.calcDistance(pointList);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (distance &lt; 0.001) {</b>
+&nbsp;            // As investigation shows often two paths should have crossed via one identical point
+&nbsp;            // but end up in two very close points.
+<b class="nc">&nbsp;            zeroCounter++;</b>
+<b class="nc">&nbsp;            distance = 0.001;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        double maxDistance = (Integer.MAX_VALUE - 1) / 1000d;</b>
+<b class="nc">&nbsp;        if (Double.isNaN(distance)) {</b>
+<b class="nc">&nbsp;            LOGGER.warn(&quot;Bug in OSM or GraphHopper (&quot; + bugCounter++ + &quot;). Illegal tower node distance &quot; + distance + &quot; reset to 1m, osm way &quot; + way.getId());</b>
+<b class="nc">&nbsp;            distance = 1;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (Double.isInfinite(distance) || distance &gt; maxDistance) {</b>
+&nbsp;            // Too large is very rare and often the wrong tagging. See #435
+&nbsp;            // so we can avoid the complexity of splitting the way for now (new towernodes would be required, splitting up geometry etc)
+&nbsp;            // For example this happens here: https://www.openstreetmap.org/way/672506453 (Cape Town - Tristan da Cunha ferry)
+<b class="nc">&nbsp;            LOGGER.warn(&quot;Bug in OSM or GraphHopper (&quot; + bugCounter++ + &quot;). Too big tower node distance &quot; + distance + &quot; reset to large value, osm way &quot; + way.getId());</b>
+<b class="nc">&nbsp;            distance = maxDistance;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (bugCounter &gt; 30)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Too many bugs in OSM or GraphHopper encountered &quot; + bugCounter);</b>
+&nbsp;
+<b class="nc">&nbsp;        setArtificialWayTags(pointList, way, distance, nodeTags);</b>
+<b class="nc">&nbsp;        IntsRef relationFlags = getRelFlagsMap(way.getId());</b>
+<b class="nc">&nbsp;        EdgeIteratorState edge = baseGraph.edge(fromIndex, toIndex).setDistance(distance);</b>
+<b class="nc">&nbsp;        osmParsers.handleWayTags(edge.getEdge(), edgeIntAccess, way, relationFlags);</b>
+<b class="nc">&nbsp;        Map&lt;String, KValue&gt; map = way.getTag(&quot;key_values&quot;, Collections.emptyMap());</b>
+<b class="nc">&nbsp;        if (!map.isEmpty())</b>
+<b class="nc">&nbsp;            edge.setKeyValues(map);</b>
+&nbsp;
+&nbsp;        // If the entire way is just the first and last point, do not waste space storing an empty way geometry
+<b class="nc">&nbsp;        if (pointList.size() &gt; 2) {</b>
+&nbsp;            // the geometry consists only of pillar nodes, but we check that the first and last points of the pointList
+&nbsp;            // are equal to the tower node coordinates
+<b class="nc">&nbsp;            checkCoordinates(fromIndex, pointList.get(0));</b>
+<b class="nc">&nbsp;            checkCoordinates(toIndex, pointList.get(pointList.size() - 1));</b>
+<b class="nc">&nbsp;            edge.setWayGeometry(pointList.shallowCopy(1, pointList.size() - 1, false));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        checkDistance(edge);</b>
+<b class="nc">&nbsp;        restrictedWaysToEdgesMap.putIfReserved(way.getId(), edge.getEdge());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void checkCoordinates(int nodeIndex, GHPoint point) {
+<b class="nc">&nbsp;        final double tolerance = 1.e-6;</b>
+<b class="nc">&nbsp;        if (Math.abs(nodeAccess.getLat(nodeIndex) - point.getLat()) &gt; tolerance || Math.abs(nodeAccess.getLon(nodeIndex) - point.getLon()) &gt; tolerance)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Suspicious coordinates for node &quot; + nodeIndex + &quot;: (&quot; + nodeAccess.getLat(nodeIndex) + &quot;,&quot; + nodeAccess.getLon(nodeIndex) + &quot;) vs. (&quot; + point + &quot;)&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void checkDistance(EdgeIteratorState edge) {
+<b class="nc">&nbsp;        final double tolerance = 1;</b>
+<b class="nc">&nbsp;        final double edgeDistance = edge.getDistance();</b>
+<b class="nc">&nbsp;        final double geometryDistance = distCalc.calcDistance(edge.fetchWayGeometry(FetchMode.ALL));</b>
+<b class="nc">&nbsp;        if (Double.isInfinite(edgeDistance))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Infinite edge distance should never occur, as we are supposed to limit each distance to the maximum distance we can store, #435&quot;);</b>
+<b class="nc">&nbsp;        else if (edgeDistance &gt; 2_000_000)</b>
+<b class="nc">&nbsp;            LOGGER.warn(&quot;Very long edge detected: &quot; + edge + &quot; dist: &quot; + edgeDistance);</b>
+<b class="nc">&nbsp;        else if (Math.abs(edgeDistance - geometryDistance) &gt; tolerance)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Suspicious distance for edge: &quot; + edge + &quot; &quot; + edgeDistance + &quot; vs. &quot; + geometryDistance</b>
+&nbsp;                    + &quot;, difference: &quot; + (edgeDistance - geometryDistance));
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is called for each way during the second pass and before the way is split into edges.
+&nbsp;     * We currently use it to parse road names and calculate the distance of a way to determine the speed based on
+&nbsp;     * the duration tag when it is present. The latter cannot be done on a per-edge basis, because the duration tag
+&nbsp;     * refers to the duration of the entire way.
+&nbsp;     */
+&nbsp;    protected void preprocessWay(ReaderWay way, WaySegmentParser.CoordinateSupplier coordinateSupplier,
+&nbsp;                                 WaySegmentParser.NodeTagSupplier nodeTagSupplier) {
+<b class="nc">&nbsp;        Map&lt;String, KValue&gt; map = new LinkedHashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        if (config.isParseWayNames()) {</b>
+&nbsp;            // http://wiki.openstreetmap.org/wiki/Key:name
+<b class="nc">&nbsp;            String name = &quot;&quot;;</b>
+<b class="nc">&nbsp;            if (!config.getPreferredLanguage().isEmpty())</b>
+<b class="nc">&nbsp;                name = fixWayName(way.getTag(&quot;name:&quot; + config.getPreferredLanguage()));</b>
+<b class="nc">&nbsp;            if (name.isEmpty())</b>
+<b class="nc">&nbsp;                name = fixWayName(way.getTag(&quot;name&quot;));</b>
+<b class="nc">&nbsp;            if (!name.isEmpty())</b>
+<b class="nc">&nbsp;                map.put(STREET_NAME, new KValue(name));</b>
+&nbsp;
+&nbsp;            // http://wiki.openstreetmap.org/wiki/Key:ref
+<b class="nc">&nbsp;            String refName = fixWayName(way.getTag(&quot;ref&quot;));</b>
+<b class="nc">&nbsp;            if (!refName.isEmpty())</b>
+<b class="nc">&nbsp;                map.put(STREET_REF, new KValue(refName));</b>
+&nbsp;
+<b class="nc">&nbsp;            if (way.hasTag(&quot;destination:ref&quot;)) {</b>
+<b class="nc">&nbsp;                map.put(STREET_DESTINATION_REF, new KValue(fixWayName(way.getTag(&quot;destination:ref&quot;))));</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                String fwdStr = fixWayName(way.getTag(&quot;destination:ref:forward&quot;));</b>
+<b class="nc">&nbsp;                String bwdStr = fixWayName(way.getTag(&quot;destination:ref:backward&quot;));</b>
+<b class="nc">&nbsp;                if (!fwdStr.isEmpty() || !bwdStr.isEmpty())</b>
+<b class="nc">&nbsp;                    map.put(STREET_DESTINATION_REF, new KValue(fwdStr.isEmpty() ? null : fwdStr, bwdStr.isEmpty() ? null : bwdStr));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (way.hasTag(&quot;destination&quot;)) {</b>
+<b class="nc">&nbsp;                map.put(STREET_DESTINATION, new KValue(fixWayName(way.getTag(&quot;destination&quot;))));</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                String fwdStr = fixWayName(way.getTag(&quot;destination:forward&quot;));</b>
+<b class="nc">&nbsp;                String bwdStr = fixWayName(way.getTag(&quot;destination:backward&quot;));</b>
+<b class="nc">&nbsp;                if (!fwdStr.isEmpty() || !bwdStr.isEmpty())</b>
+<b class="nc">&nbsp;                    map.put(STREET_DESTINATION, new KValue(fwdStr.isEmpty() ? null : fwdStr, bwdStr.isEmpty() ? null : bwdStr));</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // copy node name of motorway_junction
+<b class="nc">&nbsp;            LongArrayList nodes = way.getNodes();</b>
+<b class="nc">&nbsp;            if (!nodes.isEmpty() &amp;&amp; (way.hasTag(&quot;highway&quot;, &quot;motorway&quot;) || way.hasTag(&quot;highway&quot;, &quot;motorway_link&quot;))) {</b>
+&nbsp;                // index 0 assumes oneway=yes
+<b class="nc">&nbsp;                Map&lt;String, Object&gt; nodeTags = nodeTagSupplier.getTags(nodes.get(0));</b>
+<b class="nc">&nbsp;                String nodeName = (String) nodeTags.getOrDefault(&quot;name&quot;, &quot;&quot;);</b>
+<b class="nc">&nbsp;                if (!nodeName.isEmpty() &amp;&amp; &quot;motorway_junction&quot;.equals(nodeTags.getOrDefault(&quot;highway&quot;, &quot;&quot;)))</b>
+<b class="nc">&nbsp;                    map.put(MOTORWAY_JUNCTION, new KValue(nodeName));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (way.getTags().size() &gt; 1) // at least highway tag</b>
+<b class="nc">&nbsp;            for (Map.Entry&lt;String, Object&gt; entry : way.getTags().entrySet()) {</b>
+<b class="nc">&nbsp;                if (entry.getKey().endsWith(&quot;:conditional&quot;) &amp;&amp; entry.getValue() instanceof String &amp;&amp;</b>
+&nbsp;                        // for now reduce index size a bit and focus on access tags
+<b class="nc">&nbsp;                        !entry.getKey().startsWith(&quot;maxspeed&quot;) &amp;&amp; !entry.getKey().startsWith(&quot;maxweight&quot;)) {</b>
+&nbsp;                    // remove spaces as they unnecessarily increase the unique number of values:
+<b class="nc">&nbsp;                    String value = KVStorage.cutString(((String) entry.getValue()).</b>
+<b class="nc">&nbsp;                            replace(&quot; &quot;, &quot;&quot;).replace(&quot;bicycle&quot;, &quot;bike&quot;));</b>
+<b class="nc">&nbsp;                    String key = entry.getKey().replace(&#39;:&#39;, &#39;_&#39;).replace(&quot;bicycle&quot;, &quot;bike&quot;);</b>
+<b class="nc">&nbsp;                    boolean fwd = key.contains(&quot;forward&quot;);</b>
+<b class="nc">&nbsp;                    boolean bwd = key.contains(&quot;backward&quot;);</b>
+<b class="nc">&nbsp;                    if (!value.isEmpty()) {</b>
+<b class="nc">&nbsp;                        if (fwd == bwd)</b>
+<b class="nc">&nbsp;                            map.put(key, new KValue(value));</b>
+&nbsp;                        else
+<b class="nc">&nbsp;                            map.put(key, new KValue(fwd ? value : null, bwd ? value : null));</b>
+&nbsp;                    }
+&nbsp;                }
+<b class="nc">&nbsp;            }</b>
+&nbsp;
+<b class="nc">&nbsp;        way.setTag(&quot;key_values&quot;, map);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!isCalculateWayDistance(way))</b>
+&nbsp;            return;
+&nbsp;
+<b class="nc">&nbsp;        double distance = calcDistance(way, coordinateSupplier);</b>
+<b class="nc">&nbsp;        if (Double.isNaN(distance)) {</b>
+&nbsp;            // Some nodes were missing, and we cannot determine the distance. This can happen when ways are only
+&nbsp;            // included partially in an OSM extract. In this case we cannot calculate the speed either, so we return.
+<b class="nc">&nbsp;            LOGGER.warn(&quot;Could not determine distance for OSM way: &quot; + way.getId());</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        way.setTag(&quot;way_distance&quot;, distance);</b>
+&nbsp;
+&nbsp;        // For ways with a duration tag we determine the average speed. This is needed for e.g. ferry routes, because
+&nbsp;        // the duration tag is only valid for the entire way, and it would be wrong to use it after splitting the way
+&nbsp;        // into edges.
+<b class="nc">&nbsp;        String durationTag = way.getTag(&quot;duration&quot;);</b>
+<b class="nc">&nbsp;        if (durationTag == null) {</b>
+&nbsp;            // no duration tag -&gt; we cannot derive speed. happens very frequently for short ferries, but also for some long ones, see: #2532
+<b class="nc">&nbsp;            if (isFerry(way) &amp;&amp; distance &gt; 500_000)</b>
+<b class="nc">&nbsp;                OSM_WARNING_LOGGER.warn(&quot;Long ferry OSM way without duration tag: &quot; + way.getId() + &quot;, distance: &quot; + Math.round(distance / 1000.0) + &quot; km&quot;);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;        long durationInSeconds;
+&nbsp;        try {
+<b class="nc">&nbsp;            durationInSeconds = OSMReaderUtility.parseDuration(durationTag);</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            OSM_WARNING_LOGGER.warn(&quot;Could not parse duration tag &#39;&quot; + durationTag + &quot;&#39; in OSM way: &quot; + way.getId());</b>
+&nbsp;            return;
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        double speedInKmPerHour = distance / 1000 / (durationInSeconds / 60.0 / 60.0);</b>
+<b class="nc">&nbsp;        if (speedInKmPerHour &lt; 0.1d) {</b>
+&nbsp;            // Often there are mapping errors like duration=30:00 (30h) instead of duration=00:30 (30min). In this case we
+&nbsp;            // ignore the duration tag. If no such cases show up anymore, because they were fixed, maybe raise the limit to find some more.
+<b class="nc">&nbsp;            OSM_WARNING_LOGGER.warn(&quot;Unrealistic low speed calculated from duration. Maybe the duration is too long, or it is applied to a way that only represents a part of the connection? OSM way: &quot;</b>
+<b class="nc">&nbsp;                    + way.getId() + &quot;. duration=&quot; + durationTag + &quot; (= &quot; + Math.round(durationInSeconds / 60.0) +</b>
+&nbsp;                    &quot; minutes), distance=&quot; + distance + &quot; m&quot;);
+&nbsp;            return;
+&nbsp;        }
+&nbsp;        // tag will be present if 1) isCalculateWayDistance was true for this way, 2) no OSM nodes were missing
+&nbsp;        // such that the distance could actually be calculated, 3) there was a duration tag we could parse, and 4) the
+&nbsp;        // derived speed was not unrealistically slow.
+<b class="nc">&nbsp;        way.setTag(&quot;speed_from_duration&quot;, speedInKmPerHour);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static String fixWayName(String str) {
+<b class="nc">&nbsp;        if (str == null)</b>
+<b class="nc">&nbsp;            return &quot;&quot;;</b>
+&nbsp;        // the KVStorage does not accept too long strings -&gt; Helper.cutStringForKV
+<b class="nc">&nbsp;        return KVStorage.cutString(WAY_NAME_PATTERN.matcher(str).replaceAll(&quot;, &quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the distance of the given way or NaN if some nodes were missing
+&nbsp;     */
+&nbsp;    private double calcDistance(ReaderWay way, WaySegmentParser.CoordinateSupplier coordinateSupplier) {
+<b class="nc">&nbsp;        LongArrayList nodes = way.getNodes();</b>
+&nbsp;        // every way has at least two nodes according to our acceptWay function
+<b class="nc">&nbsp;        GHPoint3D prevPoint = coordinateSupplier.getCoordinate(nodes.get(0));</b>
+<b class="nc">&nbsp;        if (prevPoint == null)</b>
+<b class="nc">&nbsp;            return Double.NaN;</b>
+<b class="nc">&nbsp;        boolean is3D = !Double.isNaN(prevPoint.ele);</b>
+<b class="nc">&nbsp;        double distance = 0;</b>
+<b class="nc">&nbsp;        for (int i = 1; i &lt; nodes.size(); i++) {</b>
+<b class="nc">&nbsp;            GHPoint3D point = coordinateSupplier.getCoordinate(nodes.get(i));</b>
+<b class="nc">&nbsp;            if (point == null)</b>
+<b class="nc">&nbsp;                return Double.NaN;</b>
+<b class="nc">&nbsp;            if (Double.isNaN(point.ele) == is3D)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;There should be elevation data for either all points or no points at all. OSM way: &quot; + way.getId());</b>
+<b class="nc">&nbsp;            distance += is3D</b>
+<b class="nc">&nbsp;                    ? distCalc.calcDist3D(prevPoint.lat, prevPoint.lon, prevPoint.ele, point.lat, point.lon, point.ele)</b>
+<b class="nc">&nbsp;                    : distCalc.calcDist(prevPoint.lat, prevPoint.lon, point.lat, point.lon);</b>
+<b class="nc">&nbsp;            prevPoint = point;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return distance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is called for each relation during the first pass of {@link WaySegmentParser}
+&nbsp;     */
+&nbsp;    protected void preprocessRelations(ReaderRelation relation) {
+<b class="nc">&nbsp;        if (!relation.isMetaRelation() &amp;&amp; relation.hasTag(&quot;type&quot;, &quot;route&quot;)) {</b>
+&nbsp;            // we keep track of all route relations, so they are available when we create edges later
+<b class="nc">&nbsp;            for (ReaderRelation.Member member : relation.getMembers()) {</b>
+<b class="nc">&nbsp;                if (member.getType() != ReaderElement.Type.WAY)</b>
+<b class="nc">&nbsp;                    continue;</b>
+<b class="nc">&nbsp;                IntsRef oldRelationFlags = getRelFlagsMap(member.getRef());</b>
+<b class="nc">&nbsp;                IntsRef newRelationFlags = osmParsers.handleRelationTags(relation, oldRelationFlags);</b>
+<b class="nc">&nbsp;                putRelFlagsMap(member.getRef(), newRelationFlags);</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Arrays.stream(OSMRestrictionConverter.getRestrictedWayIds(relation))</b>
+<b class="nc">&nbsp;                .forEach(restrictedWaysToEdgesMap::reserve);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is called for each relation during the second pass of {@link WaySegmentParser}
+&nbsp;     * We use it to save the relations and process them afterwards.
+&nbsp;     */
+&nbsp;    protected void processRelation(ReaderRelation relation, LongToIntFunction getIdForOSMNodeId) {
+<b class="nc">&nbsp;        if (turnCostStorage != null)</b>
+<b class="nc">&nbsp;            if (OSMRestrictionConverter.isTurnRestriction(relation)) {</b>
+<b class="nc">&nbsp;                long osmViaNode = OSMRestrictionConverter.getViaNodeIfViaNodeRestriction(relation);</b>
+<b class="nc">&nbsp;                if (osmViaNode &gt;= 0) {</b>
+<b class="nc">&nbsp;                    int viaNode = getIdForOSMNodeId.applyAsInt(osmViaNode);</b>
+&nbsp;                    // only include the restriction if the corresponding node wasn&#39;t excluded
+<b class="nc">&nbsp;                    if (viaNode &gt;= 0) {</b>
+<b class="nc">&nbsp;                        relation.setTag(&quot;graphhopper:via_node&quot;, viaNode);</b>
+<b class="nc">&nbsp;                        restrictionRelations.add(relation);</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                } else</b>
+&nbsp;                    // not a via-node restriction -&gt; simply add it as is
+<b class="nc">&nbsp;                    restrictionRelations.add(relation);</b>
+&nbsp;            }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void addRestrictionsToGraph() {
+<b class="nc">&nbsp;        if (turnCostStorage == null)</b>
+&nbsp;            return;
+<b class="nc">&nbsp;        StopWatch sw = StopWatch.started();</b>
+&nbsp;        // The OSM restriction format is explained here: https://wiki.openstreetmap.org/wiki/Relation:restriction
+<b class="nc">&nbsp;        List&lt;Triple&lt;ReaderRelation, RestrictionTopology, RestrictionMembers&gt;&gt; restrictionRelationsWithTopology = new ArrayList&lt;&gt;(restrictionRelations.size());</b>
+<b class="nc">&nbsp;        for (ReaderRelation restrictionRelation : restrictionRelations) {</b>
+&nbsp;            try {
+&nbsp;                // Build the topology of the OSM relation in the graph representation. This only needs to be done once for all
+&nbsp;                // vehicle types (we also want to print warnings only once)
+<b class="nc">&nbsp;                restrictionRelationsWithTopology.add(OSMRestrictionConverter.buildRestrictionTopologyForGraph(baseGraph, restrictionRelation, restrictedWaysToEdgesMap::getEdges));</b>
+<b class="nc">&nbsp;            } catch (OSMRestrictionException e) {</b>
+<b class="nc">&nbsp;                warnOfRestriction(restrictionRelation, e);</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;        // It is important to set the restrictions for all parsers/encoded values at once to make
+&nbsp;        // sure the resulting turn restrictions do not interfere.
+<b class="nc">&nbsp;        List&lt;RestrictionSetter.Restriction&gt; restrictions = new ArrayList&lt;&gt;();</b>
+&nbsp;        // For every restriction we set flags that indicate the validity for the different parsers
+<b class="nc">&nbsp;        List&lt;BitSet&gt; encBits = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Triple&lt;ReaderRelation, RestrictionTopology, RestrictionMembers&gt; r : restrictionRelationsWithTopology) {</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                BitSet bits = new BitSet(osmParsers.getRestrictionTagParsers().size());</b>
+<b class="nc">&nbsp;                RestrictionType restrictionType = null;</b>
+<b class="nc">&nbsp;                for (int i = 0; i &lt; osmParsers.getRestrictionTagParsers().size(); i++) {</b>
+<b class="nc">&nbsp;                    RestrictionTagParser restrictionTagParser = osmParsers.getRestrictionTagParsers().get(i);</b>
+<b class="nc">&nbsp;                    RestrictionTagParser.Result res = restrictionTagParser.parseRestrictionTags(r.first.getTags());</b>
+<b class="nc">&nbsp;                    if (res == null)</b>
+&nbsp;                        // this relation is ignored by this restriction tag parser
+<b class="nc">&nbsp;                        continue;</b>
+<b class="nc">&nbsp;                    OSMRestrictionConverter.checkIfTopologyIsCompatibleWithRestriction(r.second, res.getRestriction());</b>
+<b class="nc">&nbsp;                    if (restrictionType != null &amp;&amp; res.getRestrictionType() != restrictionType)</b>
+&nbsp;                        // so far we restrict ourselves to restriction relations that use the same type for all vehicles
+<b class="nc">&nbsp;                        throw new OSMRestrictionException(&quot;has different restriction type for different vehicles.&quot;);</b>
+<b class="nc">&nbsp;                    restrictionType = res.getRestrictionType();</b>
+<b class="nc">&nbsp;                    bits.set(i);</b>
+&nbsp;                }
+<b class="nc">&nbsp;                if (bits.cardinality() &gt; 0) {</b>
+<b class="nc">&nbsp;                    List&lt;RestrictionSetter.Restriction&gt; tmpRestrictions = OSMRestrictionConverter.buildRestrictionsForOSMRestriction(baseGraph, r.second, restrictionType);</b>
+<b class="nc">&nbsp;                    restrictions.addAll(tmpRestrictions);</b>
+<b class="nc">&nbsp;                    tmpRestrictions.forEach(__ -&gt; encBits.add(RestrictionSetter.copyEncBits(bits)));</b>
+&nbsp;                }
+<b class="nc">&nbsp;            } catch (OSMRestrictionException e) {</b>
+<b class="nc">&nbsp;                warnOfRestriction(r.first, e);</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        restrictionSetter.setRestrictions(restrictions, encBits);</b>
+<b class="nc">&nbsp;        LOGGER.info(&quot;Finished adding turn restrictions. total turn cost entries: {}, took: {}&quot;,</b>
+<b class="nc">&nbsp;                Helper.nf(baseGraph.getTurnCostStorage().getTurnCostsCount()), sw.stop().getTimeString());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void warnOfRestriction(ReaderRelation restrictionRelation, OSMRestrictionException e) {
+&nbsp;        // we do not log exceptions with an empty message
+<b class="nc">&nbsp;        if (!e.isWithoutWarning()) {</b>
+<b class="nc">&nbsp;            restrictionRelation.getTags().remove(&quot;graphhopper:via_node&quot;);</b>
+<b class="nc">&nbsp;            List&lt;String&gt; members = restrictionRelation.getMembers().stream().map(m -&gt; m.getRole() + &quot; &quot; + m.getType().toString().toLowerCase() + &quot; &quot; + m.getRef()).collect(Collectors.toList());</b>
+<b class="nc">&nbsp;            OSM_WARNING_LOGGER.warn(&quot;Restriction relation &quot; + restrictionRelation.getId() + &quot; &quot; + e.getMessage() + &quot;. tags: &quot; + restrictionRelation.getTags() + &quot;, members: &quot; + members + &quot;. Relation ignored.&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void releaseEverythingExceptRestrictionData() {
+<b class="nc">&nbsp;        eleProvider.release();</b>
+<b class="nc">&nbsp;        osmWayIdToRelationFlagsMap = null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void releaseRestrictionData() {
+<b class="nc">&nbsp;        restrictedWaysToEdgesMap = null;</b>
+<b class="nc">&nbsp;        restrictionRelations = null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    IntsRef getRelFlagsMap(long osmId) {
+<b class="nc">&nbsp;        long relFlagsAsLong = osmWayIdToRelationFlagsMap.get(osmId);</b>
+<b class="nc">&nbsp;        tempRelFlags.ints[0] = (int) relFlagsAsLong;</b>
+<b class="nc">&nbsp;        tempRelFlags.ints[1] = (int) (relFlagsAsLong &gt;&gt; 32);</b>
+<b class="nc">&nbsp;        return tempRelFlags;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void putRelFlagsMap(long osmId, IntsRef relFlags) {
+<b class="nc">&nbsp;        long relFlagsAsLong = ((long) relFlags.ints[1] &lt;&lt; 32) | (relFlags.ints[0] &amp; 0xFFFFFFFFL);</b>
+<b class="nc">&nbsp;        osmWayIdToRelationFlagsMap.put(osmId, relFlagsAsLong);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return getClass().getSimpleName();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

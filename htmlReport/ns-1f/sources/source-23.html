@@ -1,0 +1,114 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > NodeAccess</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: NodeAccess (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">NodeAccess</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.util.PointAccess;
+&nbsp;
+&nbsp;/**
+&nbsp; * This interface specifies how to access properties of the nodes in the graph. Similar to
+&nbsp; * EdgeExplorer as it needs multiple instances for different threads or loops but without the need
+&nbsp; * for an additional iterator.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public interface NodeAccess extends PointAccess {
+&nbsp;    /**
+&nbsp;     * @return the index used to retrieve turn cost information for this node, can be {@link TurnCostStorage#NO_TURN_ENTRY}
+&nbsp;     *         in case no turn costs were stored for this node
+&nbsp;     * @throws AssertionError if, and only if, the underlying storage does not support turn costs
+&nbsp;     */
+&nbsp;    int getTurnCostIndex(int nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the turn cost index for this node, using {@link TurnCostStorage#NO_TURN_ENTRY} means there
+&nbsp;     * are no turn costs at this node.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @throws AssertionError if, and only if, the underlying storage does not support turn costs
+&nbsp;     */
+&nbsp;    void setTurnCostIndex(int nodeId, int additionalValue);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

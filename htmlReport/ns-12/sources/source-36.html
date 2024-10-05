@@ -1,0 +1,252 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > State</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ev</a>
+</div>
+
+<h1>Coverage Summary for Class: State (com.graphhopper.routing.ev)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">State</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/86)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.ev;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.ev.Country.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * The country subdivision is stored in this EncodedValue. E.g. US-CA is the enum US_CA.
+&nbsp; */
+<b class="nc">&nbsp;public enum State {</b>
+<b class="nc">&nbsp;    MISSING(&quot;-&quot;),</b>
+&nbsp;
+&nbsp;    // Australia
+<b class="nc">&nbsp;    AU_ACT(&quot;AU-ACT&quot;),</b>
+<b class="nc">&nbsp;    AU_NSW(&quot;AU-NSW&quot;),</b>
+<b class="nc">&nbsp;    AU_NT(&quot;AU-NT&quot;),</b>
+<b class="nc">&nbsp;    AU_QLD(&quot;AU-QLD&quot;),</b>
+<b class="nc">&nbsp;    AU_SA(&quot;AU-SA&quot;),</b>
+<b class="nc">&nbsp;    AU_TAS(&quot;AU-TAS&quot;),</b>
+<b class="nc">&nbsp;    AU_VIC(&quot;AU-VIC&quot;),</b>
+<b class="nc">&nbsp;    AU_WA(&quot;AU-WA&quot;),</b>
+&nbsp;
+&nbsp;    // the sub regions of Belgium have no data in countries.geojson
+&nbsp;    // BE_BRU(&quot;BE-BRU&quot;, BEL),
+&nbsp;    // BE_VLG(&quot;BE-VLG&quot;, BEL),
+&nbsp;    // BE_WAL(&quot;BE-WAL&quot;, BEL),
+&nbsp;
+&nbsp;    // Canada
+<b class="nc">&nbsp;    CA_AB(&quot;CA-AB&quot;),</b>
+<b class="nc">&nbsp;    CA_BC(&quot;CA-BC&quot;),</b>
+<b class="nc">&nbsp;    CA_MB(&quot;CA-MB&quot;),</b>
+<b class="nc">&nbsp;    CA_NB(&quot;CA-NB&quot;),</b>
+<b class="nc">&nbsp;    CA_NL(&quot;CA-NL&quot;),</b>
+<b class="nc">&nbsp;    CA_NS(&quot;CA-NS&quot;),</b>
+<b class="nc">&nbsp;    CA_NT(&quot;CA-NT&quot;),</b>
+<b class="nc">&nbsp;    CA_NU(&quot;CA-NU&quot;),</b>
+<b class="nc">&nbsp;    CA_ON(&quot;CA-ON&quot;),</b>
+<b class="nc">&nbsp;    CA_PE(&quot;CA-PE&quot;),</b>
+<b class="nc">&nbsp;    CA_QC(&quot;CA-QC&quot;),</b>
+<b class="nc">&nbsp;    CA_SK(&quot;CA-SK&quot;),</b>
+<b class="nc">&nbsp;    CA_YT(&quot;CA-YT&quot;),</b>
+&nbsp;
+&nbsp;    // Federated States of Micronesia
+<b class="nc">&nbsp;    FM_KSA(&quot;FM-KSA&quot;),</b>
+<b class="nc">&nbsp;    FM_PNI(&quot;FM-PNI&quot;),</b>
+<b class="nc">&nbsp;    FM_TRK(&quot;FM-TRK&quot;),</b>
+<b class="nc">&nbsp;    FM_YAP(&quot;FM-YAP&quot;),</b>
+&nbsp;
+&nbsp;    // United Kingdom
+&nbsp;    // TODO currently it isn&#39;t supported when the states list does not cover the entire country
+&nbsp;    //  furthermore the speed limits for Scotland are not different for car
+&nbsp;    // GB_SCT(&quot;GB-SCT&quot;, GBR),
+&nbsp;
+&nbsp;    // Netherlands
+&nbsp;    // TODO same problem here
+&nbsp;    // NL_BQ1(&quot;NL-BQ1&quot;, NLD),
+&nbsp;    // NL_BQ2(&quot;NL-BQ2&quot;, NLD),
+&nbsp;    // NL_BQ3(&quot;NL-BQ3&quot;, NLD),
+&nbsp;
+&nbsp;    // United States
+<b class="nc">&nbsp;    US_AL(&quot;US-AL&quot;),</b>
+<b class="nc">&nbsp;    US_AK(&quot;US-AK&quot;),</b>
+<b class="nc">&nbsp;    US_AZ(&quot;US-AZ&quot;),</b>
+<b class="nc">&nbsp;    US_AR(&quot;US-AR&quot;),</b>
+<b class="nc">&nbsp;    US_CA(&quot;US-CA&quot;),</b>
+<b class="nc">&nbsp;    US_CO(&quot;US-CO&quot;),</b>
+<b class="nc">&nbsp;    US_CT(&quot;US-CT&quot;),</b>
+<b class="nc">&nbsp;    US_DE(&quot;US-DE&quot;),</b>
+<b class="nc">&nbsp;    US_DC(&quot;US-DC&quot;), // is a federal district not a state</b>
+<b class="nc">&nbsp;    US_FL(&quot;US-FL&quot;),</b>
+<b class="nc">&nbsp;    US_GA(&quot;US-GA&quot;),</b>
+<b class="nc">&nbsp;    US_HI(&quot;US-HI&quot;),</b>
+<b class="nc">&nbsp;    US_ID(&quot;US-ID&quot;),</b>
+<b class="nc">&nbsp;    US_IL(&quot;US-IL&quot;),</b>
+<b class="nc">&nbsp;    US_IN(&quot;US-IN&quot;),</b>
+<b class="nc">&nbsp;    US_IA(&quot;US-IA&quot;),</b>
+<b class="nc">&nbsp;    US_KS(&quot;US-KS&quot;),</b>
+<b class="nc">&nbsp;    US_KY(&quot;US-KY&quot;),</b>
+<b class="nc">&nbsp;    US_LA(&quot;US-LA&quot;),</b>
+<b class="nc">&nbsp;    US_ME(&quot;US-ME&quot;),</b>
+<b class="nc">&nbsp;    US_MD(&quot;US-MD&quot;),</b>
+<b class="nc">&nbsp;    US_MA(&quot;US-MA&quot;),</b>
+<b class="nc">&nbsp;    US_MI(&quot;US-MI&quot;),</b>
+<b class="nc">&nbsp;    US_MN(&quot;US-MN&quot;),</b>
+<b class="nc">&nbsp;    US_MS(&quot;US-MS&quot;),</b>
+<b class="nc">&nbsp;    US_MO(&quot;US-MO&quot;),</b>
+<b class="nc">&nbsp;    US_MT(&quot;US-MT&quot;),</b>
+<b class="nc">&nbsp;    US_NE(&quot;US-NE&quot;),</b>
+<b class="nc">&nbsp;    US_NV(&quot;US-NV&quot;),</b>
+<b class="nc">&nbsp;    US_NH(&quot;US-NH&quot;),</b>
+<b class="nc">&nbsp;    US_NJ(&quot;US-NJ&quot;),</b>
+<b class="nc">&nbsp;    US_NM(&quot;US-NM&quot;),</b>
+<b class="nc">&nbsp;    US_NY(&quot;US-NY&quot;),</b>
+<b class="nc">&nbsp;    US_NC(&quot;US-NC&quot;),</b>
+<b class="nc">&nbsp;    US_ND(&quot;US-ND&quot;),</b>
+<b class="nc">&nbsp;    US_OH(&quot;US-OH&quot;),</b>
+<b class="nc">&nbsp;    US_OK(&quot;US-OK&quot;),</b>
+<b class="nc">&nbsp;    US_OR(&quot;US-OR&quot;),</b>
+<b class="nc">&nbsp;    US_PA(&quot;US-PA&quot;),</b>
+<b class="nc">&nbsp;    US_RI(&quot;US-RI&quot;),</b>
+<b class="nc">&nbsp;    US_SC(&quot;US-SC&quot;),</b>
+<b class="nc">&nbsp;    US_SD(&quot;US-SD&quot;),</b>
+<b class="nc">&nbsp;    US_TN(&quot;US-TN&quot;),</b>
+<b class="nc">&nbsp;    US_TX(&quot;US-TX&quot;),</b>
+<b class="nc">&nbsp;    US_UT(&quot;US-UT&quot;),</b>
+<b class="nc">&nbsp;    US_VT(&quot;US-VT&quot;),</b>
+<b class="nc">&nbsp;    US_VA(&quot;US-VA&quot;),</b>
+<b class="nc">&nbsp;    US_WA(&quot;US-WA&quot;),</b>
+<b class="nc">&nbsp;    US_WV(&quot;US-WV&quot;),</b>
+<b class="nc">&nbsp;    US_WI(&quot;US-WI&quot;),</b>
+<b class="nc">&nbsp;    US_WY(&quot;US-WY&quot;);</b>
+&nbsp;
+&nbsp;    public static final String KEY = &quot;state&quot;, ISO_3166_2 = &quot;ISO3166-2&quot;;
+&nbsp;
+&nbsp;    private final String stateCode;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param isoCodeOfSubdivision should be ISO 3166-2 but with hyphen like US-CA
+&nbsp;     */
+<b class="nc">&nbsp;    State(String isoCodeOfSubdivision) {</b>
+<b class="nc">&nbsp;        this.stateCode = isoCodeOfSubdivision;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param iso should be ISO 3166-2 but with hyphen like US-CA
+&nbsp;     */
+&nbsp;    public static State find(String iso) {
+&nbsp;        try {
+<b class="nc">&nbsp;            return State.valueOf(iso.replace(&#39;-&#39;, &#39;_&#39;));</b>
+<b class="nc">&nbsp;        } catch (IllegalArgumentException ex) {</b>
+<b class="nc">&nbsp;            return State.MISSING;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return ISO 3166-2 code with hyphen. E.g. US-CA
+&nbsp;     */
+&nbsp;    public String getStateCode() {
+<b class="nc">&nbsp;        return stateCode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return stateCode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static EnumEncodedValue&lt;State&gt; create() {
+<b class="nc">&nbsp;        return new EnumEncodedValue&lt;&gt;(State.KEY, State.class);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

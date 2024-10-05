@@ -1,0 +1,187 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > InstructionsHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: InstructionsHelper (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">InstructionsHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/29)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.graphhopper.storage.NodeAccess;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;/**
+&nbsp; * Simple helper class used during the instruction generation
+&nbsp; */
+<b class="nc">&nbsp;class InstructionsHelper {</b>
+&nbsp;
+&nbsp;    static double calculateOrientationDelta(double prevLatitude, double prevLongitude, double latitude, double longitude, double prevOrientation) {
+<b class="nc">&nbsp;        double orientation = AngleCalc.ANGLE_CALC.calcOrientation(prevLatitude, prevLongitude, latitude, longitude, false);</b>
+<b class="nc">&nbsp;        orientation = AngleCalc.ANGLE_CALC.alignOrientation(prevOrientation, orientation);</b>
+<b class="nc">&nbsp;        return orientation - prevOrientation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static int calculateSign(double prevLatitude, double prevLongitude, double latitude, double longitude, double prevOrientation) {
+<b class="nc">&nbsp;        double delta = calculateOrientationDelta(prevLatitude, prevLongitude, latitude, longitude, prevOrientation);</b>
+<b class="nc">&nbsp;        double absDelta = Math.abs(delta);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (absDelta &lt; 0.2) {</b>
+&nbsp;            // 0.2 ~= 11°
+<b class="nc">&nbsp;            return Instruction.CONTINUE_ON_STREET;</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (absDelta &lt; 0.8) {</b>
+&nbsp;            // 0.8 ~= 40°
+<b class="nc">&nbsp;            if (delta &gt; 0)</b>
+<b class="nc">&nbsp;                return Instruction.TURN_SLIGHT_LEFT;</b>
+&nbsp;            else
+<b class="nc">&nbsp;                return Instruction.TURN_SLIGHT_RIGHT;</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (absDelta &lt; 1.8) {</b>
+&nbsp;            // 1.8 ~= 103°
+<b class="nc">&nbsp;            if (delta &gt; 0)</b>
+<b class="nc">&nbsp;                return Instruction.TURN_LEFT;</b>
+&nbsp;            else
+<b class="nc">&nbsp;                return Instruction.TURN_RIGHT;</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (delta &gt; 0)</b>
+<b class="nc">&nbsp;            return Instruction.TURN_SHARP_LEFT;</b>
+&nbsp;        else
+<b class="nc">&nbsp;            return Instruction.TURN_SHARP_RIGHT;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static boolean isSameName(String name1, String name2) {
+&nbsp;        // We don&#39;t want two empty names to be similar (they usually don&#39;t have names if they are random tracks)
+<b class="nc">&nbsp;        if (name1 == null || name2 == null || name1.isEmpty() || name2.isEmpty())</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        return name1.equals(name2);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static GHPoint getPointForOrientationCalculation(EdgeIteratorState edgeIteratorState, NodeAccess nodeAccess) {
+&nbsp;        double tmpLat;
+&nbsp;        double tmpLon;
+<b class="nc">&nbsp;        PointList tmpWayGeo = edgeIteratorState.fetchWayGeometry(FetchMode.ALL);</b>
+<b class="nc">&nbsp;        if (tmpWayGeo.size() &lt;= 2) {</b>
+<b class="nc">&nbsp;            tmpLat = nodeAccess.getLat(edgeIteratorState.getAdjNode());</b>
+<b class="nc">&nbsp;            tmpLon = nodeAccess.getLon(edgeIteratorState.getAdjNode());</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            tmpLat = tmpWayGeo.getLat(1);</b>
+<b class="nc">&nbsp;            tmpLon = tmpWayGeo.getLon(1);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return new GHPoint(tmpLat, tmpLon);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

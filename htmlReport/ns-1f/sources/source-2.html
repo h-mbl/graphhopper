@@ -1,0 +1,1282 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > BaseGraph</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: BaseGraph (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BaseGraph</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/54)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/259)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">BaseGraph$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">BaseGraph$AllEdgeIterator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/23)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">BaseGraph$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/23)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">BaseGraph$EdgeIteratorImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">BaseGraph$EdgeIteratorStateImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/47)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/128)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/121)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/458)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.util.AllEdgesIterator;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;import com.graphhopper.routing.util.EncodingManager;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.search.KVStorage;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;
+&nbsp;import java.io.Closeable;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.function.Consumer;
+&nbsp;import java.util.function.IntConsumer;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.nf;
+&nbsp;import static com.graphhopper.util.Parameters.Details.STREET_NAME;
+&nbsp;
+&nbsp;/**
+&nbsp; * The base graph handles nodes and edges file format. It can be used with different Directory
+&nbsp; * implementations like RAMDirectory for fast access or via MMapDirectory for virtual-memory and not
+&nbsp; * thread safe usage.
+&nbsp; * &lt;p&gt;
+&nbsp; * Note: A RAM DataAccess Object is thread-safe in itself but if used in this Graph implementation
+&nbsp; * it is not write thread safe.
+&nbsp; * &lt;p&gt;
+&nbsp; * Life cycle: (1) object creation, (2) configuration via setters &amp;amp; getters, (3) create or
+&nbsp; * loadExisting, (4) usage, (5) flush, (6) close
+&nbsp; */
+<b class="nc">&nbsp;public class BaseGraph implements Graph, Closeable {</b>
+&nbsp;    final static long MAX_UNSIGNED_INT = 0xFFFF_FFFFL;
+&nbsp;    final BaseGraphNodesAndEdges store;
+&nbsp;    final NodeAccess nodeAccess;
+&nbsp;    final KVStorage edgeKVStorage;
+&nbsp;    // can be null if turn costs are not supported
+&nbsp;    final TurnCostStorage turnCostStorage;
+&nbsp;    final BitUtil bitUtil;
+&nbsp;    // length | nodeA | nextNode | ... | nodeB
+&nbsp;    private final DataAccess wayGeometry;
+&nbsp;    private final Directory dir;
+&nbsp;    private final int segmentSize;
+<b class="nc">&nbsp;    private boolean initialized = false;</b>
+&nbsp;    private long minGeoRef;
+&nbsp;    private long maxGeoRef;
+&nbsp;    private final int eleBytesPerCoord;
+&nbsp;
+<b class="nc">&nbsp;    public BaseGraph(Directory dir, boolean withElevation, boolean withTurnCosts, int segmentSize, int bytesForFlags) {</b>
+<b class="nc">&nbsp;        this.dir = dir;</b>
+<b class="nc">&nbsp;        this.bitUtil = BitUtil.LITTLE;</b>
+<b class="nc">&nbsp;        this.wayGeometry = dir.create(&quot;geometry&quot;, segmentSize);</b>
+<b class="nc">&nbsp;        this.edgeKVStorage = new KVStorage(dir, true);</b>
+<b class="nc">&nbsp;        this.store = new BaseGraphNodesAndEdges(dir, withElevation, withTurnCosts, segmentSize, bytesForFlags);</b>
+<b class="nc">&nbsp;        this.nodeAccess = new GHNodeAccess(store);</b>
+<b class="nc">&nbsp;        this.segmentSize = segmentSize;</b>
+<b class="nc">&nbsp;        this.turnCostStorage = withTurnCosts ? new TurnCostStorage(this, dir.create(&quot;turn_costs&quot;, dir.getDefaultType(&quot;turn_costs&quot;, true), segmentSize)) : null;</b>
+<b class="nc">&nbsp;        this.eleBytesPerCoord = (nodeAccess.getDimension() == 3 ? 3 : 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    BaseGraphNodesAndEdges getStore() {
+<b class="nc">&nbsp;        return store;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getOtherNode(int nodeThis, long edgePointer) {
+<b class="nc">&nbsp;        int nodeA = store.getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;        return nodeThis == nodeA ? store.getNodeB(edgePointer) : nodeA;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isAdjacentToNode(int node, long edgePointer) {
+<b class="nc">&nbsp;        return store.getNodeA(edgePointer) == node || store.getNodeB(edgePointer) == node;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static boolean isTestingEnabled() {
+<b class="nc">&nbsp;        boolean enableIfAssert = false;</b>
+<b class="nc">&nbsp;        assert (enableIfAssert = true) : true;</b>
+<b class="nc">&nbsp;        return enableIfAssert;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void debugPrint() {
+<b class="nc">&nbsp;        store.debugPrint();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BaseGraph getBaseGraph() {
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isInitialized() {
+<b class="nc">&nbsp;        return initialized;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void checkNotInitialized() {
+<b class="nc">&nbsp;        if (initialized)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;You cannot configure this BaseGraph &quot;</b>
+&nbsp;                    + &quot;after calling create or loadExisting. Calling one of the methods twice is also not allowed.&quot;);
+&nbsp;    }
+&nbsp;
+&nbsp;    private void loadWayGeometryHeader() {
+<b class="nc">&nbsp;        int geometryVersion = wayGeometry.getHeader(0);</b>
+<b class="nc">&nbsp;        GHUtility.checkDAVersion(wayGeometry.getName(), Constants.VERSION_GEOMETRY, geometryVersion);</b>
+<b class="nc">&nbsp;        minGeoRef = bitUtil.toLong(</b>
+<b class="nc">&nbsp;                wayGeometry.getHeader(4),</b>
+<b class="nc">&nbsp;                wayGeometry.getHeader(8)</b>
+&nbsp;        );
+<b class="nc">&nbsp;        maxGeoRef = bitUtil.toLong(</b>
+<b class="nc">&nbsp;                wayGeometry.getHeader(12),</b>
+<b class="nc">&nbsp;                wayGeometry.getHeader(16)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setWayGeometryHeader() {
+<b class="nc">&nbsp;        wayGeometry.setHeader(0, Constants.VERSION_GEOMETRY);</b>
+<b class="nc">&nbsp;        wayGeometry.setHeader(4, bitUtil.getIntLow(minGeoRef));</b>
+<b class="nc">&nbsp;        wayGeometry.setHeader(8, bitUtil.getIntHigh(minGeoRef));</b>
+<b class="nc">&nbsp;        wayGeometry.setHeader(12, bitUtil.getIntLow(maxGeoRef));</b>
+<b class="nc">&nbsp;        wayGeometry.setHeader(16, bitUtil.getIntHigh(maxGeoRef));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setInitialized() {
+<b class="nc">&nbsp;        initialized = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean supportsTurnCosts() {
+<b class="nc">&nbsp;        return turnCostStorage != null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getNodes() {
+<b class="nc">&nbsp;        return store.getNodes();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getEdges() {
+<b class="nc">&nbsp;        return store.getEdges();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public NodeAccess getNodeAccess() {
+<b class="nc">&nbsp;        return nodeAccess;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BBox getBounds() {
+<b class="nc">&nbsp;        return store.getBounds();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public synchronized void freeze() {
+<b class="nc">&nbsp;        if (isFrozen())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;base graph already frozen&quot;);</b>
+<b class="nc">&nbsp;        store.setFrozen(true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public synchronized boolean isFrozen() {
+<b class="nc">&nbsp;        return store.getFrozen();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BaseGraph create(long initSize) {
+<b class="nc">&nbsp;        checkNotInitialized();</b>
+<b class="nc">&nbsp;        dir.create();</b>
+<b class="nc">&nbsp;        store.create(initSize);</b>
+&nbsp;
+<b class="nc">&nbsp;        initSize = Math.min(initSize, 2000);</b>
+<b class="nc">&nbsp;        wayGeometry.create(initSize);</b>
+<b class="nc">&nbsp;        edgeKVStorage.create(initSize);</b>
+<b class="nc">&nbsp;        if (supportsTurnCosts()) {</b>
+<b class="nc">&nbsp;            turnCostStorage.create(initSize);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        setInitialized();</b>
+&nbsp;        // 0 stands for no separate geoRef, &lt;0 stands for no separate geoRef but existing edge copies
+<b class="nc">&nbsp;        minGeoRef = -1;</b>
+<b class="nc">&nbsp;        maxGeoRef = 1;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toDetailsString() {
+<b class="nc">&nbsp;        return store.toDetailsString() + &quot;, &quot;</b>
+<b class="nc">&nbsp;                + &quot;name:(&quot; + edgeKVStorage.getCapacity() / Helper.MB + &quot;MB), &quot;</b>
+<b class="nc">&nbsp;                + &quot;geo:&quot; + nf(maxGeoRef) + &quot;/&quot; + nf(minGeoRef) + &quot;(&quot; + wayGeometry.getCapacity() / Helper.MB + &quot;MB)&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Flush and free resources that are not needed for post-processing (way geometries and KVStorage for edges).
+&nbsp;     */
+&nbsp;    public void flushAndCloseGeometryAndNameStorage() {
+<b class="nc">&nbsp;        setWayGeometryHeader();</b>
+&nbsp;
+<b class="nc">&nbsp;        wayGeometry.flush();</b>
+<b class="nc">&nbsp;        wayGeometry.close();</b>
+&nbsp;
+<b class="nc">&nbsp;        edgeKVStorage.flush();</b>
+<b class="nc">&nbsp;        edgeKVStorage.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void flush() {
+<b class="nc">&nbsp;        if (!wayGeometry.isClosed()) {</b>
+<b class="nc">&nbsp;            setWayGeometryHeader();</b>
+<b class="nc">&nbsp;            wayGeometry.flush();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!edgeKVStorage.isClosed())</b>
+<b class="nc">&nbsp;            edgeKVStorage.flush();</b>
+&nbsp;
+<b class="nc">&nbsp;        store.flush();</b>
+<b class="nc">&nbsp;        if (supportsTurnCosts()) {</b>
+<b class="nc">&nbsp;            turnCostStorage.flush();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void close() {
+<b class="nc">&nbsp;        if (!wayGeometry.isClosed())</b>
+<b class="nc">&nbsp;            wayGeometry.close();</b>
+<b class="nc">&nbsp;        if (!edgeKVStorage.isClosed())</b>
+<b class="nc">&nbsp;            edgeKVStorage.close();</b>
+<b class="nc">&nbsp;        store.close();</b>
+<b class="nc">&nbsp;        if (supportsTurnCosts()) {</b>
+<b class="nc">&nbsp;            turnCostStorage.close();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getCapacity() {
+<b class="nc">&nbsp;        return store.getCapacity() + edgeKVStorage.getCapacity()</b>
+<b class="nc">&nbsp;                + wayGeometry.getCapacity() + (supportsTurnCosts() ? turnCostStorage.getCapacity() : 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long getMaxGeoRef() {
+<b class="nc">&nbsp;        return maxGeoRef;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean loadExisting() {
+<b class="nc">&nbsp;        checkNotInitialized();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!store.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!wayGeometry.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!edgeKVStorage.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (supportsTurnCosts() &amp;&amp; !turnCostStorage.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        setInitialized();</b>
+<b class="nc">&nbsp;        loadWayGeometryHeader();</b>
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method copies the properties of one {@link EdgeIteratorState} to another.
+&nbsp;     *
+&nbsp;     * @return the updated iterator the properties where copied to.
+&nbsp;     */
+&nbsp;    EdgeIteratorState copyProperties(EdgeIteratorState from, EdgeIteratorStateImpl to) {
+<b class="nc">&nbsp;        long edgePointer = store.toEdgePointer(to.getEdge());</b>
+<b class="nc">&nbsp;        store.writeFlags(edgePointer, from.getFlags());</b>
+&nbsp;
+&nbsp;        // copy the rest with higher level API
+<b class="nc">&nbsp;        to.setDistance(from.getDistance()).</b>
+<b class="nc">&nbsp;                setKeyValues(from.getKeyValues()).</b>
+<b class="nc">&nbsp;                setWayGeometry(from.fetchWayGeometry(FetchMode.PILLAR_ONLY));</b>
+&nbsp;
+<b class="nc">&nbsp;        return to;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create edge between nodes a and b
+&nbsp;     *
+&nbsp;     * @return EdgeIteratorState of newly created edge
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public EdgeIteratorState edge(int nodeA, int nodeB) {
+<b class="nc">&nbsp;        if (isFrozen())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Cannot create edge if graph is already frozen&quot;);</b>
+<b class="nc">&nbsp;        if (nodeA == nodeB)</b>
+&nbsp;            // Loop edges would only make sense if their attributes were the same for both &#39;directions&#39;,
+&nbsp;            // because for routing algorithms (which ignore the way geometry) loop edges do not even
+&nbsp;            // have a well-defined &#39;direction&#39;. So we either need to make sure the attributes
+&nbsp;            // are the same for both directions, or reject loop edges altogether. Since we currently
+&nbsp;            // don&#39;t know any use-case for loop edges in road networks (there is one for PT),
+&nbsp;            // we reject them here.
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Loop edges are not supported, got: &quot; + nodeA + &quot; - &quot; + nodeB);</b>
+<b class="nc">&nbsp;        int edgeId = store.edge(nodeA, nodeB);</b>
+<b class="nc">&nbsp;        EdgeIteratorStateImpl edge = new EdgeIteratorStateImpl(this);</b>
+<b class="nc">&nbsp;        boolean valid = edge.init(edgeId, nodeB);</b>
+<b class="nc">&nbsp;        assert valid;</b>
+<b class="nc">&nbsp;        return edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a copy of a given edge with the same properties.
+&nbsp;     *
+&nbsp;     * @param reuseGeometry If true the copy uses the same pointer to the geometry,
+&nbsp;     *                      so changing the geometry would alter the geometry for both edges!
+&nbsp;     */
+&nbsp;    public EdgeIteratorState copyEdge(int edge, boolean reuseGeometry) {
+<b class="nc">&nbsp;        EdgeIteratorStateImpl edgeState = (EdgeIteratorStateImpl) getEdgeIteratorState(edge, Integer.MIN_VALUE);</b>
+<b class="nc">&nbsp;        EdgeIteratorStateImpl newEdge = (EdgeIteratorStateImpl) edge(edgeState.getBaseNode(), edgeState.getAdjNode())</b>
+<b class="nc">&nbsp;                .setFlags(edgeState.getFlags())</b>
+<b class="nc">&nbsp;                .setDistance(edgeState.getDistance())</b>
+<b class="nc">&nbsp;                .setKeyValues(edgeState.getKeyValues());</b>
+<b class="nc">&nbsp;        if (reuseGeometry) {</b>
+&nbsp;            // We use the same geo ref for the copied edge. This saves memory because we are not duplicating
+&nbsp;            // the geometry, and it allows to identify the copies of a given edge.
+<b class="nc">&nbsp;            long edgePointer = edgeState.edgePointer;</b>
+<b class="nc">&nbsp;            long geoRef = store.getGeoRef(edgePointer);</b>
+<b class="nc">&nbsp;            if (geoRef == 0) {</b>
+&nbsp;                // No geometry for this edge, but we need to be able to identify the copied edges later, so
+&nbsp;                // we use a dedicated negative value for the geo ref.
+<b class="nc">&nbsp;                geoRef = minGeoRef;</b>
+<b class="nc">&nbsp;                store.setGeoRef(edgePointer, geoRef);</b>
+<b class="nc">&nbsp;                minGeoRef--;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            store.setGeoRef(newEdge.edgePointer, geoRef);</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            newEdge.setWayGeometry(edgeState.fetchWayGeometry(FetchMode.PILLAR_ONLY));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return newEdge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Runs the given action on the given edge and all its copies that were created with &#39;reuseGeometry=true&#39;.
+&nbsp;     */
+&nbsp;    public void forEdgeAndCopiesOfEdge(EdgeExplorer explorer, EdgeIteratorState edge, Consumer&lt;EdgeIteratorState&gt; consumer) {
+<b class="nc">&nbsp;        final long geoRef = store.getGeoRef(((EdgeIteratorStateImpl) edge).edgePointer);</b>
+<b class="nc">&nbsp;        if (geoRef == 0) {</b>
+&nbsp;            // 0 means there is no geometry (and no copy of this edge), but of course not all edges
+&nbsp;            // without geometry are copies of each other, so we need to return early
+<b class="nc">&nbsp;            consumer.accept(edge);</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        EdgeIterator iter = explorer.setBaseNode(edge.getBaseNode());</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            long geoRefBefore = store.getGeoRef(((EdgeIteratorStateImpl) iter).edgePointer);</b>
+<b class="nc">&nbsp;            if (geoRefBefore == geoRef)</b>
+<b class="nc">&nbsp;                consumer.accept(iter);</b>
+<b class="nc">&nbsp;            if (store.getGeoRef(((EdgeIteratorStateImpl) iter).edgePointer) != geoRefBefore)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;The consumer must not change the geo ref&quot;);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void forEdgeAndCopiesOfEdge(EdgeExplorer explorer, int node, int edge, IntConsumer consumer) {
+<b class="nc">&nbsp;        final long geoRef = store.getGeoRef(store.toEdgePointer(edge));</b>
+<b class="nc">&nbsp;        if (geoRef == 0) {</b>
+&nbsp;            // 0 means there is no geometry (and no copy of this edge), but of course not all edges
+&nbsp;            // without geometry are copies of each other, so we need to return early
+<b class="nc">&nbsp;            consumer.accept(edge);</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        EdgeIterator iter = explorer.setBaseNode(node);</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            long geoRefBefore = store.getGeoRef(((EdgeIteratorStateImpl) iter).edgePointer);</b>
+<b class="nc">&nbsp;            if (geoRefBefore == geoRef)</b>
+<b class="nc">&nbsp;                consumer.accept(iter.getEdge());</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public EdgeIteratorState getEdgeIteratorState(int edgeId, int adjNode) {
+<b class="nc">&nbsp;        EdgeIteratorStateImpl edge = new EdgeIteratorStateImpl(this);</b>
+<b class="nc">&nbsp;        if (edge.init(edgeId, adjNode))</b>
+<b class="nc">&nbsp;            return edge;</b>
+&nbsp;        // if edgeId exists but adjacent nodes do not match
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public EdgeIteratorState getEdgeIteratorStateForKey(int edgeKey) {
+<b class="nc">&nbsp;        EdgeIteratorStateImpl edge = new EdgeIteratorStateImpl(this);</b>
+<b class="nc">&nbsp;        edge.init(edgeKey);</b>
+<b class="nc">&nbsp;        return edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public EdgeExplorer createEdgeExplorer(EdgeFilter filter) {
+<b class="nc">&nbsp;        return new EdgeIteratorImpl(this, filter);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public EdgeExplorer createEdgeExplorer() {
+<b class="nc">&nbsp;        return createEdgeExplorer(EdgeFilter.ALL_EDGES);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public AllEdgesIterator getAllEdges() {
+<b class="nc">&nbsp;        return new AllEdgeIterator(this);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public TurnCostStorage getTurnCostStorage() {
+<b class="nc">&nbsp;        return turnCostStorage;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Weighting wrapWeighting(Weighting weighting) {
+<b class="nc">&nbsp;        return weighting;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getOtherNode(int edge, int node) {
+<b class="nc">&nbsp;        long edgePointer = store.toEdgePointer(edge);</b>
+<b class="nc">&nbsp;        return getOtherNode(node, edgePointer);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isAdjacentToNode(int edge, int node) {
+<b class="nc">&nbsp;        long edgePointer = store.toEdgePointer(edge);</b>
+<b class="nc">&nbsp;        return isAdjacentToNode(node, edgePointer);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if the specified node is the adjacent node of the specified edge
+&nbsp;     * (relative to the direction in which the edge is stored).
+&nbsp;     */
+&nbsp;    public boolean isAdjNode(int edge, int node) {
+<b class="nc">&nbsp;        long edgePointer = store.toEdgePointer(edge);</b>
+<b class="nc">&nbsp;        return node == store.getNodeB(edgePointer);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setWayGeometry_(PointList pillarNodes, long edgePointer, boolean reverse) {
+<b class="nc">&nbsp;        if (pillarNodes != null &amp;&amp; !pillarNodes.isEmpty()) {</b>
+<b class="nc">&nbsp;            if (pillarNodes.getDimension() != nodeAccess.getDimension())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Cannot use pointlist which is &quot; + pillarNodes.getDimension()</b>
+<b class="nc">&nbsp;                        + &quot;D for graph which is &quot; + nodeAccess.getDimension() + &quot;D&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            long existingGeoRef = store.getGeoRef(edgePointer);</b>
+<b class="nc">&nbsp;            if (existingGeoRef &lt; 0)</b>
+&nbsp;                // users of this method might not be aware that after changing the geo ref it is no
+&nbsp;                // longer possible to find the copies corresponding to an edge, so we deny this
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;This edge has already been copied so we can no longer change the geometry, pointer=&quot; + edgePointer);</b>
+&nbsp;
+<b class="nc">&nbsp;            int len = pillarNodes.size();</b>
+<b class="nc">&nbsp;            if (existingGeoRef &gt; 0) {</b>
+<b class="nc">&nbsp;                final int count = getPillarCount(existingGeoRef);</b>
+<b class="nc">&nbsp;                if (len &lt;= count) {</b>
+<b class="nc">&nbsp;                    setWayGeometryAtGeoRef(pillarNodes, edgePointer, reverse, existingGeoRef);</b>
+&nbsp;                    return;
+&nbsp;                } else {
+<b class="nc">&nbsp;                    throw new IllegalStateException(&quot;This edge already has a way geometry so it cannot be changed to a bigger geometry, pointer=&quot; + edgePointer);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            long nextGeoRef = nextGeoRef(3 + len * (8 + eleBytesPerCoord));</b>
+<b class="nc">&nbsp;            setWayGeometryAtGeoRef(pillarNodes, edgePointer, reverse, nextGeoRef);</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            store.setGeoRef(edgePointer, 0L);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public EdgeIntAccess getEdgeAccess() {
+<b class="nc">&nbsp;        return store;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void setWayGeometryAtGeoRef(PointList pillarNodes, long edgePointer, boolean reverse, long geoRef) {
+<b class="nc">&nbsp;        byte[] wayGeometryBytes = createWayGeometryBytes(pillarNodes, reverse);</b>
+<b class="nc">&nbsp;        wayGeometry.ensureCapacity(geoRef + wayGeometryBytes.length);</b>
+<b class="nc">&nbsp;        wayGeometry.setBytes(geoRef, wayGeometryBytes, wayGeometryBytes.length);</b>
+<b class="nc">&nbsp;        store.setGeoRef(edgePointer, geoRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private byte[] createWayGeometryBytes(PointList pillarNodes, boolean reverse) {
+<b class="nc">&nbsp;        int len = pillarNodes.size();</b>
+<b class="nc">&nbsp;        int totalLen = 3 + len * (8 + eleBytesPerCoord);</b>
+<b class="nc">&nbsp;        if ((totalLen &amp; 0xFF00_0000) != 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;too long way geometry &quot; + totalLen + &quot;, &quot; + len);</b>
+&nbsp;
+<b class="nc">&nbsp;        byte[] bytes = new byte[totalLen];</b>
+<b class="nc">&nbsp;        bitUtil.fromUInt3(bytes, len, 0);</b>
+<b class="nc">&nbsp;        if (reverse)</b>
+<b class="nc">&nbsp;            pillarNodes.reverse();</b>
+&nbsp;
+<b class="nc">&nbsp;        int tmpOffset = 3;</b>
+<b class="nc">&nbsp;        boolean is3D = nodeAccess.is3D();</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; len; i++) {</b>
+<b class="nc">&nbsp;            double lat = pillarNodes.getLat(i);</b>
+<b class="nc">&nbsp;            bitUtil.fromInt(bytes, Helper.degreeToInt(lat), tmpOffset);</b>
+<b class="nc">&nbsp;            tmpOffset += 4;</b>
+<b class="nc">&nbsp;            bitUtil.fromInt(bytes, Helper.degreeToInt(pillarNodes.getLon(i)), tmpOffset);</b>
+<b class="nc">&nbsp;            tmpOffset += 4;</b>
+&nbsp;
+<b class="nc">&nbsp;            if (is3D) {</b>
+<b class="nc">&nbsp;                bitUtil.fromUInt3(bytes, Helper.eleToUInt(pillarNodes.getEle(i)), tmpOffset);</b>
+<b class="nc">&nbsp;                tmpOffset += 3;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getPillarCount(long geoRef) {
+<b class="nc">&nbsp;        return (wayGeometry.getByte(geoRef + 2) &amp; 0xFF &lt;&lt; 16) | wayGeometry.getShort(geoRef);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private PointList fetchWayGeometry_(long edgePointer, boolean reverse, FetchMode mode, int baseNode, int adjNode) {
+<b class="nc">&nbsp;        if (mode == FetchMode.TOWER_ONLY) {</b>
+&nbsp;            // no reverse handling required as adjNode and baseNode is already properly switched
+<b class="nc">&nbsp;            PointList pillarNodes = new PointList(2, nodeAccess.is3D());</b>
+<b class="nc">&nbsp;            pillarNodes.add(nodeAccess, baseNode);</b>
+<b class="nc">&nbsp;            pillarNodes.add(nodeAccess, adjNode);</b>
+<b class="nc">&nbsp;            return pillarNodes;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        long geoRef = store.getGeoRef(edgePointer);</b>
+<b class="nc">&nbsp;        int count = 0;</b>
+<b class="nc">&nbsp;        byte[] bytes = null;</b>
+<b class="nc">&nbsp;        if (geoRef &gt; 0) {</b>
+<b class="nc">&nbsp;            count = getPillarCount(geoRef);</b>
+<b class="nc">&nbsp;            geoRef += 3L;</b>
+<b class="nc">&nbsp;            bytes = new byte[count * (8 + eleBytesPerCoord)];</b>
+<b class="nc">&nbsp;            wayGeometry.getBytes(geoRef, bytes, bytes.length);</b>
+<b class="nc">&nbsp;        } else if (mode == FetchMode.PILLAR_ONLY)</b>
+<b class="nc">&nbsp;            return PointList.EMPTY;</b>
+&nbsp;
+<b class="nc">&nbsp;        PointList pillarNodes = new PointList(getPointListLength(count, mode), nodeAccess.is3D());</b>
+<b class="nc">&nbsp;        if (reverse) {</b>
+<b class="nc">&nbsp;            if (mode == FetchMode.ALL || mode == FetchMode.PILLAR_AND_ADJ)</b>
+<b class="nc">&nbsp;                pillarNodes.add(nodeAccess, adjNode);</b>
+<b class="nc">&nbsp;        } else if (mode == FetchMode.ALL || mode == FetchMode.BASE_AND_PILLAR)</b>
+<b class="nc">&nbsp;            pillarNodes.add(nodeAccess, baseNode);</b>
+&nbsp;
+<b class="nc">&nbsp;        int index = 0;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; count; i++) {</b>
+<b class="nc">&nbsp;            double lat = Helper.intToDegree(bitUtil.toInt(bytes, index));</b>
+<b class="nc">&nbsp;            index += 4;</b>
+<b class="nc">&nbsp;            double lon = Helper.intToDegree(bitUtil.toInt(bytes, index));</b>
+<b class="nc">&nbsp;            index += 4;</b>
+<b class="nc">&nbsp;            if (nodeAccess.is3D()) {</b>
+<b class="nc">&nbsp;                pillarNodes.add(lat, lon, Helper.uIntToEle(bitUtil.toUInt3(bytes, index)));</b>
+<b class="nc">&nbsp;                index += 3;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                pillarNodes.add(lat, lon);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (reverse) {</b>
+<b class="nc">&nbsp;            if (mode == FetchMode.ALL || mode == FetchMode.BASE_AND_PILLAR)</b>
+<b class="nc">&nbsp;                pillarNodes.add(nodeAccess, baseNode);</b>
+&nbsp;
+<b class="nc">&nbsp;            pillarNodes.reverse();</b>
+<b class="nc">&nbsp;        } else if (mode == FetchMode.ALL || mode == FetchMode.PILLAR_AND_ADJ)</b>
+<b class="nc">&nbsp;            pillarNodes.add(nodeAccess, adjNode);</b>
+&nbsp;
+<b class="nc">&nbsp;        return pillarNodes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static int getPointListLength(int pillarNodes, FetchMode mode) {
+<b class="nc">&nbsp;        switch (mode) {</b>
+&nbsp;            case TOWER_ONLY:
+<b class="nc">&nbsp;                return 2;</b>
+&nbsp;            case PILLAR_ONLY:
+<b class="nc">&nbsp;                return pillarNodes;</b>
+&nbsp;            case BASE_AND_PILLAR:
+&nbsp;            case PILLAR_AND_ADJ:
+<b class="nc">&nbsp;                return pillarNodes + 1;</b>
+&nbsp;            case ALL:
+<b class="nc">&nbsp;                return pillarNodes + 2;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        throw new IllegalArgumentException(&quot;Mode isn&#39;t handled &quot; + mode);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private long nextGeoRef(int bytes) {
+<b class="nc">&nbsp;        long tmp = maxGeoRef;</b>
+<b class="nc">&nbsp;        maxGeoRef += bytes;</b>
+<b class="nc">&nbsp;        return tmp;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isClosed() {
+<b class="nc">&nbsp;        return store.isClosed();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Directory getDirectory() {
+<b class="nc">&nbsp;        return dir;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getSegmentSize() {
+<b class="nc">&nbsp;        return segmentSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Builder {
+&nbsp;        private final int bytesForFlags;
+<b class="nc">&nbsp;        private Directory directory = new RAMDirectory();</b>
+<b class="nc">&nbsp;        private boolean withElevation = false;</b>
+<b class="nc">&nbsp;        private boolean withTurnCosts = false;</b>
+<b class="nc">&nbsp;        private long bytes = 100;</b>
+<b class="nc">&nbsp;        private int segmentSize = -1;</b>
+&nbsp;
+&nbsp;        public Builder(EncodingManager em) {
+<b class="nc">&nbsp;            this(em.getBytesForFlags());</b>
+<b class="nc">&nbsp;            withTurnCosts(em.needsTurnCostsSupport());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        public Builder(int bytesForFlags) {</b>
+<b class="nc">&nbsp;            this.bytesForFlags = bytesForFlags;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // todo: maybe rename later, but for now this makes it easier to replace GraphBuilder
+&nbsp;        public Builder setDir(Directory directory) {
+<b class="nc">&nbsp;            this.directory = directory;</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // todo: maybe rename later, but for now this makes it easier to replace GraphBuilder
+&nbsp;        public Builder set3D(boolean withElevation) {
+<b class="nc">&nbsp;            this.withElevation = withElevation;</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // todo: maybe rename later, but for now this makes it easier to replace GraphBuilder
+&nbsp;        public Builder withTurnCosts(boolean withTurnCosts) {
+<b class="nc">&nbsp;            this.withTurnCosts = withTurnCosts;</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Builder setSegmentSize(int segmentSize) {
+<b class="nc">&nbsp;            this.segmentSize = segmentSize;</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Builder setBytes(long bytes) {
+<b class="nc">&nbsp;            this.bytes = bytes;</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public BaseGraph build() {
+<b class="nc">&nbsp;            return new BaseGraph(directory, withElevation, withTurnCosts, segmentSize, bytesForFlags);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public BaseGraph create() {
+<b class="nc">&nbsp;            BaseGraph baseGraph = build();</b>
+<b class="nc">&nbsp;            baseGraph.create(bytes);</b>
+<b class="nc">&nbsp;            return baseGraph;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    protected static class EdgeIteratorImpl extends EdgeIteratorStateImpl implements EdgeExplorer, EdgeIterator {</b>
+&nbsp;        final EdgeFilter filter;
+&nbsp;        int nextEdgeId;
+&nbsp;
+&nbsp;        public EdgeIteratorImpl(BaseGraph baseGraph, EdgeFilter filter) {
+<b class="nc">&nbsp;            super(baseGraph);</b>
+<b class="nc">&nbsp;            if (filter == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Instead null filter use EdgeFilter.ALL_EDGES&quot;);</b>
+<b class="nc">&nbsp;            this.filter = filter;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIterator setBaseNode(int baseNode) {
+<b class="nc">&nbsp;            nextEdgeId = edgeId = store.getEdgeRef(store.toNodePointer(baseNode));</b>
+<b class="nc">&nbsp;            this.baseNode = baseNode;</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final boolean next() {
+<b class="nc">&nbsp;            while (EdgeIterator.Edge.isValid(nextEdgeId)) {</b>
+<b class="nc">&nbsp;                goToNext();</b>
+<b class="nc">&nbsp;                if (filter.accept(this))</b>
+<b class="nc">&nbsp;                    return true;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        void goToNext() {
+<b class="nc">&nbsp;            edgePointer = store.toEdgePointer(nextEdgeId);</b>
+<b class="nc">&nbsp;            edgeId = nextEdgeId;</b>
+<b class="nc">&nbsp;            int nodeA = store.getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;            boolean baseNodeIsNodeA = baseNode == nodeA;</b>
+<b class="nc">&nbsp;            adjNode = baseNodeIsNodeA ? store.getNodeB(edgePointer) : nodeA;</b>
+<b class="nc">&nbsp;            reverse = !baseNodeIsNodeA;</b>
+&nbsp;
+&nbsp;            // position to next edge
+<b class="nc">&nbsp;            nextEdgeId = baseNodeIsNodeA ? store.getLinkA(edgePointer) : store.getLinkB(edgePointer);</b>
+<b class="nc">&nbsp;            assert nextEdgeId != edgeId : (&quot;endless loop detected for base node: &quot; + baseNode + &quot;, adj node: &quot; + adjNode</b>
+&nbsp;                    + &quot;, edge pointer: &quot; + edgePointer + &quot;, edge: &quot; + edgeId);
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState detach(boolean reverseArg) {
+<b class="nc">&nbsp;            if (edgeId == nextEdgeId)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;call next before detaching (edgeId:&quot; + edgeId + &quot; vs. next &quot; + nextEdgeId + &quot;)&quot;);</b>
+<b class="nc">&nbsp;            return super.detach(reverseArg);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Include all edges of this storage in the iterator.
+&nbsp;     */
+&nbsp;    protected static class AllEdgeIterator extends EdgeIteratorStateImpl implements AllEdgesIterator {
+&nbsp;        public AllEdgeIterator(BaseGraph baseGraph) {
+<b class="nc">&nbsp;            super(baseGraph);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int length() {
+<b class="nc">&nbsp;            return store.getEdges();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean next() {
+<b class="nc">&nbsp;            edgeId++;</b>
+<b class="nc">&nbsp;            if (edgeId &gt;= store.getEdges())</b>
+<b class="nc">&nbsp;                return false;</b>
+<b class="nc">&nbsp;            edgePointer = store.toEdgePointer(edgeId);</b>
+<b class="nc">&nbsp;            baseNode = store.getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;            adjNode = store.getNodeB(edgePointer);</b>
+<b class="nc">&nbsp;            reverse = false;</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final EdgeIteratorState detach(boolean reverseArg) {
+<b class="nc">&nbsp;            if (edgePointer &lt; 0)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;call next before detaching&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            AllEdgeIterator iter = new AllEdgeIterator(baseGraph);</b>
+<b class="nc">&nbsp;            iter.edgeId = edgeId;</b>
+<b class="nc">&nbsp;            iter.edgePointer = edgePointer;</b>
+<b class="nc">&nbsp;            if (reverseArg) {</b>
+<b class="nc">&nbsp;                iter.reverse = !this.reverse;</b>
+<b class="nc">&nbsp;                iter.baseNode = adjNode;</b>
+<b class="nc">&nbsp;                iter.adjNode = baseNode;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                iter.reverse = this.reverse;</b>
+<b class="nc">&nbsp;                iter.baseNode = baseNode;</b>
+<b class="nc">&nbsp;                iter.adjNode = adjNode;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return iter;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    static class EdgeIteratorStateImpl implements EdgeIteratorState {</b>
+&nbsp;        final BaseGraph baseGraph;
+&nbsp;        final BaseGraphNodesAndEdges store;
+<b class="nc">&nbsp;        long edgePointer = -1;</b>
+&nbsp;        int baseNode;
+&nbsp;        int adjNode;
+&nbsp;        // we need reverse if detach is called
+<b class="nc">&nbsp;        boolean reverse = false;</b>
+<b class="nc">&nbsp;        int edgeId = -1;</b>
+&nbsp;        private final EdgeIntAccess edgeIntAccess;
+&nbsp;
+<b class="nc">&nbsp;        public EdgeIteratorStateImpl(BaseGraph baseGraph) {</b>
+<b class="nc">&nbsp;            this.baseGraph = baseGraph;</b>
+<b class="nc">&nbsp;            edgeIntAccess = baseGraph.getEdgeAccess();</b>
+<b class="nc">&nbsp;            store = baseGraph.store;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @return false if the edge has not a node equal to expectedAdjNode
+&nbsp;         */
+&nbsp;        final boolean init(int edgeId, int expectedAdjNode) {
+<b class="nc">&nbsp;            if (edgeId &lt; 0 || edgeId &gt;= store.getEdges())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;edge: &quot; + edgeId + &quot; out of bounds: [0,&quot; + store.getEdges() + &quot;[&quot;);</b>
+<b class="nc">&nbsp;            this.edgeId = edgeId;</b>
+<b class="nc">&nbsp;            edgePointer = store.toEdgePointer(edgeId);</b>
+<b class="nc">&nbsp;            baseNode = store.getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;            adjNode = store.getNodeB(edgePointer);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (expectedAdjNode == adjNode || expectedAdjNode == Integer.MIN_VALUE) {</b>
+<b class="nc">&nbsp;                reverse = false;</b>
+<b class="nc">&nbsp;                return true;</b>
+<b class="nc">&nbsp;            } else if (expectedAdjNode == baseNode) {</b>
+<b class="nc">&nbsp;                reverse = true;</b>
+<b class="nc">&nbsp;                baseNode = adjNode;</b>
+<b class="nc">&nbsp;                adjNode = expectedAdjNode;</b>
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Similar to {@link #init(int edgeId, int adjNode)}, but here we retrieve the edge in a certain direction
+&nbsp;         * directly using an edge key.
+&nbsp;         */
+&nbsp;        final void init(int edgeKey) {
+<b class="nc">&nbsp;            if (edgeKey &lt; 0)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;edge keys must not be negative, given: &quot; + edgeKey);</b>
+<b class="nc">&nbsp;            this.edgeId = GHUtility.getEdgeFromEdgeKey(edgeKey);</b>
+<b class="nc">&nbsp;            edgePointer = store.toEdgePointer(edgeId);</b>
+<b class="nc">&nbsp;            baseNode = store.getNodeA(edgePointer);</b>
+<b class="nc">&nbsp;            adjNode = store.getNodeB(edgePointer);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (edgeKey % 2 == 0) {</b>
+<b class="nc">&nbsp;                reverse = false;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                reverse = true;</b>
+<b class="nc">&nbsp;                int tmp = baseNode;</b>
+<b class="nc">&nbsp;                baseNode = adjNode;</b>
+<b class="nc">&nbsp;                adjNode = tmp;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final int getBaseNode() {
+<b class="nc">&nbsp;            return baseNode;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final int getAdjNode() {
+<b class="nc">&nbsp;            return adjNode;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double getDistance() {
+<b class="nc">&nbsp;            return store.getDist(edgePointer);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setDistance(double dist) {
+<b class="nc">&nbsp;            store.setDist(edgePointer, dist);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public IntsRef getFlags() {
+<b class="nc">&nbsp;            IntsRef edgeFlags = store.createEdgeFlags();</b>
+<b class="nc">&nbsp;            store.readFlags(edgePointer, edgeFlags);</b>
+<b class="nc">&nbsp;            return edgeFlags;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final EdgeIteratorState setFlags(IntsRef edgeFlags) {
+<b class="nc">&nbsp;            assert edgeId &lt; store.getEdges() : &quot;must be edge but was shortcut: &quot; + edgeId + &quot; &gt;= &quot; + store.getEdges() + &quot;. Use setFlagsAndWeight&quot;;</b>
+<b class="nc">&nbsp;            store.writeFlags(edgePointer, edgeFlags);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean get(BooleanEncodedValue property) {
+<b class="nc">&nbsp;            return property.getBool(reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(BooleanEncodedValue property, boolean value) {
+<b class="nc">&nbsp;            property.setBool(reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean getReverse(BooleanEncodedValue property) {
+<b class="nc">&nbsp;            return property.getBool(!reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setReverse(BooleanEncodedValue property, boolean value) {
+<b class="nc">&nbsp;            property.setBool(!reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(BooleanEncodedValue property, boolean fwd, boolean bwd) {
+<b class="nc">&nbsp;            if (!property.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;EncodedValue &quot; + property.getName() + &quot; supports only one direction&quot;);</b>
+<b class="nc">&nbsp;            property.setBool(reverse, edgeId, edgeIntAccess, fwd);</b>
+<b class="nc">&nbsp;            property.setBool(!reverse, edgeId, edgeIntAccess, bwd);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int get(IntEncodedValue property) {
+<b class="nc">&nbsp;            return property.getInt(reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(IntEncodedValue property, int value) {
+<b class="nc">&nbsp;            property.setInt(reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getReverse(IntEncodedValue property) {
+<b class="nc">&nbsp;            return property.getInt(!reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setReverse(IntEncodedValue property, int value) {
+<b class="nc">&nbsp;            property.setInt(!reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(IntEncodedValue property, int fwd, int bwd) {
+<b class="nc">&nbsp;            if (!property.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;EncodedValue &quot; + property.getName() + &quot; supports only one direction&quot;);</b>
+<b class="nc">&nbsp;            property.setInt(reverse, edgeId, edgeIntAccess, fwd);</b>
+<b class="nc">&nbsp;            property.setInt(!reverse, edgeId, edgeIntAccess, bwd);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double get(DecimalEncodedValue property) {
+<b class="nc">&nbsp;            return property.getDecimal(reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(DecimalEncodedValue property, double value) {
+<b class="nc">&nbsp;            property.setDecimal(reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double getReverse(DecimalEncodedValue property) {
+<b class="nc">&nbsp;            return property.getDecimal(!reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setReverse(DecimalEncodedValue property, double value) {
+<b class="nc">&nbsp;            property.setDecimal(!reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(DecimalEncodedValue property, double fwd, double bwd) {
+<b class="nc">&nbsp;            if (!property.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;EncodedValue &quot; + property.getName() + &quot; supports only one direction&quot;);</b>
+<b class="nc">&nbsp;            property.setDecimal(reverse, edgeId, edgeIntAccess, fwd);</b>
+<b class="nc">&nbsp;            property.setDecimal(!reverse, edgeId, edgeIntAccess, bwd);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public &lt;T extends Enum&lt;?&gt;&gt; T get(EnumEncodedValue&lt;T&gt; property) {
+<b class="nc">&nbsp;            return property.getEnum(reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public &lt;T extends Enum&lt;?&gt;&gt; EdgeIteratorState set(EnumEncodedValue&lt;T&gt; property, T value) {
+<b class="nc">&nbsp;            property.setEnum(reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public &lt;T extends Enum&lt;?&gt;&gt; T getReverse(EnumEncodedValue&lt;T&gt; property) {
+<b class="nc">&nbsp;            return property.getEnum(!reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public &lt;T extends Enum&lt;?&gt;&gt; EdgeIteratorState setReverse(EnumEncodedValue&lt;T&gt; property, T value) {
+<b class="nc">&nbsp;            property.setEnum(!reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public &lt;T extends Enum&lt;?&gt;&gt; EdgeIteratorState set(EnumEncodedValue&lt;T&gt; property, T fwd, T bwd) {
+<b class="nc">&nbsp;            if (!property.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;EncodedValue &quot; + property.getName() + &quot; supports only one direction&quot;);</b>
+<b class="nc">&nbsp;            property.setEnum(reverse, edgeId, edgeIntAccess, fwd);</b>
+<b class="nc">&nbsp;            property.setEnum(!reverse, edgeId, edgeIntAccess, bwd);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String get(StringEncodedValue property) {
+<b class="nc">&nbsp;            return property.getString(reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(StringEncodedValue property, String value) {
+<b class="nc">&nbsp;            property.setString(reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String getReverse(StringEncodedValue property) {
+<b class="nc">&nbsp;            return property.getString(!reverse, edgeId, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setReverse(StringEncodedValue property, String value) {
+<b class="nc">&nbsp;            property.setString(!reverse, edgeId, edgeIntAccess, value);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState set(StringEncodedValue property, String fwd, String bwd) {
+<b class="nc">&nbsp;            if (!property.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;EncodedValue &quot; + property.getName() + &quot; supports only one direction&quot;);</b>
+<b class="nc">&nbsp;            property.setString(reverse, edgeId, edgeIntAccess, fwd);</b>
+<b class="nc">&nbsp;            property.setString(!reverse, edgeId, edgeIntAccess, bwd);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final EdgeIteratorState copyPropertiesFrom(EdgeIteratorState edge) {
+<b class="nc">&nbsp;            return baseGraph.copyProperties(edge, this);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setWayGeometry(PointList pillarNodes) {
+<b class="nc">&nbsp;            baseGraph.setWayGeometry_(pillarNodes, edgePointer, reverse);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public PointList fetchWayGeometry(FetchMode mode) {
+<b class="nc">&nbsp;            return baseGraph.fetchWayGeometry_(edgePointer, reverse, mode, getBaseNode(), getAdjNode());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getEdge() {
+<b class="nc">&nbsp;            return edgeId;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getEdgeKey() {
+<b class="nc">&nbsp;            return GHUtility.createEdgeKey(edgeId, reverse);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getReverseEdgeKey() {
+<b class="nc">&nbsp;            return GHUtility.reverseEdgeKey(getEdgeKey());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState setKeyValues(Map&lt;String, KVStorage.KValue&gt; entries) {
+<b class="nc">&nbsp;            long pointer = baseGraph.edgeKVStorage.add(entries);</b>
+<b class="nc">&nbsp;            if (pointer &gt; MAX_UNSIGNED_INT)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Too many key value pairs are stored, currently limited to &quot; + MAX_UNSIGNED_INT + &quot; was &quot; + pointer);</b>
+<b class="nc">&nbsp;            store.setKeyValuesRef(edgePointer, BitUtil.toSignedInt(pointer));</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Map&lt;String, KVStorage.KValue&gt; getKeyValues() {
+<b class="nc">&nbsp;            long kvEntryRef = Integer.toUnsignedLong(store.getKeyValuesRef(edgePointer));</b>
+<b class="nc">&nbsp;            return baseGraph.edgeKVStorage.getAll(kvEntryRef);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Object getValue(String key) {
+<b class="nc">&nbsp;            long kvEntryRef = Integer.toUnsignedLong(store.getKeyValuesRef(edgePointer));</b>
+<b class="nc">&nbsp;            return baseGraph.edgeKVStorage.get(kvEntryRef, key, reverse);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String getName() {
+<b class="nc">&nbsp;            String name = (String) getValue(STREET_NAME);</b>
+&nbsp;            // preserve backward compatibility (returns empty string if name tag missing)
+<b class="nc">&nbsp;            return name == null ? &quot;&quot; : name;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public EdgeIteratorState detach(boolean reverseArg) {
+<b class="nc">&nbsp;            if (!EdgeIterator.Edge.isValid(edgeId))</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;call setEdgeId before detaching (edgeId:&quot; + edgeId + &quot;)&quot;);</b>
+<b class="nc">&nbsp;            EdgeIteratorStateImpl edge = new EdgeIteratorStateImpl(baseGraph);</b>
+<b class="nc">&nbsp;            boolean valid = edge.init(edgeId, reverseArg ? baseNode : adjNode);</b>
+<b class="nc">&nbsp;            assert valid;</b>
+<b class="nc">&nbsp;            if (reverseArg) {</b>
+&nbsp;                // for #162
+<b class="nc">&nbsp;                edge.reverse = !reverse;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return edge;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public final String toString() {
+<b class="nc">&nbsp;            return getEdge() + &quot; &quot; + getBaseNode() + &quot;-&quot; + getAdjNode();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

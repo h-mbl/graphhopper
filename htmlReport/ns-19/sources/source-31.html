@@ -1,0 +1,238 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > OSMTemporalAccessParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: OSMTemporalAccessParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OSMTemporalAccessParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">OSMTemporalAccessParser$Setter</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.reader.osm.conditional.ConditionalValueParser;
+&nbsp;import com.graphhopper.reader.osm.conditional.DateRangeParser;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.text.ParseException;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * This parser fills the different XYTemporalAccess enums from the OSM conditional
+&nbsp; * restrictions based on the specified dateRangeParserDate. &#39;Temporal&#39; means that both, temporary
+&nbsp; * and seasonal restrictions will be considered. Node tags will be ignored for now.
+&nbsp; */
+&nbsp;public class OSMTemporalAccessParser implements TagParser {
+&nbsp;
+&nbsp;    private final Collection&lt;String&gt; conditionals;
+&nbsp;    private final Setter restrictionSetter;
+&nbsp;    private final DateRangeParser parser;
+&nbsp;
+&nbsp;    @FunctionalInterface
+&nbsp;    public interface Setter {
+&nbsp;        void setBoolean(int edgeId, EdgeIntAccess edgeIntAccess, boolean b);
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public OSMTemporalAccessParser(Collection&lt;String&gt; conditionals, Setter restrictionSetter, String dateRangeParserDate) {</b>
+<b class="nc">&nbsp;        this.conditionals = conditionals;</b>
+<b class="nc">&nbsp;        this.restrictionSetter = restrictionSetter;</b>
+<b class="nc">&nbsp;        if (dateRangeParserDate.isEmpty())</b>
+<b class="nc">&nbsp;            dateRangeParserDate = Helper.createFormatter(&quot;yyyy-MM-dd&quot;).format(new Date().getTime());</b>
+&nbsp;
+<b class="nc">&nbsp;        this.parser = DateRangeParser.createInstance(dateRangeParserDate);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+&nbsp;        // TODO for now the node tag overhead is not worth the effort due to very few data points
+&nbsp;        // List&lt;Map&lt;String, Object&gt;&gt; nodeTags = way.getTag(&quot;node_tags&quot;, null);
+&nbsp;
+<b class="nc">&nbsp;        Boolean b = getConditional(way.getTags());</b>
+<b class="nc">&nbsp;        if (b != null)</b>
+<b class="nc">&nbsp;            restrictionSetter.setBoolean(edgeId, edgeIntAccess, b);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    Boolean getConditional(Map&lt;String, Object&gt; tags) {
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, Object&gt; entry : tags.entrySet()) {</b>
+<b class="nc">&nbsp;            if (!conditionals.contains(entry.getKey())) continue;</b>
+&nbsp;
+<b class="nc">&nbsp;            String value = (String) entry.getValue();</b>
+<b class="nc">&nbsp;            String[] strs = value.split(&quot;@&quot;);</b>
+<b class="nc">&nbsp;            if (strs.length == 2) {</b>
+<b class="nc">&nbsp;                Boolean inRange = isInRange(parser, strs[1].trim());</b>
+<b class="nc">&nbsp;                if (inRange != null) {</b>
+<b class="nc">&nbsp;                    if (strs[0].trim().equals(&quot;no&quot;)) return !inRange;</b>
+<b class="nc">&nbsp;                    if (strs[0].trim().equals(&quot;yes&quot;)) return inRange;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Boolean isInRange(final DateRangeParser parser, final String value) {
+<b class="nc">&nbsp;        if (value.isEmpty())</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (value.contains(&quot;;&quot;))</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;
+<b class="nc">&nbsp;        String conditionalValue = value.replace(&#39;(&#39;, &#39; &#39;).replace(&#39;)&#39;, &#39; &#39;).trim();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            ConditionalValueParser.ConditionState res = parser.checkCondition(conditionalValue);</b>
+<b class="nc">&nbsp;            if (res.isValid())</b>
+<b class="nc">&nbsp;                return res.isCheckPassed();</b>
+<b class="nc">&nbsp;        } catch (ParseException ex) {</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // We do not care about the date. We just want to know if ConditionState is valid and the value before @ is accepted
+<b class="nc">&nbsp;    private static final DateRangeParser GENERIC_PARSER = DateRangeParser.createInstance(&quot;1970-01-01&quot;);</b>
+<b class="nc">&nbsp;    private static final Set&lt;String&gt; GENERIC_ACCEPTED_VALUES = Set.of(&quot;yes&quot;, &quot;no&quot;);</b>
+&nbsp;
+&nbsp;    public static boolean hasTemporalRestriction(ReaderWay way, int firstIndex, List&lt;String&gt; restrictions) {
+<b class="nc">&nbsp;        for (int i = firstIndex; i &gt;= 0; i--) {</b>
+<b class="nc">&nbsp;            String value = way.getTag(restrictions.get(i) + &quot;:conditional&quot;);</b>
+<b class="nc">&nbsp;            if (OSMTemporalAccessParser.hasTemporalRestriction(value)) return true;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static boolean hasTemporalRestriction(String value) {
+<b class="nc">&nbsp;        if (value == null) return false;</b>
+<b class="nc">&nbsp;        String[] strs = value.split(&quot;@&quot;);</b>
+<b class="nc">&nbsp;        if (strs.length == 2) {</b>
+<b class="nc">&nbsp;            Boolean inRange = isInRange(GENERIC_PARSER, strs[1].trim());</b>
+<b class="nc">&nbsp;            if (inRange != null &amp;&amp; GENERIC_ACCEPTED_VALUES.contains(strs[0].trim()))</b>
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

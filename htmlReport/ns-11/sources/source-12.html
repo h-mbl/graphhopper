@@ -1,0 +1,239 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ShortcutUnpacker</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ch</a>
+</div>
+
+<h1>Coverage Summary for Class: ShortcutUnpacker (com.graphhopper.routing.ch)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ShortcutUnpacker</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/47)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ShortcutUnpacker$Visitor</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/47)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.ch;
+&nbsp;
+&nbsp;import com.graphhopper.storage.RoutingCHEdgeIteratorState;
+&nbsp;import com.graphhopper.storage.RoutingCHGraph;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;
+&nbsp;import java.util.Locale;
+&nbsp;
+&nbsp;import static com.graphhopper.util.EdgeIterator.NO_EDGE;
+&nbsp;
+&nbsp;/**
+&nbsp; * Recursively unpack shortcuts.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @author easbar
+&nbsp; * @see PrepareContractionHierarchies
+&nbsp; */
+<b class="nc">&nbsp;public class ShortcutUnpacker {</b>
+&nbsp;    private final RoutingCHGraph graph;
+&nbsp;    private final Visitor visitor;
+&nbsp;    private final boolean edgeBased;
+&nbsp;    private boolean reverseOrder;
+&nbsp;
+<b class="nc">&nbsp;    public ShortcutUnpacker(RoutingCHGraph graph, Visitor visitor, boolean edgeBased) {</b>
+<b class="nc">&nbsp;        this.graph = graph;</b>
+<b class="nc">&nbsp;        this.visitor = visitor;</b>
+<b class="nc">&nbsp;        this.edgeBased = edgeBased;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds an edge/shortcut with the given id and adjNode and calls the visitor for each original edge that is
+&nbsp;     * packed inside this shortcut (or if an original edge is given simply calls the visitor on it).
+&nbsp;     *
+&nbsp;     * @param reverseOrder if true the original edges will be traversed in reverse order
+&nbsp;     */
+&nbsp;    public void visitOriginalEdgesFwd(int edgeId, int adjNode, boolean reverseOrder, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        doVisitOriginalEdges(edgeId, adjNode, reverseOrder, false, prevOrNextEdgeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void visitOriginalEdgesBwd(int edgeId, int adjNode, boolean reverseOrder, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        doVisitOriginalEdges(edgeId, adjNode, reverseOrder, true, prevOrNextEdgeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void doVisitOriginalEdges(int edgeId, int adjNode, boolean reverseOrder, boolean reverse, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        this.reverseOrder = reverseOrder;</b>
+<b class="nc">&nbsp;        RoutingCHEdgeIteratorState edge = getEdge(edgeId, adjNode);</b>
+<b class="nc">&nbsp;        if (edge == null) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Edge with id: &quot; + edgeId + &quot; does not exist or does not touch node &quot; + adjNode);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        expandEdge(edge, reverse, prevOrNextEdgeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void expandEdge(RoutingCHEdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        if (!edge.isShortcut()) {</b>
+<b class="nc">&nbsp;            visitor.visit(graph.getBaseGraph().getEdgeIteratorState(edge.getOrigEdge(), edge.getAdjNode()), reverse, prevOrNextEdgeId);</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        if (edgeBased) {</b>
+<b class="nc">&nbsp;            expandSkippedEdgesEdgeBased(edge.getSkippedEdge1(), edge.getSkippedEdge2(), edge.getBaseNode(), edge.getAdjNode(), reverse, prevOrNextEdgeId);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expandSkippedEdgesNodeBased(edge.getSkippedEdge1(), edge.getSkippedEdge2(), edge.getBaseNode(), edge.getAdjNode(), reverse);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void expandSkippedEdgesEdgeBased(int skippedEdge1, int skippedEdge2, int base, int adj, boolean reverse, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        if (reverse) {</b>
+<b class="nc">&nbsp;            int tmp = skippedEdge1;</b>
+<b class="nc">&nbsp;            skippedEdge1 = skippedEdge2;</b>
+<b class="nc">&nbsp;            skippedEdge2 = tmp;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        RoutingCHEdgeIteratorState sk2 = getEdge(skippedEdge2, adj);</b>
+<b class="nc">&nbsp;        assert sk2 != null : &quot;skipped edge &quot; + skippedEdge2 + &quot; is not attached to adjNode &quot; + adj + &quot;. this should &quot; +</b>
+&nbsp;                &quot;never happen because edge-based CH does not use bidirectional shortcuts at the moment&quot;;
+<b class="nc">&nbsp;        RoutingCHEdgeIteratorState sk1 = getEdge(skippedEdge1, sk2.getBaseNode());</b>
+<b class="nc">&nbsp;        if (base == adj &amp;&amp; (sk1.getAdjNode() == sk1.getBaseNode() || sk2.getAdjNode() == sk2.getBaseNode())) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(String.format(Locale.ROOT,</b>
+&nbsp;                    &quot;error: detected edge where a skipped edges is a loop. this should never happen. base: %d, adj: %d, &quot; +
+<b class="nc">&nbsp;                            &quot;skip-edge1: %d, skip-edge2: %d, reverse: %b&quot;, base, adj, skippedEdge1, skippedEdge2, reverse));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        int adjEdge = getOppositeEdge(sk1, base);</b>
+<b class="nc">&nbsp;        if (reverseOrder) {</b>
+<b class="nc">&nbsp;            expandEdge(sk2, reverse, adjEdge);</b>
+<b class="nc">&nbsp;            expandEdge(sk1, reverse, prevOrNextEdgeId);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expandEdge(sk1, reverse, prevOrNextEdgeId);</b>
+<b class="nc">&nbsp;            expandEdge(sk2, reverse, adjEdge);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void expandSkippedEdgesNodeBased(int skippedEdge1, int skippedEdge2, int base, int adj, boolean reverse) {
+<b class="nc">&nbsp;        RoutingCHEdgeIteratorState sk2 = getEdge(skippedEdge2, adj);</b>
+&nbsp;        RoutingCHEdgeIteratorState sk1;
+<b class="nc">&nbsp;        if (sk2 == null) {</b>
+<b class="nc">&nbsp;            sk2 = getEdge(skippedEdge1, adj);</b>
+<b class="nc">&nbsp;            sk1 = getEdge(skippedEdge2, sk2.getBaseNode());</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            sk1 = getEdge(skippedEdge1, sk2.getBaseNode());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (reverseOrder) {</b>
+<b class="nc">&nbsp;            expandEdge(sk2, reverse, NO_EDGE);</b>
+<b class="nc">&nbsp;            expandEdge(sk1, reverse, NO_EDGE);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expandEdge(sk1, reverse, NO_EDGE);</b>
+<b class="nc">&nbsp;            expandEdge(sk2, reverse, NO_EDGE);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getOppositeEdge(RoutingCHEdgeIteratorState edgeState, int adjNode) {
+<b class="nc">&nbsp;        assert edgeState.getBaseNode() == adjNode || edgeState.getAdjNode() == adjNode : &quot;adjNode &quot; + adjNode + &quot; must be one of adj/base of edgeState: &quot; + edgeState;</b>
+&nbsp;        // since the first/last orig edge key is not stateful (just like skipped1/2) we have to find out which one
+&nbsp;        // is attached to adjNode, similar as we do for skipped1/2.
+<b class="nc">&nbsp;        boolean adjacentToNode = graph.getBaseGraph().isAdjacentToNode(GHUtility.getEdgeFromEdgeKey(edgeState.getOrigEdgeKeyLast()), adjNode);</b>
+<b class="nc">&nbsp;        return GHUtility.getEdgeFromEdgeKey(adjacentToNode ? edgeState.getOrigEdgeKeyFirst() : edgeState.getOrigEdgeKeyLast());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private RoutingCHEdgeIteratorState getEdge(int edgeId, int adjNode) {
+<b class="nc">&nbsp;        return graph.getEdgeIteratorState(edgeId, adjNode);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface Visitor {
+&nbsp;        void visit(EdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId);
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

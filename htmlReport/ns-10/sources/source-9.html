@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > AbstractRoutingAlgorithm</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: AbstractRoutingAlgorithm (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AbstractRoutingAlgorithm</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.graphhopper.routing.util.TraversalMode;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.storage.NodeAccess;
+&nbsp;import com.graphhopper.util.EdgeExplorer;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public abstract class AbstractRoutingAlgorithm implements RoutingAlgorithm {
+&nbsp;    protected final Graph graph;
+&nbsp;    protected final Weighting weighting;
+&nbsp;    protected final TraversalMode traversalMode;
+&nbsp;    protected final NodeAccess nodeAccess;
+&nbsp;    protected final EdgeExplorer edgeExplorer;
+<b class="nc">&nbsp;    protected int maxVisitedNodes = Integer.MAX_VALUE;</b>
+<b class="nc">&nbsp;    protected long timeoutMillis = Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;    private long finishTimeMillis = Long.MAX_VALUE;</b>
+&nbsp;    private boolean alreadyRun;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param graph         specifies the graph where this algorithm will run on
+&nbsp;     * @param weighting     set the used weight calculation (e.g. fastest, shortest).
+&nbsp;     * @param traversalMode how the graph is traversed e.g. if via nodes or edges.
+&nbsp;     */
+<b class="nc">&nbsp;    public AbstractRoutingAlgorithm(Graph graph, Weighting weighting, TraversalMode traversalMode) {</b>
+<b class="nc">&nbsp;        if (weighting.hasTurnCosts() &amp;&amp; !traversalMode.isEdgeBased())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Weightings supporting turn costs cannot be used with node-based traversal mode&quot;);</b>
+<b class="nc">&nbsp;        this.weighting = weighting;</b>
+<b class="nc">&nbsp;        this.traversalMode = traversalMode;</b>
+<b class="nc">&nbsp;        this.graph = graph;</b>
+<b class="nc">&nbsp;        this.nodeAccess = graph.getNodeAccess();</b>
+<b class="nc">&nbsp;        edgeExplorer = graph.createEdgeExplorer();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setMaxVisitedNodes(int numberOfNodes) {
+<b class="nc">&nbsp;        this.maxVisitedNodes = numberOfNodes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setTimeoutMillis(long timeoutMillis) {
+<b class="nc">&nbsp;        this.timeoutMillis = timeoutMillis;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean accept(EdgeIteratorState iter, int prevOrNextEdgeId) {
+&nbsp;        // for edge-based traversal we leave it for TurnWeighting to decide whether or not a u-turn is acceptable,
+&nbsp;        // but for node-based traversal we exclude such a turn for performance reasons already here
+<b class="nc">&nbsp;        return traversalMode.isEdgeBased() || iter.getEdge() != prevOrNextEdgeId;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void checkAlreadyRun() {
+<b class="nc">&nbsp;        if (alreadyRun)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Create a new instance per call&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        alreadyRun = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void setupFinishTime() {
+&nbsp;        try {
+<b class="nc">&nbsp;            this.finishTimeMillis = Math.addExact(System.currentTimeMillis(), timeoutMillis);</b>
+<b class="nc">&nbsp;        } catch (ArithmeticException e) {</b>
+<b class="nc">&nbsp;            this.finishTimeMillis = Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;Path&gt; calcPaths(int from, int to) {
+<b class="nc">&nbsp;        return Collections.singletonList(calcPath(from, to));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected Path createEmptyPath() {
+<b class="nc">&nbsp;        return new Path(graph);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String getName() {
+<b class="nc">&nbsp;        return getClass().getSimpleName();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return getName() + &quot;|&quot; + weighting;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isMaxVisitedNodesExceeded() {
+<b class="nc">&nbsp;        return maxVisitedNodes &lt; getVisitedNodes();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isTimeoutExceeded() {
+<b class="nc">&nbsp;        return finishTimeMillis &lt; Long.MAX_VALUE &amp;&amp; System.currentTimeMillis() &gt; finishTimeMillis;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

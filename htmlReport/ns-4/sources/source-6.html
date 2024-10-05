@@ -1,0 +1,614 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > GHLongLongBTree</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.coll</a>
+</div>
+
+<h1>Coverage Summary for Class: GHLongLongBTree (com.graphhopper.coll)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GHLongLongBTree</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/92)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">GHLongLongBTree$BTreeEntry</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/114)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">GHLongLongBTree$ReturnValue</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/208)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.coll;
+&nbsp;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;
+&nbsp;/**
+&nbsp; * An in-memory B-Tree with configurable value size (1-8 bytes). Delete not supported.
+&nbsp; * (Later we could use DataAccess to allow on-disc storage for very large data sets.)
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class GHLongLongBTree implements LongLongMap {
+<b class="nc">&nbsp;    private final static Logger logger = LoggerFactory.getLogger(GHLongLongBTree.class);</b>
+&nbsp;    private final long emptyValue;
+&nbsp;    private final int maxLeafEntries;
+&nbsp;    private final int initLeafSize;
+&nbsp;    private final int splitIndex;
+&nbsp;    private final float factor;
+&nbsp;    private long size;
+&nbsp;    private int height;
+&nbsp;    private BTreeEntry root;
+&nbsp;    private final int bytesPerValue;
+&nbsp;    private final long maxValue;
+&nbsp;
+<b class="nc">&nbsp;    public GHLongLongBTree(int maxLeafEntries, int bytesPerValue, long emptyValue) {</b>
+<b class="nc">&nbsp;        this.maxLeafEntries = maxLeafEntries;</b>
+<b class="nc">&nbsp;        this.bytesPerValue = bytesPerValue;</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 8)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Values can have 8 bytes maximum but requested was &quot; + bytesPerValue);</b>
+<b class="nc">&nbsp;        this.emptyValue = emptyValue;</b>
+&nbsp;
+&nbsp;        // reserve one bit for negative values
+<b class="nc">&nbsp;        this.maxValue = (1L &lt;&lt; (bytesPerValue * 8 - 1)) - 1;</b>
+<b class="nc">&nbsp;        if (maxLeafEntries &lt; 1)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;illegal maxLeafEntries:&quot; + maxLeafEntries);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (maxLeafEntries % 2 == 0)</b>
+<b class="nc">&nbsp;            maxLeafEntries++;</b>
+&nbsp;
+<b class="nc">&nbsp;        splitIndex = maxLeafEntries / 2;</b>
+<b class="nc">&nbsp;        if (maxLeafEntries &lt; 10) {</b>
+<b class="nc">&nbsp;            factor = 2;</b>
+<b class="nc">&nbsp;            initLeafSize = 1;</b>
+<b class="nc">&nbsp;        } else if (maxLeafEntries &lt; 20) {</b>
+<b class="nc">&nbsp;            factor = 2;</b>
+<b class="nc">&nbsp;            initLeafSize = 4;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            factor = 1.7f;</b>
+<b class="nc">&nbsp;            initLeafSize = maxLeafEntries / 10;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        clear();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static int binarySearch(long[] keys, int start, int len, long key) {
+<b class="nc">&nbsp;        int high = start + len, low = start - 1, guess;</b>
+<b class="nc">&nbsp;        while (high - low &gt; 1) {</b>
+&nbsp;            // use &gt;&gt;&gt; for average or we could get an integer overflow.
+<b class="nc">&nbsp;            guess = (high + low) &gt;&gt;&gt; 1;</b>
+<b class="nc">&nbsp;            long guessedKey = keys[guess];</b>
+<b class="nc">&nbsp;            if (guessedKey &lt; key) {</b>
+<b class="nc">&nbsp;                low = guess;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                high = guess;</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        if (high == start + len) {</b>
+<b class="nc">&nbsp;            return ~(start + len);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        long highKey = keys[high];</b>
+<b class="nc">&nbsp;        if (highKey == key) {</b>
+<b class="nc">&nbsp;            return high;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return ~high;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long put(long key, long value) {
+<b class="nc">&nbsp;        if (value &gt; maxValue)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Value &quot; + value + &quot; exceeded max value: &quot; + maxValue</b>
+&nbsp;                    + &quot;. Increase bytesPerValue (&quot; + bytesPerValue + &quot;)&quot;);
+<b class="nc">&nbsp;        if (value == emptyValue)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Value cannot be the &#39;empty value&#39; &quot; + emptyValue);</b>
+&nbsp;
+<b class="nc">&nbsp;        ReturnValue rv = root.put(key, value);</b>
+<b class="nc">&nbsp;        if (rv.tree != null) {</b>
+<b class="nc">&nbsp;            height++;</b>
+<b class="nc">&nbsp;            root = rv.tree;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (rv.oldValue == null) {</b>
+&nbsp;            // successfully inserted
+<b class="nc">&nbsp;            size++;</b>
+<b class="nc">&nbsp;            if (size % 1000000 == 0)</b>
+<b class="nc">&nbsp;                optimize();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return rv.oldValue == null ? emptyValue : toLong(rv.oldValue);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long get(long key) {
+<b class="nc">&nbsp;        return root.get(key);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    int height() {
+<b class="nc">&nbsp;        return height;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long getSize() {
+<b class="nc">&nbsp;        return size;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return memory usage in MB
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public int getMemoryUsage() {
+<b class="nc">&nbsp;        return Math.round(root.getCapacity() / Helper.MB);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void clear() {
+<b class="nc">&nbsp;        size = 0;</b>
+<b class="nc">&nbsp;        height = 1;</b>
+<b class="nc">&nbsp;        root = new BTreeEntry(initLeafSize, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getEmptyValue() {
+<b class="nc">&nbsp;        return emptyValue;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int getEntries() {
+<b class="nc">&nbsp;        return root.getEntries();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void optimize() {
+<b class="nc">&nbsp;        if (getSize() &gt; 10000) {</b>
+&nbsp;//            StopWatch sw = new StopWatch().start();
+&nbsp;//            int old = memoryUsage();
+<b class="nc">&nbsp;            root.compact();</b>
+&nbsp;//            logger.info(size + &quot;| osmIdMap.optimize took: &quot; + sw.stop().getSeconds()
+&nbsp;//                    + &quot; =&gt; freed: &quot; + (old - memoryUsage()) + &quot;MB&quot;);
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return &quot;Height:&quot; + height() + &quot;, entries:&quot; + getEntries();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long getMaxValue() {
+<b class="nc">&nbsp;        return maxValue;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void print() {
+<b class="nc">&nbsp;        logger.info(root.toString(1));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static class ReturnValue {
+&nbsp;        byte[] oldValue;
+&nbsp;        BTreeEntry tree;
+&nbsp;
+<b class="nc">&nbsp;        public ReturnValue(byte[] oldValue) {</b>
+<b class="nc">&nbsp;            this.oldValue = oldValue;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    long toLong(byte[] b) {
+<b class="nc">&nbsp;        return toLong(b, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    long toLong(byte[] bytes, int offset) {
+<b class="nc">&nbsp;        long res = 0;</b>
+<b class="nc">&nbsp;        if (bytesPerValue == 8) res |= (long) bytes[offset + 7] &lt;&lt; 56;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 7) res |= ((long) bytes[offset + 7] &lt;&lt; 56);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bytesPerValue == 7) res |= (long) bytes[offset + 6] &lt;&lt; 48;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 6) res |= ((long) bytes[offset + 6] &amp; 0xFF) &lt;&lt; 48;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bytesPerValue == 6) res |= (long) bytes[offset + 5] &lt;&lt; 40;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 5) res |= ((long) bytes[offset + 5] &amp; 0xFF) &lt;&lt; 40;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bytesPerValue == 5) res |= (long) bytes[offset + 4] &lt;&lt; 32;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 4) res |= ((long) bytes[offset + 4] &amp; 0xFF) &lt;&lt; 32;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bytesPerValue == 4) res |= (long) bytes[offset + 3] &lt;&lt; 24;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 3) res |= ((long) bytes[offset + 3] &amp; 0xFF) &lt;&lt; 24;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bytesPerValue == 3) res |= (long) bytes[offset + 2] &lt;&lt; 16;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 2) res |= ((long) bytes[offset + 2] &amp; 0xFF) &lt;&lt; 16;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bytesPerValue == 2) res |= (long) bytes[offset + 1] &lt;&lt; 8;</b>
+<b class="nc">&nbsp;        else if (bytesPerValue &gt; 1) res |= ((long) bytes[offset + 1] &amp; 0xFF) &lt;&lt; 8;</b>
+&nbsp;
+<b class="nc">&nbsp;        res |= ((long) bytes[offset] &amp; 0xff);</b>
+<b class="nc">&nbsp;        return res;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    final byte[] fromLong(long value) {
+<b class="nc">&nbsp;        byte[] bytes = new byte[bytesPerValue];</b>
+<b class="nc">&nbsp;        fromLong(bytes, value, 0);</b>
+<b class="nc">&nbsp;        return bytes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    final void fromLong(byte[] bytes, long value, int offset) {
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 7) bytes[offset + 7] = (byte) (value &gt;&gt; 56);</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 6) bytes[offset + 6] = (byte) (value &gt;&gt; 48);</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 5) bytes[offset + 5] = (byte) (value &gt;&gt; 40);</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 4) bytes[offset + 4] = (byte) (value &gt;&gt; 32);</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 3) bytes[offset + 3] = (byte) (value &gt;&gt; 24);</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 2) bytes[offset + 2] = (byte) (value &gt;&gt; 16);</b>
+<b class="nc">&nbsp;        if (bytesPerValue &gt; 1) bytes[offset + 1] = (byte) (value &gt;&gt; 8);</b>
+<b class="nc">&nbsp;        bytes[offset] = (byte) (value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    class BTreeEntry {
+&nbsp;        int entrySize;
+&nbsp;        long[] keys;
+&nbsp;        byte[] values;
+&nbsp;        BTreeEntry[] children;
+&nbsp;        boolean isLeaf;
+&nbsp;
+<b class="nc">&nbsp;        public BTreeEntry(int tmpSize, boolean leaf) {</b>
+<b class="nc">&nbsp;            this.isLeaf = leaf;</b>
+<b class="nc">&nbsp;            keys = new long[tmpSize];</b>
+<b class="nc">&nbsp;            values = new byte[tmpSize * bytesPerValue];</b>
+&nbsp;
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+&nbsp;                // in a b-tree we need one more entry to point to all children!
+<b class="nc">&nbsp;                children = new BTreeEntry[tmpSize + 1];</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @return the old value which was associated with the specified key or if no update it
+&nbsp;         * returns noNumberValue
+&nbsp;         */
+&nbsp;        ReturnValue put(long key, long newValue) {
+<b class="nc">&nbsp;            int index = binarySearch(keys, 0, entrySize, key);</b>
+<b class="nc">&nbsp;            if (index &gt;= 0) {</b>
+&nbsp;                // update
+<b class="nc">&nbsp;                byte[] oldValue = new byte[bytesPerValue];</b>
+<b class="nc">&nbsp;                System.arraycopy(values, index * bytesPerValue, oldValue, 0, bytesPerValue);</b>
+&nbsp;                // copy newValue to values
+<b class="nc">&nbsp;                fromLong(values, newValue, index * bytesPerValue);</b>
+<b class="nc">&nbsp;                return new ReturnValue(oldValue);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            index = ~index;</b>
+&nbsp;            ReturnValue downTreeRV;
+<b class="nc">&nbsp;            if (isLeaf || children[index] == null) {</b>
+&nbsp;                // insert
+<b class="nc">&nbsp;                downTreeRV = new ReturnValue(null);</b>
+<b class="nc">&nbsp;                downTreeRV.tree = checkSplitEntry();</b>
+<b class="nc">&nbsp;                if (downTreeRV.tree == null) {</b>
+<b class="nc">&nbsp;                    insertKeyValue(index, key, fromLong(newValue));</b>
+<b class="nc">&nbsp;                } else if (index &lt;= splitIndex) {</b>
+<b class="nc">&nbsp;                    downTreeRV.tree.children[0].insertKeyValue(index, key, fromLong(newValue));</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    downTreeRV.tree.children[1].insertKeyValue(index - splitIndex - 1, key, fromLong(newValue));</b>
+&nbsp;                }
+<b class="nc">&nbsp;                return downTreeRV;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            downTreeRV = children[index].put(key, newValue);</b>
+<b class="nc">&nbsp;            if (downTreeRV.oldValue != null) // only update</b>
+<b class="nc">&nbsp;                return downTreeRV;</b>
+&nbsp;
+<b class="nc">&nbsp;            if (downTreeRV.tree != null) {</b>
+&nbsp;                // split this treeEntry if it is too big
+<b class="nc">&nbsp;                BTreeEntry returnTree, downTree = returnTree = checkSplitEntry();</b>
+<b class="nc">&nbsp;                if (downTree == null) {</b>
+<b class="nc">&nbsp;                    insertTree(index, downTreeRV.tree);</b>
+<b class="nc">&nbsp;                } else if (index &lt;= splitIndex) {</b>
+<b class="nc">&nbsp;                    downTree.children[0].insertTree(index, downTreeRV.tree);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    downTree.children[1].insertTree(index - splitIndex - 1, downTreeRV.tree);</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                downTreeRV.tree = returnTree;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return downTreeRV;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @return null if nothing to do or a new sub tree if this tree capacity is no longer
+&nbsp;         * sufficient.
+&nbsp;         */
+&nbsp;        BTreeEntry checkSplitEntry() {
+<b class="nc">&nbsp;            if (entrySize &lt; maxLeafEntries) {</b>
+<b class="nc">&nbsp;                return null;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // right child: copy from this
+<b class="nc">&nbsp;            int count = entrySize - splitIndex - 1;</b>
+<b class="nc">&nbsp;            BTreeEntry newRightChild = new BTreeEntry(Math.max(initLeafSize, count), isLeaf);</b>
+<b class="nc">&nbsp;            copy(this, newRightChild, splitIndex + 1, count);</b>
+&nbsp;
+&nbsp;            // left child: copy from this
+&nbsp;            // avoid: http://stackoverflow.com/q/15897869/194609
+<b class="nc">&nbsp;            BTreeEntry newLeftChild = new BTreeEntry(Math.max(initLeafSize, splitIndex), isLeaf);</b>
+<b class="nc">&nbsp;            copy(this, newLeftChild, 0, splitIndex);</b>
+&nbsp;
+&nbsp;            // new tree pointing to left + right tree only
+<b class="nc">&nbsp;            BTreeEntry newTree = new BTreeEntry(1, false);</b>
+<b class="nc">&nbsp;            newTree.entrySize = 1;</b>
+<b class="nc">&nbsp;            newTree.keys[0] = this.keys[splitIndex];</b>
+&nbsp;
+<b class="nc">&nbsp;            System.arraycopy(this.values, splitIndex * bytesPerValue, newTree.values, 0, bytesPerValue);</b>
+<b class="nc">&nbsp;            newTree.children[0] = newLeftChild;</b>
+<b class="nc">&nbsp;            newTree.children[1] = newRightChild;</b>
+<b class="nc">&nbsp;            return newTree;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        void copy(BTreeEntry fromChild, BTreeEntry toChild, int from, int count) {
+<b class="nc">&nbsp;            System.arraycopy(fromChild.keys, from, toChild.keys, 0, count);</b>
+<b class="nc">&nbsp;            System.arraycopy(fromChild.values, from * bytesPerValue, toChild.values, 0, count * bytesPerValue);</b>
+<b class="nc">&nbsp;            if (!fromChild.isLeaf) {</b>
+<b class="nc">&nbsp;                System.arraycopy(fromChild.children, from, toChild.children, 0, count + 1);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            toChild.entrySize = count;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        void insertKeyValue(int index, long key, byte[] newValueFromIdx0) {
+<b class="nc">&nbsp;            ensureSize(entrySize + 1);</b>
+<b class="nc">&nbsp;            int count = entrySize - index;</b>
+<b class="nc">&nbsp;            if (count &gt; 0) {</b>
+<b class="nc">&nbsp;                System.arraycopy(keys, index, keys, index + 1, count);</b>
+<b class="nc">&nbsp;                System.arraycopy(values, index * bytesPerValue, values, index * bytesPerValue + bytesPerValue, count * bytesPerValue);</b>
+<b class="nc">&nbsp;                if (!isLeaf) {</b>
+<b class="nc">&nbsp;                    System.arraycopy(children, index + 1, children, index + 2, count);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            keys[index] = key;</b>
+<b class="nc">&nbsp;            System.arraycopy(newValueFromIdx0, 0, values, index * bytesPerValue, bytesPerValue);</b>
+<b class="nc">&nbsp;            entrySize++;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        void insertTree(int index, BTreeEntry tree) {
+<b class="nc">&nbsp;            insertKeyValue(index, tree.keys[0], tree.values);</b>
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+&nbsp;                // overwrite children
+<b class="nc">&nbsp;                children[index] = tree.children[0];</b>
+&nbsp;                // set
+<b class="nc">&nbsp;                children[index + 1] = tree.children[1];</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        long get(long key) {
+<b class="nc">&nbsp;            int index = binarySearch(keys, 0, entrySize, key);</b>
+<b class="nc">&nbsp;            if (index &gt;= 0) {</b>
+<b class="nc">&nbsp;                return toLong(values, index * bytesPerValue);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            index = ~index;</b>
+<b class="nc">&nbsp;            if (isLeaf || children[index] == null) {</b>
+<b class="nc">&nbsp;                return emptyValue;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return children[index].get(key);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * @return used bytes
+&nbsp;         */
+&nbsp;        long getCapacity() {
+<b class="nc">&nbsp;            long cap = keys.length * (8 + 4) + 3 * 12 + 4 + 1;</b>
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+<b class="nc">&nbsp;                cap += children.length * 4;</b>
+<b class="nc">&nbsp;                for (int i = 0; i &lt; children.length; i++) {</b>
+<b class="nc">&nbsp;                    if (children[i] != null) {</b>
+<b class="nc">&nbsp;                        cap += children[i].getCapacity();</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return cap;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        int getEntries() {
+<b class="nc">&nbsp;            int entries = 1;</b>
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+<b class="nc">&nbsp;                for (int i = 0; i &lt; children.length; i++) {</b>
+<b class="nc">&nbsp;                    if (children[i] != null) {</b>
+<b class="nc">&nbsp;                        entries += children[i].getEntries();</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return entries;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        void ensureSize(int size) {
+<b class="nc">&nbsp;            if (size &lt;= keys.length) {</b>
+&nbsp;                return;
+&nbsp;            }
+<b class="nc">&nbsp;            int newSize = Math.min(maxLeafEntries, Math.max(size + 1, Math.round(size * factor)));</b>
+<b class="nc">&nbsp;            keys = Arrays.copyOf(keys, newSize);</b>
+<b class="nc">&nbsp;            values = Arrays.copyOf(values, newSize * bytesPerValue);</b>
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+<b class="nc">&nbsp;                children = Arrays.copyOf(children, newSize + 1);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        void compact() {
+<b class="nc">&nbsp;            int tolerance = 1;</b>
+<b class="nc">&nbsp;            if (entrySize + tolerance &lt; keys.length) {</b>
+<b class="nc">&nbsp;                keys = Arrays.copyOf(keys, entrySize);</b>
+<b class="nc">&nbsp;                values = Arrays.copyOf(values, entrySize * bytesPerValue);</b>
+<b class="nc">&nbsp;                if (!isLeaf) {</b>
+<b class="nc">&nbsp;                    children = Arrays.copyOf(children, entrySize + 1);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+<b class="nc">&nbsp;                for (int i = 0; i &lt; children.length; i++) {</b>
+<b class="nc">&nbsp;                    if (children[i] != null) {</b>
+<b class="nc">&nbsp;                        children[i].compact();</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        String toString(int height) {
+<b class="nc">&nbsp;            String str = height + &quot;: &quot;;</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; entrySize; i++) {</b>
+<b class="nc">&nbsp;                if (i &gt; 0) {</b>
+<b class="nc">&nbsp;                    str += &quot;,&quot;;</b>
+&nbsp;                }
+<b class="nc">&nbsp;                str += keys[i];</b>
+&nbsp;            }
+<b class="nc">&nbsp;            str += &quot;\n&quot;;</b>
+<b class="nc">&nbsp;            if (!isLeaf) {</b>
+<b class="nc">&nbsp;                for (int i = 0; i &lt; entrySize + 1; i++) {</b>
+<b class="nc">&nbsp;                    if (children[i] != null) {</b>
+<b class="nc">&nbsp;                        str += children[i].toString(height + 1) + &quot;| &quot;;</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return str;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

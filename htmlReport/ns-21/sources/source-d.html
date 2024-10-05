@@ -1,0 +1,183 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > EdgeIterator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: EdgeIterator (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+  <tr>
+    <td class="name">EdgeIterator$Edge</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;/**
+&nbsp; * Iterates through all edges of one node. Avoids object creation in-between via direct access
+&nbsp; * methods. If you want to access some properties of an &#39;edge&#39; (i.e. the current state) for later
+&nbsp; * usage store it via edgeIterator.detach() or edgeIterator.getEdge() instead of the iterator
+&nbsp; * itself. Usage:
+&nbsp; * &lt;pre&gt;
+&nbsp; * EdgeExplorer explorer = graph.createEdgeExplorer();
+&nbsp; * EdgeIterator iter = explorer.setBaseNode(nodeId);
+&nbsp; * // calls to iter.getAdjNode(), getDistance() without calling next() will cause undefined behaviour!
+&nbsp; * while(iter.next()) {
+&nbsp; *   int baseNodeId = iter.getBaseNode(); // equal to nodeId
+&nbsp; *   int adjacentNodeId = iter.getAdjNode(); // this is the node where this edge state is &quot;pointing to&quot;
+&nbsp; *   ...
+&nbsp; * }
+&nbsp; * &lt;/pre&gt;
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @see EdgeIteratorState
+&nbsp; * @see EdgeExplorer
+&nbsp; */
+&nbsp;public interface EdgeIterator extends EdgeIteratorState {
+&nbsp;    /**
+&nbsp;     * Integer value used in places where normally an edge would be expected, but none is given. For example in the
+&nbsp;     * shortest path tree of route calculations every child element should have an incoming edge, but for the root item
+&nbsp;     * there is no parent so we would use this value instead.
+&nbsp;     */
+&nbsp;    int NO_EDGE = -1;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Integer value used in places where normally an edge would be expected, but no specific edge shall be specified.
+&nbsp;     */
+&nbsp;    int ANY_EDGE = -2;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * To be called to go to the next edge state.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return true if an edge state is available
+&nbsp;     */
+&nbsp;    boolean next();
+&nbsp;
+<b class="nc">&nbsp;    class Edge {</b>
+&nbsp;        /**
+&nbsp;         * Checks if a given integer edge ID is valid or not. Edge IDs &gt;= 0 are considered valid, while negative
+&nbsp;         * values are considered as invalid. However, some negative values are used as special values, e.g. {@link
+&nbsp;         * #NO_EDGE}.
+&nbsp;         */
+&nbsp;        public static boolean isValid(int edgeId) {
+<b class="nc">&nbsp;            return edgeId &gt;= 0;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

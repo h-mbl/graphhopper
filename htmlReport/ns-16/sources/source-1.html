@@ -1,0 +1,191 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > AccessFilter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: AccessFilter (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AccessFilter</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class AccessFilter implements EdgeFilter {
+&nbsp;    private final boolean bwd;
+&nbsp;    private final boolean fwd;
+&nbsp;    private final BooleanEncodedValue accessEnc;
+&nbsp;
+<b class="nc">&nbsp;    private AccessFilter(BooleanEncodedValue accessEnc, boolean fwd, boolean bwd) {</b>
+<b class="nc">&nbsp;        this.accessEnc = accessEnc;</b>
+<b class="nc">&nbsp;        this.fwd = fwd;</b>
+<b class="nc">&nbsp;        this.bwd = bwd;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static AccessFilter outEdges(BooleanEncodedValue accessEnc) {
+<b class="nc">&nbsp;        return new AccessFilter(accessEnc, true, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static AccessFilter inEdges(BooleanEncodedValue accessEnc) {
+<b class="nc">&nbsp;        return new AccessFilter(accessEnc, false, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Accepts all edges that are either forward or backward according to the given accessEnc.
+&nbsp;     * Edges where neither one of the flags is enabled will still not be accepted. If you need to retrieve all edges
+&nbsp;     * regardless of their encoding use {@link EdgeFilter#ALL_EDGES} instead.
+&nbsp;     */
+&nbsp;    public static AccessFilter allEdges(BooleanEncodedValue accessEnc) {
+<b class="nc">&nbsp;        return new AccessFilter(accessEnc, true, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BooleanEncodedValue getAccessEnc() {
+<b class="nc">&nbsp;        return accessEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public final boolean accept(EdgeIteratorState iter) {
+<b class="nc">&nbsp;        return fwd &amp;&amp; iter.get(accessEnc) || bwd &amp;&amp; iter.getReverse(accessEnc);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return accessEnc.toString() + &quot;, bwd:&quot; + bwd + &quot;, fwd:&quot; + fwd;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object o) {
+<b class="nc">&nbsp;        if (this == o) return true;</b>
+<b class="nc">&nbsp;        if (o == null || getClass() != o.getClass()) return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        AccessFilter that = (AccessFilter) o;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (bwd != that.bwd) return false;</b>
+<b class="nc">&nbsp;        if (fwd != that.fwd) return false;</b>
+<b class="nc">&nbsp;        return accessEnc.equals(that.accessEnc);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        int result = (bwd ? 1 : 0);</b>
+<b class="nc">&nbsp;        result = 31 * result + (fwd ? 1 : 0);</b>
+<b class="nc">&nbsp;        result = 31 * result + accessEnc.hashCode();</b>
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,406 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > AbstractBidirAlgo</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: AbstractBidirAlgo (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AbstractBidirAlgo</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/33)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/104)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntObjectMap;
+&nbsp;import com.graphhopper.coll.GHIntObjectHashMap;
+&nbsp;import com.graphhopper.routing.util.TraversalMode;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;import java.util.PriorityQueue;
+&nbsp;
+&nbsp;import static com.graphhopper.util.EdgeIterator.ANY_EDGE;
+&nbsp;
+<b class="nc">&nbsp;public abstract class AbstractBidirAlgo implements EdgeToEdgeRoutingAlgorithm {</b>
+&nbsp;    protected final TraversalMode traversalMode;
+&nbsp;    protected int from;
+&nbsp;    protected int to;
+&nbsp;    protected int fromOutEdge;
+&nbsp;    protected int toInEdge;
+&nbsp;    protected IntObjectMap&lt;SPTEntry&gt; bestWeightMapFrom;
+&nbsp;    protected IntObjectMap&lt;SPTEntry&gt; bestWeightMapTo;
+&nbsp;    protected IntObjectMap&lt;SPTEntry&gt; bestWeightMapOther;
+&nbsp;    protected SPTEntry currFrom;
+&nbsp;    protected SPTEntry currTo;
+&nbsp;    protected SPTEntry bestFwdEntry;
+&nbsp;    protected SPTEntry bestBwdEntry;
+<b class="nc">&nbsp;    protected double bestWeight = Double.MAX_VALUE;</b>
+<b class="nc">&nbsp;    protected int maxVisitedNodes = Integer.MAX_VALUE;</b>
+<b class="nc">&nbsp;    protected long timeoutMillis = Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;    private long finishTimeMillis = Long.MAX_VALUE;</b>
+&nbsp;    PriorityQueue&lt;SPTEntry&gt; pqOpenSetFrom;
+&nbsp;    PriorityQueue&lt;SPTEntry&gt; pqOpenSetTo;
+<b class="nc">&nbsp;    protected boolean updateBestPath = true;</b>
+&nbsp;    protected boolean finishedFrom;
+&nbsp;    protected boolean finishedTo;
+&nbsp;    int visitedCountFrom;
+&nbsp;    int visitedCountTo;
+&nbsp;    private boolean alreadyRun;
+&nbsp;
+<b class="nc">&nbsp;    public AbstractBidirAlgo(TraversalMode traversalMode) {</b>
+<b class="nc">&nbsp;        this.traversalMode = traversalMode;</b>
+<b class="nc">&nbsp;        fromOutEdge = ANY_EDGE;</b>
+<b class="nc">&nbsp;        toInEdge = ANY_EDGE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void initCollections(int size) {
+<b class="nc">&nbsp;        pqOpenSetFrom = new PriorityQueue&lt;&gt;(size);</b>
+<b class="nc">&nbsp;        bestWeightMapFrom = new GHIntObjectHashMap&lt;&gt;(size);</b>
+&nbsp;
+<b class="nc">&nbsp;        pqOpenSetTo = new PriorityQueue&lt;&gt;(size);</b>
+<b class="nc">&nbsp;        bestWeightMapTo = new GHIntObjectHashMap&lt;&gt;(size);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates the root shortest path tree entry for the forward or backward search.
+&nbsp;     */
+&nbsp;    protected abstract SPTEntry createStartEntry(int node, double weight, boolean reverse);
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;Path&gt; calcPaths(int from, int to) {
+<b class="nc">&nbsp;        return Collections.singletonList(calcPath(from, to));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Path calcPath(int from, int to) {
+<b class="nc">&nbsp;        return calcPath(from, to, ANY_EDGE, ANY_EDGE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Path calcPath(int from, int to, int fromOutEdge, int toInEdge) {
+<b class="nc">&nbsp;        if ((fromOutEdge != ANY_EDGE || toInEdge != ANY_EDGE) &amp;&amp; !traversalMode.isEdgeBased()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Restricting the start/target edges is only possible for edge-based graph traversal&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        this.fromOutEdge = fromOutEdge;</b>
+<b class="nc">&nbsp;        this.toInEdge = toInEdge;</b>
+<b class="nc">&nbsp;        checkAlreadyRun();</b>
+<b class="nc">&nbsp;        setupFinishTime();</b>
+<b class="nc">&nbsp;        init(from, 0, to, 0);</b>
+<b class="nc">&nbsp;        runAlgo();</b>
+<b class="nc">&nbsp;        return extractPath();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void init(int from, double fromWeight, int to, double toWeight) {
+<b class="nc">&nbsp;        initFrom(from, fromWeight);</b>
+<b class="nc">&nbsp;        initTo(to, toWeight);</b>
+<b class="nc">&nbsp;        postInit(from, to);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void initFrom(int from, double weight) {
+<b class="nc">&nbsp;        this.from = from;</b>
+<b class="nc">&nbsp;        currFrom = createStartEntry(from, weight, false);</b>
+<b class="nc">&nbsp;        pqOpenSetFrom.add(currFrom);</b>
+<b class="nc">&nbsp;        if (!traversalMode.isEdgeBased()) {</b>
+<b class="nc">&nbsp;            bestWeightMapFrom.put(from, currFrom);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void initTo(int to, double weight) {
+<b class="nc">&nbsp;        this.to = to;</b>
+<b class="nc">&nbsp;        currTo = createStartEntry(to, weight, true);</b>
+<b class="nc">&nbsp;        pqOpenSetTo.add(currTo);</b>
+<b class="nc">&nbsp;        if (!traversalMode.isEdgeBased()) {</b>
+<b class="nc">&nbsp;            bestWeightMapTo.put(to, currTo);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void postInit(int from, int to) {
+<b class="nc">&nbsp;        if (!traversalMode.isEdgeBased()) {</b>
+<b class="nc">&nbsp;            if (updateBestPath) {</b>
+<b class="nc">&nbsp;                bestWeightMapOther = bestWeightMapFrom;</b>
+<b class="nc">&nbsp;                updateBestPath(Double.POSITIVE_INFINITY, currFrom, EdgeIterator.NO_EDGE, to, true);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } else if (from == to &amp;&amp; fromOutEdge == ANY_EDGE &amp;&amp; toInEdge == ANY_EDGE) {</b>
+&nbsp;            // special handling if start and end are the same and no directions are restricted
+&nbsp;            // the resulting weight should be zero
+<b class="nc">&nbsp;            if (currFrom.weight != 0 || currTo.weight != 0) {</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;If from=to, the starting weight must be zero for from and to&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            bestFwdEntry = currFrom;</b>
+<b class="nc">&nbsp;            bestBwdEntry = currTo;</b>
+<b class="nc">&nbsp;            bestWeight = 0;</b>
+<b class="nc">&nbsp;            finishedFrom = true;</b>
+<b class="nc">&nbsp;            finishedTo = true;</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        postInitFrom();</b>
+<b class="nc">&nbsp;        postInitTo();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected abstract void postInitFrom();
+&nbsp;
+&nbsp;    protected abstract void postInitTo();
+&nbsp;
+&nbsp;    protected void runAlgo() {
+<b class="nc">&nbsp;        while (!finished() &amp;&amp; !isMaxVisitedNodesExceeded() &amp;&amp; !isTimeoutExceeded()) {</b>
+<b class="nc">&nbsp;            if (!finishedFrom)</b>
+<b class="nc">&nbsp;                finishedFrom = !fillEdgesFrom();</b>
+&nbsp;
+<b class="nc">&nbsp;            if (!finishedTo)</b>
+<b class="nc">&nbsp;                finishedTo = !fillEdgesTo();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // http://www.cs.princeton.edu/courses/archive/spr06/cos423/Handouts/EPP%20shortest%20path%20algorithms.pdf
+&nbsp;    // a node from overlap may not be on the best path!
+&nbsp;    // =&gt; when scanning an arc (v, w) in the forward search and w is scanned in the reverseOrder
+&nbsp;    //    search, update extractPath = ? if df (v) + (v, w) + dr (w) &lt; ?
+&nbsp;    protected boolean finished() {
+<b class="nc">&nbsp;        if (finishedFrom || finishedTo)</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;
+<b class="nc">&nbsp;        return currFrom.weight + currTo.weight &gt;= bestWeight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    abstract boolean fillEdgesFrom();
+&nbsp;
+&nbsp;    abstract boolean fillEdgesTo();
+&nbsp;
+&nbsp;    protected void updateBestPath(double edgeWeight, SPTEntry entry, int origEdgeIdForCH, int traversalId, boolean reverse) {
+<b class="nc">&nbsp;        assert traversalMode.isEdgeBased() != Double.isInfinite(edgeWeight);</b>
+<b class="nc">&nbsp;        SPTEntry entryOther = bestWeightMapOther.get(traversalId);</b>
+<b class="nc">&nbsp;        if (entryOther == null)</b>
+&nbsp;            return;
+&nbsp;
+&nbsp;        // update ?
+<b class="nc">&nbsp;        double weight = entry.getWeightOfVisitedPath() + entryOther.getWeightOfVisitedPath();</b>
+<b class="nc">&nbsp;        if (traversalMode.isEdgeBased()) {</b>
+<b class="nc">&nbsp;            if (getIncomingEdge(entryOther) != getIncomingEdge(entry))</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;cannot happen for edge based execution of &quot; + getName());</b>
+&nbsp;
+&nbsp;            // prevents the path to contain the edge at the meeting point twice and subtracts the weight (excluding turn weight =&gt; no previous edge)
+<b class="nc">&nbsp;            entry = entry.getParent();</b>
+<b class="nc">&nbsp;            weight -= edgeWeight;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (weight &lt; bestWeight) {</b>
+<b class="nc">&nbsp;            bestFwdEntry = reverse ? entryOther : entry;</b>
+<b class="nc">&nbsp;            bestBwdEntry = reverse ? entry : entryOther;</b>
+<b class="nc">&nbsp;            bestWeight = weight;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected abstract double getInEdgeWeight(SPTEntry entry);
+&nbsp;
+&nbsp;    protected int getIncomingEdge(SPTEntry entry) {
+<b class="nc">&nbsp;        return entry.edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    abstract protected Path extractPath();
+&nbsp;
+&nbsp;    protected boolean fromEntryCanBeSkipped() {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean fwdSearchCanBeStopped() {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean toEntryCanBeSkipped() {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean bwdSearchCanBeStopped() {
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected double getCurrentFromWeight() {
+<b class="nc">&nbsp;        return currFrom.weight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected double getCurrentToWeight() {
+<b class="nc">&nbsp;        return currTo.weight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    IntObjectMap&lt;SPTEntry&gt; getBestFromMap() {
+<b class="nc">&nbsp;        return bestWeightMapFrom;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    IntObjectMap&lt;SPTEntry&gt; getBestToMap() {
+<b class="nc">&nbsp;        return bestWeightMapTo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setBestOtherMap(IntObjectMap&lt;SPTEntry&gt; other) {
+<b class="nc">&nbsp;        bestWeightMapOther = other;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void setUpdateBestPath(boolean b) {
+<b class="nc">&nbsp;        updateBestPath = b;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getVisitedNodes() {
+<b class="nc">&nbsp;        return visitedCountFrom + visitedCountTo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void setToDataStructures(AbstractBidirAlgo other) {
+<b class="nc">&nbsp;        to = other.to;</b>
+<b class="nc">&nbsp;        toInEdge = other.toInEdge;</b>
+<b class="nc">&nbsp;        pqOpenSetTo = other.pqOpenSetTo;</b>
+<b class="nc">&nbsp;        bestWeightMapTo = other.bestWeightMapTo;</b>
+<b class="nc">&nbsp;        finishedTo = other.finishedTo;</b>
+<b class="nc">&nbsp;        currTo = other.currTo;</b>
+<b class="nc">&nbsp;        visitedCountTo = other.visitedCountTo;</b>
+&nbsp;        // inEdgeExplorer
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setMaxVisitedNodes(int numberOfNodes) {
+<b class="nc">&nbsp;        this.maxVisitedNodes = numberOfNodes;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setTimeoutMillis(long timeoutMillis) {
+<b class="nc">&nbsp;        this.timeoutMillis = timeoutMillis;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void checkAlreadyRun() {
+<b class="nc">&nbsp;        if (alreadyRun)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Create a new instance per call&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        alreadyRun = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void setupFinishTime() {
+&nbsp;        try {
+<b class="nc">&nbsp;            this.finishTimeMillis = Math.addExact(System.currentTimeMillis(), timeoutMillis);</b>
+<b class="nc">&nbsp;        } catch (ArithmeticException e) {</b>
+<b class="nc">&nbsp;            this.finishTimeMillis = Long.MAX_VALUE;</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String getName() {
+<b class="nc">&nbsp;        return getClass().getSimpleName();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isMaxVisitedNodesExceeded() {
+<b class="nc">&nbsp;        return maxVisitedNodes &lt; getVisitedNodes();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected boolean isTimeoutExceeded() {
+<b class="nc">&nbsp;        return finishTimeMillis &lt; Long.MAX_VALUE &amp;&amp; System.currentTimeMillis() &gt; finishTimeMillis;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

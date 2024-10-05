@@ -1,0 +1,438 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > MaxSpeedCalculator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: MaxSpeedCalculator (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MaxSpeedCalculator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/68)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">MaxSpeedCalculator$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">MaxSpeedCalculator$RoadTypeFilterImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">MaxSpeedCalculator$RoadTypeImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">MaxSpeedCalculator$SpeedLimitsJson</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/88)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonProperty;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.util.parsers.DefaultMaxSpeedParser;
+&nbsp;import com.graphhopper.routing.util.parsers.TagParser;
+&nbsp;import com.graphhopper.routing.util.parsers.helpers.OSMValueExtractor;
+&nbsp;import com.graphhopper.storage.DataAccess;
+&nbsp;import com.graphhopper.storage.Directory;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.StopWatch;
+&nbsp;import de.westnordost.osm_legal_default_speeds.LegalDefaultSpeeds;
+&nbsp;import de.westnordost.osm_legal_default_speeds.RoadType;
+&nbsp;import de.westnordost.osm_legal_default_speeds.RoadTypeFilter;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.function.Function;
+&nbsp;
+&nbsp;public class MaxSpeedCalculator {
+&nbsp;
+&nbsp;    private final DefaultMaxSpeedParser parser;
+&nbsp;    private final LegalDefaultSpeeds defaultSpeeds;
+&nbsp;    private EdgeIntAccess internalMaxSpeedStorage;
+&nbsp;    private DecimalEncodedValue ruralMaxSpeedEnc;
+&nbsp;    private DecimalEncodedValue urbanMaxSpeedEnc;
+&nbsp;    private DataAccess dataAccess;
+&nbsp;
+<b class="nc">&nbsp;    public MaxSpeedCalculator(LegalDefaultSpeeds defaultSpeeds) {</b>
+<b class="nc">&nbsp;        this.defaultSpeeds = defaultSpeeds;</b>
+<b class="nc">&nbsp;        parser = new DefaultMaxSpeedParser(defaultSpeeds);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    DecimalEncodedValue getRuralMaxSpeedEnc() {
+<b class="nc">&nbsp;        return ruralMaxSpeedEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public DecimalEncodedValue getUrbanMaxSpeedEnc() {
+<b class="nc">&nbsp;        return urbanMaxSpeedEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    EdgeIntAccess getInternalMaxSpeedStorage() {
+<b class="nc">&nbsp;        return internalMaxSpeedStorage;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public LegalDefaultSpeeds getDefaultSpeeds() {
+<b class="nc">&nbsp;        return defaultSpeeds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static LegalDefaultSpeeds createLegalDefaultSpeeds() {
+&nbsp;        SpeedLimitsJson data;
+&nbsp;        try {
+<b class="nc">&nbsp;            data = new ObjectMapper().readValue(MaxSpeedCalculator.class.getResource(&quot;legal_default_speeds.json&quot;), SpeedLimitsJson.class);</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // pre-converts kmh, mph and &quot;walk&quot; into kmh
+<b class="nc">&nbsp;        convertMaxspeed(data.speedLimitsByCountryCode.entrySet());</b>
+&nbsp;
+<b class="nc">&nbsp;        LegalDefaultSpeeds speeds = new LegalDefaultSpeeds(data.roadTypesByName, data.speedLimitsByCountryCode);</b>
+<b class="nc">&nbsp;        return speeds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void convertMaxspeed(Set&lt;Map.Entry&lt;String, List&lt;RoadTypeImpl&gt;&gt;&gt; entrySet) {
+<b class="nc">&nbsp;        for (Map.Entry&lt;String, List&lt;RoadTypeImpl&gt;&gt; entry : entrySet) {</b>
+<b class="nc">&nbsp;            for (RoadTypeImpl roadType : entry.getValue()) {</b>
+<b class="nc">&nbsp;                Map&lt;String, String&gt; newTags = new HashMap&lt;&gt;(roadType.getTags().size());</b>
+<b class="nc">&nbsp;                for (Map.Entry&lt;String, String&gt; tags : roadType.getTags().entrySet()) {</b>
+&nbsp;                    // note, we could remove conditional tags here to reduce load a bit at import
+&nbsp;
+<b class="nc">&nbsp;                    if (&quot;maxspeed&quot;.equals(tags.getKey())</b>
+<b class="nc">&nbsp;                            || &quot;maxspeed:advisory&quot;.equals(tags.getKey())) {</b>
+<b class="nc">&nbsp;                        double tmp = OSMValueExtractor.stringToKmh(tags.getValue());</b>
+<b class="nc">&nbsp;                        if (Double.isNaN(tmp))</b>
+<b class="nc">&nbsp;                            throw new IllegalStateException(&quot;illegal maxspeed &quot; + tags.getValue());</b>
+<b class="nc">&nbsp;                        newTags.put(tags.getKey(), &quot;&quot; + Math.round(tmp));</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                }</b>
+<b class="nc">&nbsp;                roadType.setTags(newTags);</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates temporary uni dir max_speed storage that is removed after import.
+&nbsp;     */
+&nbsp;    private EdgeIntAccess createMaxSpeedStorage(DataAccess dataAccess) {
+<b class="nc">&nbsp;        return new EdgeIntAccess() {</b>
+&nbsp;
+&nbsp;            public int getInt(int edgeId, int index) {
+<b class="nc">&nbsp;                dataAccess.ensureCapacity(edgeId * 2L + 2L);</b>
+<b class="nc">&nbsp;                return dataAccess.getShort(edgeId * 2L);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            public void setInt(int edgeId, int index, int value) {
+<b class="nc">&nbsp;                dataAccess.ensureCapacity(edgeId * 2L + 2L);</b>
+<b class="nc">&nbsp;                if (value &gt; Short.MAX_VALUE)</b>
+<b class="nc">&nbsp;                    throw new IllegalStateException(&quot;value too large for short: &quot; + value);</b>
+<b class="nc">&nbsp;                dataAccess.setShort(edgeId * 2L, (short) value);</b>
+&nbsp;            }
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    public TagParser getParser() {
+<b class="nc">&nbsp;        return parser;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void createDataAccessForParser(Directory directory) {
+<b class="nc">&nbsp;        this.dataAccess = directory.create(&quot;max_speed_storage_tmp&quot;).create(1000);</b>
+<b class="nc">&nbsp;        this.internalMaxSpeedStorage = createMaxSpeedStorage(this.dataAccess);</b>
+<b class="nc">&nbsp;        this.ruralMaxSpeedEnc = new DecimalEncodedValueImpl(&quot;tmp_rural&quot;, 7, 0, 2, false, false, true);</b>
+<b class="nc">&nbsp;        this.urbanMaxSpeedEnc = new DecimalEncodedValueImpl(&quot;tmp_urban&quot;, 7, 0, 2, false, false, true);</b>
+<b class="nc">&nbsp;        EncodedValue.InitializerConfig config = new EncodedValue.InitializerConfig();</b>
+<b class="nc">&nbsp;        ruralMaxSpeedEnc.init(config);</b>
+<b class="nc">&nbsp;        urbanMaxSpeedEnc.init(config);</b>
+<b class="nc">&nbsp;        if (config.getRequiredBytes() &gt; 2)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;bytes are not sufficient &quot; + config.getRequiredBytes());</b>
+&nbsp;
+<b class="nc">&nbsp;        parser.init(ruralMaxSpeedEnc, urbanMaxSpeedEnc, internalMaxSpeedStorage);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method sets max_speed values where the value is UNSET_SPEED to a value determined by
+&nbsp;     * the default speed library which is country-dependent.
+&nbsp;     */
+&nbsp;    public void fillMaxSpeed(Graph graph, EncodingManager em) {
+&nbsp;        // In DefaultMaxSpeedParser and in OSMMaxSpeedParser we don&#39;t have the rural/urban info,
+&nbsp;        // but now we have and can fill the country-dependent max_speed value where missing.
+<b class="nc">&nbsp;        EnumEncodedValue&lt;UrbanDensity&gt; udEnc = em.getEnumEncodedValue(UrbanDensity.KEY, UrbanDensity.class);</b>
+<b class="nc">&nbsp;        fillMaxSpeed(graph, em, edge -&gt; edge.get(udEnc) != UrbanDensity.RURAL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void fillMaxSpeed(Graph graph, EncodingManager em, Function&lt;EdgeIteratorState, Boolean&gt; isUrbanDensityFun) {
+<b class="nc">&nbsp;        DecimalEncodedValue maxSpeedEnc = em.getDecimalEncodedValue(MaxSpeed.KEY);</b>
+<b class="nc">&nbsp;        BooleanEncodedValue maxSpeedEstEnc = em.getBooleanEncodedValue(MaxSpeedEstimated.KEY);</b>
+&nbsp;
+<b class="nc">&nbsp;        StopWatch sw = new StopWatch().start();</b>
+<b class="nc">&nbsp;        AllEdgesIterator iter = graph.getAllEdges();</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            double fwdMaxSpeedPureOSM = iter.get(maxSpeedEnc);</b>
+<b class="nc">&nbsp;            double bwdMaxSpeedPureOSM = iter.getReverse(maxSpeedEnc);</b>
+&nbsp;
+&nbsp;            // skip speeds-library if max_speed is known for both directions
+<b class="nc">&nbsp;            if (fwdMaxSpeedPureOSM != MaxSpeed.UNSET_SPEED</b>
+<b class="nc">&nbsp;                    &amp;&amp; bwdMaxSpeedPureOSM != MaxSpeed.UNSET_SPEED) continue;</b>
+&nbsp;
+<b class="nc">&nbsp;            double maxSpeed = isUrbanDensityFun.apply(iter)</b>
+<b class="nc">&nbsp;                    ? urbanMaxSpeedEnc.getDecimal(false, iter.getEdge(), internalMaxSpeedStorage)</b>
+<b class="nc">&nbsp;                    : ruralMaxSpeedEnc.getDecimal(false, iter.getEdge(), internalMaxSpeedStorage);</b>
+<b class="nc">&nbsp;            if (maxSpeed != MaxSpeed.UNSET_SPEED) {</b>
+<b class="nc">&nbsp;                if (maxSpeed == 0) {</b>
+&nbsp;                    // TODO fix properly: RestrictionSetter adds artificial edges for which
+&nbsp;                    //  we didn&#39;t set the speed in DefaultMaxSpeedParser, #2914
+<b class="nc">&nbsp;                    iter.set(maxSpeedEnc, MaxSpeed.UNSET_SPEED, MaxSpeed.UNSET_SPEED);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    iter.set(maxSpeedEnc,</b>
+<b class="nc">&nbsp;                            fwdMaxSpeedPureOSM == MaxSpeed.UNSET_SPEED ? maxSpeed : fwdMaxSpeedPureOSM,</b>
+<b class="nc">&nbsp;                            bwdMaxSpeedPureOSM == MaxSpeed.UNSET_SPEED ? maxSpeed : bwdMaxSpeedPureOSM);</b>
+<b class="nc">&nbsp;                    iter.set(maxSpeedEstEnc, true);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        LoggerFactory.getLogger(getClass()).info(&quot;max_speed_calculator took: &quot; + sw.stop().getSeconds());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close() {
+<b class="nc">&nbsp;        dataAccess.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void checkEncodedValues(EncodingManager encodingManager) {
+<b class="nc">&nbsp;        if (!encodingManager.hasEncodedValue(Country.KEY))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;max_speed_calculator needs country&quot;);</b>
+<b class="nc">&nbsp;        if (!encodingManager.hasEncodedValue(UrbanDensity.KEY))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;max_speed_calculator needs urban_density&quot;);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    static class SpeedLimitsJson {</b>
+&nbsp;        @JsonProperty
+&nbsp;        private Map&lt;String, String&gt; meta;
+&nbsp;        @JsonProperty
+&nbsp;        private Map&lt;String, RoadTypeFilterImpl&gt; roadTypesByName;
+&nbsp;        @JsonProperty
+&nbsp;        private Map&lt;String, List&lt;RoadTypeImpl&gt;&gt; speedLimitsByCountryCode;
+&nbsp;        @JsonProperty
+&nbsp;        private List&lt;String&gt; warnings;
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    static class RoadTypeFilterImpl implements RoadTypeFilter {</b>
+&nbsp;
+&nbsp;        private String filter, fuzzyFilter, relationFilter;
+&nbsp;
+&nbsp;        public void setFilter(String filter) {
+<b class="nc">&nbsp;            this.filter = filter;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public void setFuzzyFilter(String fuzzyFilter) {
+<b class="nc">&nbsp;            this.fuzzyFilter = fuzzyFilter;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public void setRelationFilter(String relationFilter) {
+<b class="nc">&nbsp;            this.relationFilter = relationFilter;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String getFilter() {
+<b class="nc">&nbsp;            return filter;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String getFuzzyFilter() {
+<b class="nc">&nbsp;            return fuzzyFilter;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String getRelationFilter() {
+<b class="nc">&nbsp;            return relationFilter;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    static class RoadTypeImpl implements RoadType {</b>
+&nbsp;
+&nbsp;        private String name;
+&nbsp;        private Map&lt;String, String&gt; tags;
+&nbsp;
+&nbsp;        public void setName(String name) {
+<b class="nc">&nbsp;            this.name = name;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public void setTags(Map&lt;String, String&gt; tags) {
+<b class="nc">&nbsp;            this.tags = tags;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public String getName() {
+<b class="nc">&nbsp;            return name;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public Map&lt;String, String&gt; getTags() {
+<b class="nc">&nbsp;            return tags;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

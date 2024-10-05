@@ -1,0 +1,218 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > FindMinMax</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.weighting.custom</a>
+</div>
+
+<h1>Coverage Summary for Class: FindMinMax (com.graphhopper.routing.weighting.custom)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FindMinMax</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/46)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.weighting.custom;
+&nbsp;
+&nbsp;import com.graphhopper.json.MinMax;
+&nbsp;import com.graphhopper.json.Statement;
+&nbsp;import com.graphhopper.routing.ev.EncodedValueLookup;
+&nbsp;import com.graphhopper.util.CustomModel;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.json.Statement.Keyword.ELSE;
+&nbsp;import static com.graphhopper.json.Statement.Keyword.IF;
+&nbsp;
+<b class="nc">&nbsp;public class FindMinMax {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method throws an exception when this CustomModel would decrease the edge weight compared to the specified
+&nbsp;     * baseModel as in such a case the optimality of A* with landmarks can no longer be guaranteed (as the preparation
+&nbsp;     * is based on baseModel).
+&nbsp;     */
+&nbsp;    public static void checkLMConstraints(CustomModel baseModel, CustomModel queryModel, EncodedValueLookup lookup) {
+<b class="nc">&nbsp;        if (queryModel.getDistanceInfluence() != null) {</b>
+<b class="nc">&nbsp;            double bmDI = baseModel.getDistanceInfluence() == null ? 0 : baseModel.getDistanceInfluence();</b>
+<b class="nc">&nbsp;            if (queryModel.getDistanceInfluence() &lt; bmDI)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;CustomModel in query can only use distance_influence bigger or equal to &quot;</b>
+<b class="nc">&nbsp;                        + bmDI + &quot;, but was: &quot; + queryModel.getDistanceInfluence());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        checkMultiplyValue(queryModel.getPriority(), lookup);</b>
+<b class="nc">&nbsp;        checkMultiplyValue(queryModel.getSpeed(), lookup);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void checkMultiplyValue(List&lt;Statement&gt; list, EncodedValueLookup lookup) {
+<b class="nc">&nbsp;        for (Statement statement : list) {</b>
+<b class="nc">&nbsp;            if (statement.operation() == Statement.Op.MULTIPLY) {</b>
+<b class="nc">&nbsp;                MinMax minMax = ValueExpressionVisitor.findMinMax(statement.value(), lookup);</b>
+<b class="nc">&nbsp;                if (minMax.max &gt; 1)</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;maximum of value &#39;&quot; + statement.value() + &quot;&#39; cannot be larger than 1, but was: &quot; + minMax.max);</b>
+<b class="nc">&nbsp;                else if (minMax.min &lt; 0)</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;minimum of value &#39;&quot; + statement.value() + &quot;&#39; cannot be smaller than 0, but was: &quot; + minMax.min);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns the smallest value possible in &quot;min&quot; and the smallest value that cannot be
+&nbsp;     * exceeded by any edge in max.
+&nbsp;     */
+&nbsp;    static MinMax findMinMax(MinMax minMax, List&lt;Statement&gt; statements, EncodedValueLookup lookup) {
+<b class="nc">&nbsp;        List&lt;List&lt;Statement&gt;&gt; groups = CustomModelParser.splitIntoGroup(statements);</b>
+<b class="nc">&nbsp;        for (List&lt;Statement&gt; group : groups) findMinMaxForGroup(minMax, group, lookup);</b>
+<b class="nc">&nbsp;        return minMax;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void findMinMaxForGroup(final MinMax minMax, List&lt;Statement&gt; group, EncodedValueLookup lookup) {
+<b class="nc">&nbsp;        if (group.isEmpty() || !IF.equals(group.get(0).keyword()))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Every group must start with an if-statement&quot;);</b>
+&nbsp;
+&nbsp;        MinMax minMaxGroup;
+<b class="nc">&nbsp;        Statement first = group.get(0);</b>
+<b class="nc">&nbsp;        if (first.condition().trim().equals(&quot;true&quot;)) {</b>
+<b class="nc">&nbsp;            if(first.isBlock()) {</b>
+<b class="nc">&nbsp;                for (List&lt;Statement&gt; subGroup : CustomModelParser.splitIntoGroup(first.doBlock())) findMinMaxForGroup(minMax, subGroup, lookup);</b>
+&nbsp;                return;
+&nbsp;            } else {
+<b class="nc">&nbsp;                minMaxGroup = first.operation().apply(minMax, ValueExpressionVisitor.findMinMax(first.value(), lookup));</b>
+<b class="nc">&nbsp;                if (minMaxGroup.max &lt; 0)</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;statement resulted in negative value: &quot; + first);</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            minMaxGroup = new MinMax(Double.MAX_VALUE, 0);</b>
+<b class="nc">&nbsp;            boolean foundElse = false;</b>
+<b class="nc">&nbsp;            for (Statement s : group) {</b>
+<b class="nc">&nbsp;                if (s.keyword() == ELSE) foundElse = true;</b>
+&nbsp;                MinMax tmp;
+<b class="nc">&nbsp;                if(s.isBlock()) {</b>
+<b class="nc">&nbsp;                    tmp = new MinMax(minMax.min, minMax.max);</b>
+<b class="nc">&nbsp;                    for (List&lt;Statement&gt; subGroup : CustomModelParser.splitIntoGroup(first.doBlock())) findMinMaxForGroup(tmp, subGroup, lookup);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    tmp = s.operation().apply(minMax, ValueExpressionVisitor.findMinMax(s.value(), lookup));</b>
+<b class="nc">&nbsp;                    if (tmp.max &lt; 0)</b>
+<b class="nc">&nbsp;                        throw new IllegalArgumentException(&quot;statement resulted in negative value: &quot; + s);</b>
+&nbsp;                }
+<b class="nc">&nbsp;                minMaxGroup.min = Math.min(minMaxGroup.min, tmp.min);</b>
+<b class="nc">&nbsp;                minMaxGroup.max = Math.max(minMaxGroup.max, tmp.max);</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;
+&nbsp;            // if there is no &#39;else&#39; statement it&#39;s like there is a &#39;neutral&#39; branch that leaves the initial value as is
+<b class="nc">&nbsp;            if (!foundElse) {</b>
+<b class="nc">&nbsp;                minMaxGroup.min = Math.min(minMaxGroup.min, minMax.min);</b>
+<b class="nc">&nbsp;                minMaxGroup.max = Math.max(minMaxGroup.max, minMax.max);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        minMax.min = minMaxGroup.min;</b>
+<b class="nc">&nbsp;        minMax.max = minMaxGroup.max;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

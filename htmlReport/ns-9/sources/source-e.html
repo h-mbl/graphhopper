@@ -1,0 +1,426 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ResponsePathDeserializerHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.jackson</a>
+</div>
+
+<h1>Coverage Summary for Class: ResponsePathDeserializerHelper (com.graphhopper.jackson)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ResponsePathDeserializerHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    66,7%
+  </span>
+  <span class="absValue">
+    (4/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62,6%
+  </span>
+  <span class="absValue">
+    (112/179)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ResponsePathDeserializerHelper$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    57,1%
+  </span>
+  <span class="absValue">
+    (4/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62,2%
+  </span>
+  <span class="absValue">
+    (112/180)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.jackson;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.core.type.TypeReference;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.graphhopper.ResponsePath;
+&nbsp;import com.graphhopper.util.*;
+&nbsp;import com.graphhopper.util.details.PathDetail;
+&nbsp;import com.graphhopper.util.exceptions.*;
+&nbsp;import org.locationtech.jts.geom.LineString;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+<b class="nc">&nbsp;public class ResponsePathDeserializerHelper {</b>
+&nbsp;
+&nbsp;    public static ResponsePath createResponsePath(ObjectMapper objectMapper, JsonNode path, boolean hasElevation, boolean turnDescription) {
+<b class="fc">&nbsp;        ResponsePath responsePath = new ResponsePath();</b>
+<b class="fc">&nbsp;        responsePath.addErrors(readErrors(objectMapper, path));</b>
+<b class="fc">&nbsp;        if (responsePath.hasErrors())</b>
+<b class="nc">&nbsp;            return responsePath;</b>
+&nbsp;
+&nbsp;        // Read multiplier from JSON to properly decode the &quot;points&quot; and/or &quot;snapped_waypoints&quot; array.
+&nbsp;        // Note, in earlier versions the points_encoded was missing from the JSON for calc_points == false (although still required for snapped_waypoints).
+<b class="fc">&nbsp;        double multiplier = 1e5;</b>
+<b class="fc">&nbsp;        if (path.has(&quot;points_encoded&quot;) &amp;&amp; path.get(&quot;points_encoded&quot;).asBoolean() &amp;&amp; path.has(&quot;points_encoded_multiplier&quot;))</b>
+<b class="nc">&nbsp;            multiplier = path.get(&quot;points_encoded_multiplier&quot;).asDouble();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (path.has(&quot;snapped_waypoints&quot;)) {</b>
+<b class="fc">&nbsp;            JsonNode snappedWaypoints = path.get(&quot;snapped_waypoints&quot;);</b>
+<b class="fc">&nbsp;            PointList snappedPoints = deserializePointList(objectMapper, snappedWaypoints, hasElevation, multiplier);</b>
+<b class="fc">&nbsp;            responsePath.setWaypoints(snappedPoints);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (path.has(&quot;ascend&quot;)) {</b>
+<b class="fc">&nbsp;            responsePath.setAscend(path.get(&quot;ascend&quot;).asDouble());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (path.has(&quot;descend&quot;)) {</b>
+<b class="fc">&nbsp;            responsePath.setDescend(path.get(&quot;descend&quot;).asDouble());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (path.has(&quot;weight&quot;)) {</b>
+<b class="fc">&nbsp;            responsePath.setRouteWeight(path.get(&quot;weight&quot;).asDouble());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (path.has(&quot;description&quot;)) {</b>
+<b class="nc">&nbsp;            JsonNode descriptionNode = path.get(&quot;description&quot;);</b>
+<b class="nc">&nbsp;            if (descriptionNode.isArray()) {</b>
+<b class="nc">&nbsp;                List&lt;String&gt; description = new ArrayList&lt;&gt;(descriptionNode.size());</b>
+<b class="nc">&nbsp;                for (JsonNode descNode : descriptionNode) {</b>
+<b class="nc">&nbsp;                    description.add(descNode.asText());</b>
+<b class="nc">&nbsp;                }</b>
+<b class="nc">&nbsp;                responsePath.setDescription(description);</b>
+<b class="nc">&nbsp;            } else {</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Description has to be an array&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (path.has(&quot;points&quot;)) {</b>
+<b class="fc">&nbsp;            final PointList pointList = deserializePointList(objectMapper, path.get(&quot;points&quot;), hasElevation, multiplier);</b>
+<b class="fc">&nbsp;            responsePath.setPoints(pointList);</b>
+&nbsp;
+<b class="fc">&nbsp;            if (path.has(&quot;instructions&quot;)) {</b>
+<b class="fc">&nbsp;                JsonNode instrArr = path.get(&quot;instructions&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;                InstructionList il = new InstructionList(null);</b>
+<b class="fc">&nbsp;                int viaCount = 1;</b>
+<b class="fc">&nbsp;                for (JsonNode jsonObj : instrArr) {</b>
+<b class="fc">&nbsp;                    double instDist = jsonObj.get(&quot;distance&quot;).asDouble();</b>
+<b class="fc">&nbsp;                    String text = turnDescription ? jsonObj.get(&quot;text&quot;).asText() : jsonObj.get(Parameters.Details.STREET_NAME).asText();</b>
+<b class="fc">&nbsp;                    long instTime = jsonObj.get(&quot;time&quot;).asLong();</b>
+<b class="fc">&nbsp;                    int sign = jsonObj.get(&quot;sign&quot;).asInt();</b>
+<b class="fc">&nbsp;                    JsonNode iv = jsonObj.get(&quot;interval&quot;);</b>
+<b class="fc">&nbsp;                    int from = iv.get(0).asInt();</b>
+<b class="fc">&nbsp;                    int to = iv.get(1).asInt();</b>
+<b class="fc">&nbsp;                    PointList instPL = new PointList(to - from, hasElevation);</b>
+<b class="fc">&nbsp;                    for (int j = from; j &lt;= to; j++) {</b>
+<b class="fc">&nbsp;                        instPL.add(pointList, j);</b>
+&nbsp;                    }
+&nbsp;
+&nbsp;                    Instruction instr;
+<b class="fc">&nbsp;                    if (sign == Instruction.USE_ROUNDABOUT || sign == Instruction.LEAVE_ROUNDABOUT) {</b>
+<b class="nc">&nbsp;                        RoundaboutInstruction ri = new RoundaboutInstruction(sign, text, instPL);</b>
+&nbsp;
+<b class="nc">&nbsp;                        if (jsonObj.has(&quot;exit_number&quot;)) {</b>
+<b class="nc">&nbsp;                            ri.setExitNumber(jsonObj.get(&quot;exit_number&quot;).asInt());</b>
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        if (jsonObj.has(&quot;exited&quot;)) {</b>
+<b class="nc">&nbsp;                            if (jsonObj.get(&quot;exited&quot;).asBoolean())</b>
+<b class="nc">&nbsp;                                ri.setExited();</b>
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        if (jsonObj.has(&quot;turn_angle&quot;)) {</b>
+&nbsp;                            // TODO provide setTurnAngle setter
+<b class="nc">&nbsp;                            double angle = jsonObj.get(&quot;turn_angle&quot;).asDouble();</b>
+<b class="nc">&nbsp;                            ri.setDirOfRotation(angle);</b>
+<b class="nc">&nbsp;                            ri.setRadian((angle &lt; 0 ? -Math.PI : Math.PI) - angle);</b>
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        instr = ri;</b>
+<b class="nc">&nbsp;                    } else if (sign == Instruction.REACHED_VIA) {</b>
+<b class="nc">&nbsp;                        ViaInstruction tmpInstr = new ViaInstruction(text, instPL);</b>
+<b class="nc">&nbsp;                        tmpInstr.setViaCount(viaCount);</b>
+<b class="nc">&nbsp;                        viaCount++;</b>
+<b class="nc">&nbsp;                        instr = tmpInstr;</b>
+<b class="nc">&nbsp;                    } else if (sign == Instruction.FINISH) {</b>
+<b class="fc">&nbsp;                        instr = new FinishInstruction(text, instPL, 0);</b>
+&nbsp;                    } else {
+<b class="fc">&nbsp;                        instr = new Instruction(sign, text, instPL);</b>
+<b class="fc">&nbsp;                        if (sign == Instruction.CONTINUE_ON_STREET) {</b>
+<b class="fc">&nbsp;                            if (jsonObj.has(&quot;heading&quot;)) {</b>
+<b class="fc">&nbsp;                                instr.setExtraInfo(&quot;heading&quot;, jsonObj.get(&quot;heading&quot;).asDouble());</b>
+&nbsp;                            }
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;
+&nbsp;                    // Usually, the translation is done from the routing service so just use the provided string
+&nbsp;                    // instead of creating a combination with sign and name etc.
+&nbsp;                    // This is called the turn description.
+&nbsp;                    // This can be changed by passing &lt;code&gt;turn_description=false&lt;/code&gt;.
+<b class="fc">&nbsp;                    if (turnDescription)</b>
+<b class="fc">&nbsp;                        instr.setUseRawName();</b>
+&nbsp;
+<b class="fc">&nbsp;                    instr.setDistance(instDist).setTime(instTime);</b>
+<b class="fc">&nbsp;                    il.add(instr);</b>
+<b class="fc">&nbsp;                }</b>
+<b class="fc">&nbsp;                responsePath.setInstructions(il);</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            if (path.has(&quot;details&quot;)) {</b>
+<b class="fc">&nbsp;                JsonNode details = path.get(&quot;details&quot;);</b>
+<b class="fc">&nbsp;                Map&lt;String, List&lt;PathDetail&gt;&gt; pathDetails = new HashMap&lt;&gt;(details.size());</b>
+<b class="fc">&nbsp;                Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; detailIterator = details.fields();</b>
+<b class="fc">&nbsp;                while (detailIterator.hasNext()) {</b>
+<b class="fc">&nbsp;                    Map.Entry&lt;String, JsonNode&gt; detailEntry = detailIterator.next();</b>
+<b class="fc">&nbsp;                    List&lt;PathDetail&gt; pathDetailList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;                    for (JsonNode pathDetail : detailEntry.getValue()) {</b>
+<b class="fc">&nbsp;                        PathDetail pd = objectMapper.convertValue(pathDetail, PathDetail.class);</b>
+<b class="fc">&nbsp;                        pathDetailList.add(pd);</b>
+<b class="fc">&nbsp;                    }</b>
+<b class="fc">&nbsp;                    pathDetails.put(detailEntry.getKey(), pathDetailList);</b>
+<b class="fc">&nbsp;                }</b>
+<b class="fc">&nbsp;                responsePath.addPathDetails(pathDetails);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (path.has(&quot;points_order&quot;)) {</b>
+<b class="nc">&nbsp;            responsePath.setPointsOrder((List&lt;Integer&gt;) objectMapper.convertValue(path.get(&quot;points_order&quot;), List.class));</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            List&lt;Integer&gt; list = new ArrayList&lt;&gt;(responsePath.getWaypoints().size());</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; responsePath.getWaypoints().size(); i++) {</b>
+<b class="fc">&nbsp;                list.add(i);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            responsePath.setPointsOrder(list);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        double distance = path.get(&quot;distance&quot;).asDouble();</b>
+<b class="fc">&nbsp;        long time = path.get(&quot;time&quot;).asLong();</b>
+<b class="fc">&nbsp;        responsePath.setDistance(distance).setTime(time);</b>
+<b class="fc">&nbsp;        return responsePath;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static PointList deserializePointList(ObjectMapper objectMapper, JsonNode jsonNode, boolean hasElevation, double multiplier) {
+&nbsp;        PointList snappedPoints;
+<b class="fc">&nbsp;        if (jsonNode.isTextual()) {</b>
+<b class="fc">&nbsp;            snappedPoints = decodePolyline(jsonNode.asText(), Math.max(10, jsonNode.asText().length() / 4), hasElevation, multiplier);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            LineString lineString = objectMapper.convertValue(jsonNode, LineString.class);</b>
+<b class="fc">&nbsp;            snappedPoints = PointList.fromLineString(lineString);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return snappedPoints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static PointList decodePolyline(String encoded, int initCap, boolean is3D, double multiplier) {
+<b class="fc">&nbsp;        if (multiplier &lt; 1)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;multiplier cannot be smaller than 1 but was &quot; + multiplier + &quot; for polyline &quot; + encoded);</b>
+&nbsp;
+<b class="fc">&nbsp;        PointList poly = new PointList(initCap, is3D);</b>
+<b class="fc">&nbsp;        int index = 0;</b>
+<b class="fc">&nbsp;        int len = encoded.length();</b>
+<b class="fc">&nbsp;        int lat = 0, lng = 0, ele = 0;</b>
+<b class="fc">&nbsp;        while (index &lt; len) {</b>
+&nbsp;            // latitude
+<b class="fc">&nbsp;            int b, shift = 0, result = 0;</b>
+&nbsp;            do {
+<b class="fc">&nbsp;                b = encoded.charAt(index++) - 63;</b>
+<b class="fc">&nbsp;                result |= (b &amp; 0x1f) &lt;&lt; shift;</b>
+<b class="fc">&nbsp;                shift += 5;</b>
+<b class="fc">&nbsp;            } while (b &gt;= 0x20);</b>
+<b class="fc">&nbsp;            int deltaLatitude = ((result &amp; 1) != 0 ? ~(result &gt;&gt; 1) : (result &gt;&gt; 1));</b>
+<b class="fc">&nbsp;            lat += deltaLatitude;</b>
+&nbsp;
+&nbsp;            // longitude
+<b class="fc">&nbsp;            shift = 0;</b>
+<b class="fc">&nbsp;            result = 0;</b>
+&nbsp;            do {
+<b class="fc">&nbsp;                b = encoded.charAt(index++) - 63;</b>
+<b class="fc">&nbsp;                result |= (b &amp; 0x1f) &lt;&lt; shift;</b>
+<b class="fc">&nbsp;                shift += 5;</b>
+<b class="fc">&nbsp;            } while (b &gt;= 0x20);</b>
+<b class="fc">&nbsp;            int deltaLongitude = ((result &amp; 1) != 0 ? ~(result &gt;&gt; 1) : (result &gt;&gt; 1));</b>
+<b class="fc">&nbsp;            lng += deltaLongitude;</b>
+&nbsp;
+<b class="fc">&nbsp;            if (is3D) {</b>
+&nbsp;                // elevation
+<b class="fc">&nbsp;                shift = 0;</b>
+<b class="fc">&nbsp;                result = 0;</b>
+&nbsp;                do {
+<b class="fc">&nbsp;                    b = encoded.charAt(index++) - 63;</b>
+<b class="fc">&nbsp;                    result |= (b &amp; 0x1f) &lt;&lt; shift;</b>
+<b class="fc">&nbsp;                    shift += 5;</b>
+<b class="fc">&nbsp;                } while (b &gt;= 0x20);</b>
+<b class="fc">&nbsp;                int deltaElevation = ((result &amp; 1) != 0 ? ~(result &gt;&gt; 1) : (result &gt;&gt; 1));</b>
+<b class="fc">&nbsp;                ele += deltaElevation;</b>
+<b class="fc">&nbsp;                poly.add((double) lat / multiplier, (double) lng / multiplier, (double) ele / 100);</b>
+<b class="fc">&nbsp;            } else</b>
+<b class="fc">&nbsp;                poly.add((double) lat / multiplier, (double) lng / multiplier);</b>
+<b class="fc">&nbsp;        }</b>
+<b class="fc">&nbsp;        return poly;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;Throwable&gt; readErrors(ObjectMapper objectMapper, JsonNode json) {
+<b class="fc">&nbsp;        List&lt;Throwable&gt; errors = new ArrayList&lt;&gt;();</b>
+&nbsp;        JsonNode errorJson;
+&nbsp;
+<b class="fc">&nbsp;        if (json.has(&quot;message&quot;)) {</b>
+<b class="nc">&nbsp;            if (json.has(&quot;hints&quot;)) {</b>
+<b class="nc">&nbsp;                errorJson = json.get(&quot;hints&quot;);</b>
+&nbsp;            } else {
+&nbsp;                // should not happen
+<b class="nc">&nbsp;                errors.add(new RuntimeException(json.get(&quot;message&quot;).asText()));</b>
+<b class="nc">&nbsp;                return errors;</b>
+&nbsp;            }
+&nbsp;        } else
+<b class="fc">&nbsp;            return errors;</b>
+&nbsp;
+<b class="nc">&nbsp;        for (JsonNode error : errorJson) {</b>
+<b class="nc">&nbsp;            String exClass = &quot;&quot;;</b>
+<b class="nc">&nbsp;            if (error.has(&quot;details&quot;))</b>
+<b class="nc">&nbsp;                exClass = error.get(&quot;details&quot;).asText();</b>
+&nbsp;
+<b class="nc">&nbsp;            String exMessage = error.get(&quot;message&quot;).asText();</b>
+&nbsp;
+<b class="nc">&nbsp;            if (exClass.equals(UnsupportedOperationException.class.getName()))</b>
+<b class="nc">&nbsp;                errors.add(new UnsupportedOperationException(exMessage));</b>
+<b class="nc">&nbsp;            else if (exClass.equals(IllegalStateException.class.getName()))</b>
+<b class="nc">&nbsp;                errors.add(new IllegalStateException(exMessage));</b>
+<b class="nc">&nbsp;            else if (exClass.equals(RuntimeException.class.getName()))</b>
+<b class="nc">&nbsp;                errors.add(new DetailedRuntimeException(exMessage, toMap(objectMapper, error)));</b>
+<b class="nc">&nbsp;            else if (exClass.equals(IllegalArgumentException.class.getName()))</b>
+<b class="nc">&nbsp;                errors.add(new DetailedIllegalArgumentException(exMessage, toMap(objectMapper, error)));</b>
+<b class="nc">&nbsp;            else if (exClass.equals(ConnectionNotFoundException.class.getName())) {</b>
+<b class="nc">&nbsp;                errors.add(new ConnectionNotFoundException(exMessage, toMap(objectMapper, error)));</b>
+<b class="nc">&nbsp;            } else if (exClass.equals(MaximumNodesExceededException.class.getName())) {</b>
+<b class="nc">&nbsp;                int maxVisitedNodes = error.get(MaximumNodesExceededException.NODES_KEY).asInt();</b>
+<b class="nc">&nbsp;                errors.add(new MaximumNodesExceededException(exMessage, maxVisitedNodes));</b>
+<b class="nc">&nbsp;            } else if (exClass.equals(PointNotFoundException.class.getName())) {</b>
+<b class="nc">&nbsp;                int pointIndex = error.get(PointNotFoundException.INDEX_KEY).asInt();</b>
+<b class="nc">&nbsp;                errors.add(new PointNotFoundException(exMessage, pointIndex));</b>
+<b class="nc">&nbsp;            } else if (exClass.equals(PointOutOfBoundsException.class.getName())) {</b>
+<b class="nc">&nbsp;                int pointIndex = error.get(PointNotFoundException.INDEX_KEY).asInt();</b>
+<b class="nc">&nbsp;                errors.add(new PointOutOfBoundsException(exMessage, pointIndex));</b>
+<b class="nc">&nbsp;            } else if (exClass.isEmpty())</b>
+<b class="nc">&nbsp;                errors.add(new DetailedRuntimeException(exMessage, toMap(objectMapper, error)));</b>
+&nbsp;            else
+<b class="nc">&nbsp;                errors.add(new DetailedRuntimeException(exClass + &quot; &quot; + exMessage, toMap(objectMapper, error)));</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        if (json.has(&quot;message&quot;) &amp;&amp; errors.isEmpty())</b>
+<b class="nc">&nbsp;            errors.add(new RuntimeException(json.get(&quot;message&quot;).asText()));</b>
+&nbsp;
+<b class="nc">&nbsp;        return errors;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Credits to: http://stackoverflow.com/a/24012023/194609
+&nbsp;    private static Map&lt;String, Object&gt; toMap(ObjectMapper objectMapper, JsonNode object) {
+<b class="nc">&nbsp;        return objectMapper.convertValue(object, new TypeReference&lt;Map&lt;String, Object&gt;&gt;() {</b>
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,224 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > EdgeElevationSmoothingMovingAverage</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.dem</a>
+</div>
+
+<h1>Coverage Summary for Class: EdgeElevationSmoothingMovingAverage (com.graphhopper.reader.dem)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EdgeElevationSmoothingMovingAverage</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/50)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.reader.dem;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntDoubleHashMap;
+&nbsp;import com.carrotsearch.hppc.cursors.IntDoubleCursor;
+&nbsp;import com.graphhopper.util.DistancePlaneProjection;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;
+&nbsp;import java.util.function.Consumer;
+&nbsp;/**
+&nbsp; * Elevation data is read from DEM tiles that have data points for rectangular tiles usually having an
+&nbsp; * edge length of 30 or 90 meter. Elevation in between the middle points of those tiles will be
+&nbsp; * interpolated and weighted by the distance from a node to adjacent tile centers.
+&nbsp; * &lt;p&gt;
+&nbsp; * Ways that go along cliffs or ridges are particularly affected by ups and downs that do not reflect
+&nbsp; * the actual elevation but may be artifacts originated from very accurately mapping when elevation has
+&nbsp; * a lower resolution.
+&nbsp; *
+&nbsp; * @author Christoph Lingg
+&nbsp; */
+<b class="nc">&nbsp;public class EdgeElevationSmoothingMovingAverage {</b>
+&nbsp;    public static void smooth(PointList geometry, double maxWindowSize) {
+<b class="nc">&nbsp;        if (geometry.size() &lt;= 2) {</b>
+&nbsp;            // geometry consists only of tower nodes, there are no pillar nodes to be smoothed in between
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // calculate the distance between all points once here to avoid repeated calculation.
+&nbsp;        // for n nodes there are always n-1 edges
+<b class="nc">&nbsp;        double[] distances = new double[geometry.size() - 1];</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt;= geometry.size() - 2; i++) {</b>
+<b class="nc">&nbsp;            distances[i] = DistancePlaneProjection.DIST_PLANE.calcDist(</b>
+<b class="nc">&nbsp;                    geometry.getLat(i), geometry.getLon(i),</b>
+<b class="nc">&nbsp;                    geometry.getLat(i + 1), geometry.getLon(i + 1)</b>
+&nbsp;            );
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        // map that will collect all smoothed elevation values, size is less by 2
+&nbsp;        // because elevation of start and end point (tower nodes) won&#39;t be touched
+<b class="nc">&nbsp;        IntDoubleHashMap averagedElevations = new IntDoubleHashMap((geometry.size() - 1) * 4 / 3);</b>
+&nbsp;
+&nbsp;        // iterate over every pillar node to smooth its elevation
+&nbsp;        // first and last points are left out as they are tower nodes
+<b class="nc">&nbsp;        for (int i = 1; i &lt;= geometry.size() - 2; i++) {</b>
+&nbsp;            // first, determine the average window which could be smaller when close to pillar nodes
+<b class="nc">&nbsp;            double searchDistance = maxWindowSize / 2.0;</b>
+&nbsp;
+<b class="nc">&nbsp;            double searchDistanceBack = 0.0;</b>
+<b class="nc">&nbsp;            for (int j = i - 1; j &gt;= 0; j--) {</b>
+<b class="nc">&nbsp;                searchDistanceBack += distances[j];</b>
+<b class="nc">&nbsp;                if (searchDistanceBack &gt; searchDistance) {</b>
+<b class="nc">&nbsp;                    break;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            // update search distance if pillar node is close to START tower node
+<b class="nc">&nbsp;            searchDistance = Math.min(searchDistance, searchDistanceBack);</b>
+&nbsp;
+<b class="nc">&nbsp;            double searchDistanceForward = 0.0;</b>
+<b class="nc">&nbsp;            for (int j = i; j &lt; geometry.size() - 1; j++) {</b>
+<b class="nc">&nbsp;                searchDistanceForward += distances[j];</b>
+<b class="nc">&nbsp;                if (searchDistanceForward &gt; searchDistance) {</b>
+<b class="nc">&nbsp;                    break;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            // update search distance if pillar node is close to END tower node
+<b class="nc">&nbsp;            searchDistance = Math.min(searchDistance, searchDistanceForward);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (searchDistance &lt;= 0.0) {</b>
+&nbsp;                // there is nothing to smooth. this is an edge case where pillar nodes share exactly the same location
+&nbsp;                // as a tower node.
+&nbsp;                // by doing so we avoid (at least theoretically) a division by zero later in the function call
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // area under elevation curve
+<b class="nc">&nbsp;            double elevationArea = 0.0;</b>
+&nbsp;
+&nbsp;            // first going again backwards
+<b class="nc">&nbsp;            double distanceBack = 0.0;</b>
+<b class="nc">&nbsp;            for (int j = i - 1; j &gt;= 0; j--) {</b>
+<b class="nc">&nbsp;                double dist = distances[j];</b>
+<b class="nc">&nbsp;                double searchDistLeft = searchDistance - distanceBack;</b>
+<b class="nc">&nbsp;                distanceBack += dist;</b>
+<b class="nc">&nbsp;                if (searchDistLeft &lt; dist) {</b>
+&nbsp;                    // node lies outside averaging window
+<b class="nc">&nbsp;                    double elevationDelta = geometry.getEle(j) - geometry.getEle(j + 1);</b>
+<b class="nc">&nbsp;                    double elevationAtSearchDistance = geometry.getEle(j + 1) + searchDistLeft / dist * elevationDelta;</b>
+<b class="nc">&nbsp;                    elevationArea += searchDistLeft * (geometry.getEle(j + 1) + elevationAtSearchDistance) / 2.0;</b>
+<b class="nc">&nbsp;                    break;</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    elevationArea += dist * (geometry.getEle(j + 1) + geometry.getEle(j)) / 2.0;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            // now going forward
+<b class="nc">&nbsp;            double distanceForward = 0.0;</b>
+<b class="nc">&nbsp;            for (int j = i; j &lt; geometry.size() - 1; j++) {</b>
+<b class="nc">&nbsp;                double dist = distances[j];</b>
+<b class="nc">&nbsp;                double searchDistLeft = searchDistance - distanceForward;</b>
+<b class="nc">&nbsp;                distanceForward += dist;</b>
+<b class="nc">&nbsp;                if (searchDistLeft &lt; dist) {</b>
+<b class="nc">&nbsp;                    double elevationDelta = geometry.getEle(j + 1) - geometry.getEle(j);</b>
+<b class="nc">&nbsp;                    double elevationAtSearchDistance = geometry.getEle(j) + searchDistLeft / dist * elevationDelta;</b>
+<b class="nc">&nbsp;                    elevationArea += searchDistLeft * (geometry.getEle(j) + elevationAtSearchDistance) / 2.0;</b>
+<b class="nc">&nbsp;                    break;</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    elevationArea += dist * (geometry.getEle(j + 1) + geometry.getEle(j)) / 2.0;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            double elevationAverage = elevationArea / (searchDistance * 2);</b>
+<b class="nc">&nbsp;            averagedElevations.put(i, elevationAverage);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // after all pillar nodes got an averaged elevation, elevations are overwritten
+<b class="nc">&nbsp;        averagedElevations.forEach((Consumer&lt;IntDoubleCursor&gt;) c -&gt; geometry.setElevation(c.key, c.value));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

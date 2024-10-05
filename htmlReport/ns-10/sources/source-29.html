@@ -1,0 +1,394 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ViaRouting</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: ViaRouting (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ViaRouting</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/103)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ViaRouting$Result</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/106)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.graphhopper.routing.ev.EncodedValueLookup;
+&nbsp;import com.graphhopper.routing.ev.EnumEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.RoadClass;
+&nbsp;import com.graphhopper.routing.ev.RoadEnvironment;
+&nbsp;import com.graphhopper.routing.querygraph.QueryGraph;
+&nbsp;import com.graphhopper.routing.querygraph.VirtualEdgeIteratorState;
+&nbsp;import com.graphhopper.routing.util.*;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.storage.index.Snap;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import static com.graphhopper.util.EdgeIterator.ANY_EDGE;
+&nbsp;import static com.graphhopper.util.EdgeIterator.NO_EDGE;
+&nbsp;import static com.graphhopper.util.Parameters.Curbsides.CURBSIDE_ANY;
+&nbsp;import static com.graphhopper.util.Parameters.Routing.CURBSIDE;
+&nbsp;
+&nbsp;/**
+&nbsp; * The methods here can be used to calculate routes with or without via points and implement possible restrictions
+&nbsp; * like snap preventions, headings and curbsides.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @author easbar
+&nbsp; */
+<b class="nc">&nbsp;public class ViaRouting {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @throws MultiplePointsNotFoundException in case one or more points could not be resolved
+&nbsp;     */
+&nbsp;    public static List&lt;Snap&gt; lookup(EncodedValueLookup lookup, List&lt;GHPoint&gt; points, EdgeFilter snapFilter,
+&nbsp;                                    LocationIndex locationIndex, List&lt;String&gt; snapPreventions, List&lt;String&gt; pointHints,
+&nbsp;                                    DirectedEdgeFilter directedSnapFilter, List&lt;Double&gt; headings) {
+<b class="nc">&nbsp;        if (points.size() &lt; 2)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;At least 2 points have to be specified, but was:&quot; + points.size());</b>
+&nbsp;
+<b class="nc">&nbsp;        final EnumEncodedValue&lt;RoadClass&gt; roadClassEnc = lookup.getEnumEncodedValue(RoadClass.KEY, RoadClass.class);</b>
+<b class="nc">&nbsp;        final EnumEncodedValue&lt;RoadEnvironment&gt; roadEnvEnc = lookup.getEnumEncodedValue(RoadEnvironment.KEY, RoadEnvironment.class);</b>
+<b class="nc">&nbsp;        EdgeFilter strictEdgeFilter = snapPreventions.isEmpty()</b>
+<b class="nc">&nbsp;                ? snapFilter</b>
+<b class="nc">&nbsp;                : new SnapPreventionEdgeFilter(snapFilter, roadClassEnc, roadEnvEnc, snapPreventions);</b>
+<b class="nc">&nbsp;        List&lt;Snap&gt; snaps = new ArrayList&lt;&gt;(points.size());</b>
+<b class="nc">&nbsp;        IntArrayList pointsNotFound = new IntArrayList();</b>
+<b class="nc">&nbsp;        for (int placeIndex = 0; placeIndex &lt; points.size(); placeIndex++) {</b>
+<b class="nc">&nbsp;            GHPoint point = points.get(placeIndex);</b>
+<b class="nc">&nbsp;            Snap snap = null;</b>
+<b class="nc">&nbsp;            if (placeIndex &lt; headings.size() &amp;&amp; !Double.isNaN(headings.get(placeIndex))) {</b>
+<b class="nc">&nbsp;                if (!pointHints.isEmpty() &amp;&amp; !Helper.isEmpty(pointHints.get(placeIndex)))</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;Cannot specify heading and point_hint at the same time. &quot; +</b>
+&nbsp;                            &quot;Make sure you specify either an empty point_hint (String) or a NaN heading (double) for point &quot; + placeIndex);
+<b class="nc">&nbsp;                snap = locationIndex.findClosest(point.lat, point.lon, new HeadingEdgeFilter(directedSnapFilter, headings.get(placeIndex), point));</b>
+<b class="nc">&nbsp;            } else if (!pointHints.isEmpty()) {</b>
+<b class="nc">&nbsp;                snap = locationIndex.findClosest(point.lat, point.lon, new NameSimilarityEdgeFilter(strictEdgeFilter,</b>
+<b class="nc">&nbsp;                        pointHints.get(placeIndex), point, 170));</b>
+<b class="nc">&nbsp;            } else if (!snapPreventions.isEmpty()) {</b>
+<b class="nc">&nbsp;                snap = locationIndex.findClosest(point.lat, point.lon, strictEdgeFilter);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (snap == null || !snap.isValid())</b>
+<b class="nc">&nbsp;                snap = locationIndex.findClosest(point.lat, point.lon, snapFilter);</b>
+<b class="nc">&nbsp;            if (!snap.isValid())</b>
+<b class="nc">&nbsp;                pointsNotFound.add(placeIndex);</b>
+&nbsp;
+<b class="nc">&nbsp;            snaps.add(snap);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!pointsNotFound.isEmpty())</b>
+<b class="nc">&nbsp;            throw new MultiplePointsNotFoundException(pointsNotFound);</b>
+&nbsp;
+<b class="nc">&nbsp;        return snaps;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Result calcPaths(List&lt;GHPoint&gt; points, QueryGraph queryGraph, List&lt;Snap&gt; snaps,
+&nbsp;                                   DirectedEdgeFilter directedEdgeFilter, PathCalculator pathCalculator,
+&nbsp;                                   List&lt;String&gt; curbsides, String curbsideStrictness, List&lt;Double&gt; headings, boolean passThrough) {
+<b class="nc">&nbsp;        if (!curbsides.isEmpty() &amp;&amp; curbsides.size() != points.size())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;If you pass &quot; + CURBSIDE + &quot;, you need to pass exactly one curbside for every point, empty curbsides will be ignored&quot;);</b>
+<b class="nc">&nbsp;        if (!curbsides.isEmpty() &amp;&amp; !headings.isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;You cannot use curbsides and headings or pass_through at the same time&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        final int legs = snaps.size() - 1;</b>
+<b class="nc">&nbsp;        Result result = new Result(legs);</b>
+<b class="nc">&nbsp;        for (int leg = 0; leg &lt; legs; ++leg) {</b>
+<b class="nc">&nbsp;            Snap fromSnap = snaps.get(leg);</b>
+<b class="nc">&nbsp;            Snap toSnap = snaps.get(leg + 1);</b>
+&nbsp;
+&nbsp;            // enforce headings
+&nbsp;            // at via-nodes and the target node the heading parameter is interpreted as the direction we want
+&nbsp;            // to enforce for arriving (not starting) at this node. the starting direction is not enforced at
+&nbsp;            // all for these points (unless using pass through). see this forum discussion:
+&nbsp;            // https://discuss.graphhopper.com/t/meaning-of-heading-parameter-for-via-routing/5643/6
+<b class="nc">&nbsp;            double fromHeading = (leg == 0 &amp;&amp; !headings.isEmpty()) ? headings.get(0) : Double.NaN;</b>
+<b class="nc">&nbsp;            double toHeading = (snaps.size() == headings.size() &amp;&amp; !Double.isNaN(headings.get(leg + 1))) ? headings.get(leg + 1) : Double.NaN;</b>
+&nbsp;
+&nbsp;            // enforce pass-through
+<b class="nc">&nbsp;            int incomingEdge = NO_EDGE;</b>
+<b class="nc">&nbsp;            if (leg != 0) {</b>
+&nbsp;                // enforce straight start after via stop
+<b class="nc">&nbsp;                Path prevRoute = result.paths.get(leg - 1);</b>
+<b class="nc">&nbsp;                if (prevRoute.getEdgeCount() &gt; 0)</b>
+<b class="nc">&nbsp;                    incomingEdge = prevRoute.getFinalEdge().getEdge();</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // enforce curbsides
+<b class="nc">&nbsp;            final String fromCurbside = curbsides.isEmpty() ? CURBSIDE_ANY : curbsides.get(leg);</b>
+<b class="nc">&nbsp;            final String toCurbside = curbsides.isEmpty() ? CURBSIDE_ANY : curbsides.get(leg + 1);</b>
+&nbsp;
+<b class="nc">&nbsp;            EdgeRestrictions edgeRestrictions = buildEdgeRestrictions(queryGraph, fromSnap, toSnap,</b>
+&nbsp;                    fromHeading, toHeading, incomingEdge, passThrough,
+&nbsp;                    fromCurbside, toCurbside, directedEdgeFilter);
+&nbsp;
+<b class="nc">&nbsp;            edgeRestrictions.setSourceOutEdge(ignoreThrowOrAcceptImpossibleCurbsides(curbsides, edgeRestrictions.getSourceOutEdge(), leg, curbsideStrictness));</b>
+<b class="nc">&nbsp;            edgeRestrictions.setTargetInEdge(ignoreThrowOrAcceptImpossibleCurbsides(curbsides, edgeRestrictions.getTargetInEdge(), leg + 1, curbsideStrictness));</b>
+&nbsp;
+&nbsp;            // calculate paths
+<b class="nc">&nbsp;            List&lt;Path&gt; paths = pathCalculator.calcPaths(fromSnap.getClosestNode(), toSnap.getClosestNode(), edgeRestrictions);</b>
+<b class="nc">&nbsp;            result.debug += pathCalculator.getDebugString();</b>
+&nbsp;
+&nbsp;            // for alternative routing we get multiple paths and add all of them (which is ok, because we do not allow
+&nbsp;            // via-points for alternatives at the moment). otherwise we would have to return a list&lt;list&lt;path&gt;&gt; and find
+&nbsp;            // a good method to decide how to combine the different legs
+<b class="nc">&nbsp;            for (int i = 0; i &lt; paths.size(); i++) {</b>
+<b class="nc">&nbsp;                Path path = paths.get(i);</b>
+<b class="nc">&nbsp;                if (path.getTime() &lt; 0)</b>
+<b class="nc">&nbsp;                    throw new RuntimeException(&quot;Time was negative &quot; + path.getTime() + &quot; for index &quot; + i);</b>
+&nbsp;
+<b class="nc">&nbsp;                result.paths.add(path);</b>
+<b class="nc">&nbsp;                result.debug += &quot;, &quot; + path.getDebugInfo();</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            result.visitedNodes += pathCalculator.getVisitedNodes();</b>
+<b class="nc">&nbsp;            result.debug += &quot;, visited nodes sum: &quot; + result.visitedNodes;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Result {
+&nbsp;        public List&lt;Path&gt; paths;
+&nbsp;        public long visitedNodes;
+<b class="nc">&nbsp;        public String debug = &quot;&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        Result(int legs) {</b>
+<b class="nc">&nbsp;            paths = new ArrayList&lt;&gt;(legs);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Determines restrictions for the start/target edges to account for the heading, pass_through and curbside parameters
+&nbsp;     * for a single via-route leg.
+&nbsp;     *
+&nbsp;     * @param fromHeading  the heading at the start node of this leg, or NaN if no restriction should be applied
+&nbsp;     * @param toHeading    the heading at the target node (the vehicle&#39;s heading when arriving at the target), or NaN if
+&nbsp;     *                     no restriction should be applied
+&nbsp;     * @param incomingEdge the last edge of the previous leg (or {@link EdgeIterator#NO_EDGE} if not available
+&nbsp;     */
+&nbsp;    private static EdgeRestrictions buildEdgeRestrictions(
+&nbsp;            QueryGraph queryGraph, Snap fromSnap, Snap toSnap,
+&nbsp;            double fromHeading, double toHeading, int incomingEdge, boolean passThrough,
+&nbsp;            String fromCurbside, String toCurbside, DirectedEdgeFilter edgeFilter) {
+<b class="nc">&nbsp;        EdgeRestrictions edgeRestrictions = new EdgeRestrictions();</b>
+&nbsp;
+&nbsp;        // curbsides
+<b class="nc">&nbsp;        if (!fromCurbside.equals(CURBSIDE_ANY) || !toCurbside.equals(CURBSIDE_ANY)) {</b>
+<b class="nc">&nbsp;            DirectedEdgeFilter directedEdgeFilter = (edge, reverse) -&gt; {</b>
+&nbsp;                // todo: maybe find a cleaner way to obtain the original edge given a VirtualEdgeIterator (not VirtualEdgeIteratorState)
+<b class="nc">&nbsp;                if (queryGraph.isVirtualEdge(edge.getEdge())) {</b>
+<b class="nc">&nbsp;                    EdgeIteratorState virtualEdge = queryGraph.getEdgeIteratorStateForKey(edge.getEdgeKey());</b>
+<b class="nc">&nbsp;                    EdgeIteratorState origEdge = queryGraph.getEdgeIteratorStateForKey(((VirtualEdgeIteratorState) virtualEdge).getOriginalEdgeKey());</b>
+<b class="nc">&nbsp;                    return edgeFilter.accept(origEdge, reverse);</b>
+&nbsp;                } else
+<b class="nc">&nbsp;                    return edgeFilter.accept(edge, reverse);</b>
+&nbsp;            };
+<b class="nc">&nbsp;            DirectionResolver directionResolver = new DirectionResolver(queryGraph, directedEdgeFilter);</b>
+<b class="nc">&nbsp;            DirectionResolverResult fromDirection = directionResolver.resolveDirections(fromSnap.getClosestNode(), fromSnap.getQueryPoint());</b>
+<b class="nc">&nbsp;            DirectionResolverResult toDirection = directionResolver.resolveDirections(toSnap.getClosestNode(), toSnap.getQueryPoint());</b>
+<b class="nc">&nbsp;            int sourceOutEdge = DirectionResolverResult.getOutEdge(fromDirection, fromCurbside);</b>
+<b class="nc">&nbsp;            int targetInEdge = DirectionResolverResult.getInEdge(toDirection, toCurbside);</b>
+<b class="nc">&nbsp;            if (fromSnap.getClosestNode() == toSnap.getClosestNode()) {</b>
+&nbsp;                // special case where we go from one point back to itself. for example going from a point A
+&nbsp;                // with curbside right to the same point with curbside right is interpreted as &#39;being there
+&nbsp;                // already&#39; -&gt; empty path. Similarly if the curbside for the start/target is not even specified
+&nbsp;                // there is no need to drive a loop. However, going from point A/right to point A/left (or the
+&nbsp;                // other way around) means we need to drive some kind of loop to get back to the same location
+&nbsp;                // (arriving on the other side of the road).
+<b class="nc">&nbsp;                if (Helper.isEmpty(fromCurbside) || Helper.isEmpty(toCurbside) ||</b>
+<b class="nc">&nbsp;                        fromCurbside.equals(CURBSIDE_ANY) || toCurbside.equals(CURBSIDE_ANY) ||</b>
+<b class="nc">&nbsp;                        fromCurbside.equals(toCurbside)) {</b>
+&nbsp;                    // we just disable start/target edge constraints to get an empty path
+<b class="nc">&nbsp;                    sourceOutEdge = ANY_EDGE;</b>
+<b class="nc">&nbsp;                    targetInEdge = ANY_EDGE;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            edgeRestrictions.setSourceOutEdge(sourceOutEdge);</b>
+<b class="nc">&nbsp;            edgeRestrictions.setTargetInEdge(targetInEdge);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // heading
+<b class="nc">&nbsp;        if (!Double.isNaN(fromHeading) || !Double.isNaN(toHeading)) {</b>
+&nbsp;            // todo: for heading/pass_through with edge-based routing (especially CH) we have to find the edge closest
+&nbsp;            // to the heading and use it as sourceOutEdge/targetInEdge here. the heading penalty will not be applied
+&nbsp;            // this way (unless we implement this), but this is more or less ok as we can use finite u-turn costs
+&nbsp;            // instead. maybe the hardest part is dealing with headings that cannot be fulfilled, like in one-way
+&nbsp;            // streets. see also #1765
+<b class="nc">&nbsp;            HeadingResolver headingResolver = new HeadingResolver(queryGraph);</b>
+<b class="nc">&nbsp;            if (!Double.isNaN(fromHeading))</b>
+<b class="nc">&nbsp;                edgeRestrictions.getUnfavoredEdges().addAll(headingResolver.getEdgesWithDifferentHeading(fromSnap.getClosestNode(), fromHeading));</b>
+&nbsp;
+<b class="nc">&nbsp;            if (!Double.isNaN(toHeading)) {</b>
+<b class="nc">&nbsp;                toHeading += 180;</b>
+<b class="nc">&nbsp;                if (toHeading &gt; 360)</b>
+<b class="nc">&nbsp;                    toHeading -= 360;</b>
+<b class="nc">&nbsp;                edgeRestrictions.getUnfavoredEdges().addAll(headingResolver.getEdgesWithDifferentHeading(toSnap.getClosestNode(), toHeading));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // pass through
+<b class="nc">&nbsp;        if (incomingEdge != NO_EDGE &amp;&amp; passThrough)</b>
+<b class="nc">&nbsp;            edgeRestrictions.getUnfavoredEdges().add(incomingEdge);</b>
+<b class="nc">&nbsp;        return edgeRestrictions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int ignoreThrowOrAcceptImpossibleCurbsides(List&lt;String&gt; curbsides, int edge, int placeIndex, String curbsideStrictness) {
+<b class="nc">&nbsp;        if (edge != NO_EDGE) {</b>
+<b class="nc">&nbsp;            return edge;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (&quot;strict&quot;.equals(curbsideStrictness)) {</b>
+<b class="nc">&nbsp;            return throwImpossibleCurbsideConstraint(curbsides, placeIndex);</b>
+<b class="nc">&nbsp;        } else if (&quot;soft&quot;.equals(curbsideStrictness)) {</b>
+<b class="nc">&nbsp;            return ANY_EDGE;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Unknown curbside_strictness &quot; + curbsideStrictness);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int throwImpossibleCurbsideConstraint(List&lt;String&gt; curbsides, int placeIndex) {
+<b class="nc">&nbsp;        throw new IllegalArgumentException(&quot;Impossible curbside constraint: &#39;curbside=&quot; + curbsides.get(placeIndex) + &quot;&#39; at point &quot; + placeIndex);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

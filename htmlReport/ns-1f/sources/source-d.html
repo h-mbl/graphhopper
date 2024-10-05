@@ -1,0 +1,297 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > IntsRef</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: IntsRef (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">IntsRef</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/78)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Licensed to the Apache Software Foundation (ASF) under one or more
+&nbsp; * contributor license agreements.  See the NOTICE file distributed with
+&nbsp; * this work for additional information regarding copyright ownership.
+&nbsp; * The ASF licenses this file to You under the Apache License, Version 2.0
+&nbsp; * (the &quot;License&quot;); you may not use this file except in compliance with
+&nbsp; * the License.  You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *     http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;
+&nbsp;/**
+&nbsp; * Idea and most of the code is from Lucene. But the variables are final, except for the array content.
+&nbsp; */
+<b class="nc">&nbsp;public final class IntsRef implements Comparable&lt;IntsRef&gt; {</b>
+&nbsp;    /**
+&nbsp;     * An IntsRef with an array of size 0.
+&nbsp;     */
+<b class="nc">&nbsp;    public static final IntsRef EMPTY = new IntsRef(0, false);</b>
+&nbsp;    /**
+&nbsp;     * The contents of the IntsRef. Cannot be {@code null}.
+&nbsp;     */
+&nbsp;    public final int[] ints;
+&nbsp;    /**
+&nbsp;     * Offset of first valid integer.
+&nbsp;     */
+&nbsp;    public final int offset;
+&nbsp;    /**
+&nbsp;     * Length of used ints.
+&nbsp;     */
+&nbsp;    public final int length;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a IntsRef pointing to a new int array of size &lt;code&gt;capacity&lt;/code&gt; leading to capacity*32 bits.
+&nbsp;     * Offset will be zero and length will be the capacity.
+&nbsp;     */
+&nbsp;    public IntsRef(int capacity) {
+<b class="nc">&nbsp;        this(capacity, true);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private IntsRef(int capacity, boolean checked) {</b>
+<b class="nc">&nbsp;        if (checked &amp;&amp; capacity == 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Use instance EMPTY instead of capacity 0&quot;);</b>
+<b class="nc">&nbsp;        ints = new int[capacity];</b>
+<b class="nc">&nbsp;        length = capacity;</b>
+<b class="nc">&nbsp;        offset = 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This instance will directly reference ints w/o making a copy.
+&nbsp;     * ints should not be null.
+&nbsp;     */
+<b class="nc">&nbsp;    public IntsRef(int[] ints, int offset, int length) {</b>
+<b class="nc">&nbsp;        this.ints = ints;</b>
+<b class="nc">&nbsp;        this.offset = offset;</b>
+<b class="nc">&nbsp;        this.length = length;</b>
+<b class="nc">&nbsp;        assert isValid();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        final int prime = 31;</b>
+<b class="nc">&nbsp;        int result = 0;</b>
+<b class="nc">&nbsp;        final int end = offset + length;</b>
+<b class="nc">&nbsp;        for (int i = offset; i &lt; end; i++) {</b>
+<b class="nc">&nbsp;            result = prime * result + ints[i];</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object other) {
+<b class="nc">&nbsp;        if (other == null) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (other instanceof IntsRef) {</b>
+<b class="nc">&nbsp;            return this.intsEquals((IntsRef) other);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean intsEquals(IntsRef other) {
+<b class="nc">&nbsp;        if (length == other.length) {</b>
+<b class="nc">&nbsp;            int otherUpto = other.offset;</b>
+<b class="nc">&nbsp;            final int[] otherInts = other.ints;</b>
+<b class="nc">&nbsp;            final int end = offset + length;</b>
+<b class="nc">&nbsp;            for (int upto = offset; upto &lt; end; upto++, otherUpto++) {</b>
+<b class="nc">&nbsp;                if (ints[upto] != otherInts[otherUpto]) {</b>
+<b class="nc">&nbsp;                    return false;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Signed int order comparison
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public int compareTo(IntsRef other) {
+<b class="nc">&nbsp;        if (this == other) return 0;</b>
+<b class="nc">&nbsp;        final int[] aInts = this.ints;</b>
+<b class="nc">&nbsp;        int aUpto = this.offset;</b>
+<b class="nc">&nbsp;        final int[] bInts = other.ints;</b>
+<b class="nc">&nbsp;        int bUpto = other.offset;</b>
+<b class="nc">&nbsp;        final int aStop = aUpto + Math.min(this.length, other.length);</b>
+<b class="nc">&nbsp;        while (aUpto &lt; aStop) {</b>
+<b class="nc">&nbsp;            int aInt = aInts[aUpto++];</b>
+<b class="nc">&nbsp;            int bInt = bInts[bUpto++];</b>
+<b class="nc">&nbsp;            if (aInt &gt; bInt) {</b>
+<b class="nc">&nbsp;                return 1;</b>
+<b class="nc">&nbsp;            } else if (aInt &lt; bInt) {</b>
+<b class="nc">&nbsp;                return -1;</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;        // One is a prefix of the other, or, they are equal:
+<b class="nc">&nbsp;        return this.length - other.length;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new IntsRef that points to a copy of the ints from
+&nbsp;     * &lt;code&gt;other&lt;/code&gt;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * The returned IntsRef will have a length of other.length
+&nbsp;     * and an offset of zero.
+&nbsp;     */
+&nbsp;    public static IntsRef deepCopyOf(IntsRef other) {
+<b class="nc">&nbsp;        return new IntsRef(Arrays.copyOfRange(other.ints, other.offset, other.offset + other.length), 0, other.length);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Performs internal consistency checks.
+&nbsp;     * Always returns true (or throws IllegalStateException)
+&nbsp;     */
+&nbsp;    public boolean isValid() {
+<b class="nc">&nbsp;        if (ints == null) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;ints is null&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (length &lt; 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;length is negative: &quot; + length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (length &gt; ints.length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;length is out of bounds: &quot; + length + &quot;,ints.length=&quot; + ints.length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (offset &lt; 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;offset is negative: &quot; + offset);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (offset &gt; ints.length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;offset out of bounds: &quot; + offset + &quot;,ints.length=&quot; + ints.length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (offset + length &lt; 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;offset+length is negative: offset=&quot; + offset + &quot;,length=&quot; + length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (offset + length &gt; ints.length) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;offset+length out of bounds: offset=&quot; + offset + &quot;,length=&quot; + length + &quot;,ints.length=&quot; + ints.length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        StringBuilder sb = new StringBuilder();</b>
+<b class="nc">&nbsp;        sb.append(&#39;[&#39;);</b>
+<b class="nc">&nbsp;        final int end = offset + length;</b>
+<b class="nc">&nbsp;        for (int i = offset; i &lt; end; i++) {</b>
+<b class="nc">&nbsp;            if (i &gt; offset) {</b>
+<b class="nc">&nbsp;                sb.append(&#39; &#39;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            sb.append(Integer.toHexString(ints[i]));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        sb.append(&#39;]&#39;);</b>
+<b class="nc">&nbsp;        return sb.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isEmpty() {
+<b class="nc">&nbsp;        for (int i = 0; i &lt; ints.length; i++) {</b>
+<b class="nc">&nbsp;            if (ints[i] != 0)</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

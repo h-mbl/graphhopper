@@ -1,0 +1,179 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > DijkstraBidirectionCH</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: DijkstraBidirectionCH (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DijkstraBidirectionCH</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.IntObjectMap;
+&nbsp;import com.graphhopper.storage.RoutingCHEdgeExplorer;
+&nbsp;import com.graphhopper.storage.RoutingCHEdgeIterator;
+&nbsp;import com.graphhopper.storage.RoutingCHGraph;
+&nbsp;
+&nbsp;/**
+&nbsp; * Uses a very simple version of stall-on-demand (SOD) for CH queries to prevent exploring nodes that can not be part
+&nbsp; * of a shortest path. When a node that is about to be settled is stallable it is not expanded. However, no further search
+&nbsp; * for neighboring stallable nodes is performed (sometimes called &#39;aggressive&#39; stalling in the literature). Some experimenting
+&nbsp; * showed that due to the overhead for such aggressive stalling the routing does not become faster, see #240.
+&nbsp; *
+&nbsp; * @author easbar
+&nbsp; */
+&nbsp;public class DijkstraBidirectionCH extends DijkstraBidirectionCHNoSOD {
+&nbsp;
+&nbsp;    public DijkstraBidirectionCH(RoutingCHGraph graph) {
+<b class="nc">&nbsp;        super(graph);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    protected boolean fromEntryCanBeSkipped() {
+<b class="nc">&nbsp;        return entryIsStallable(currFrom, bestWeightMapFrom, inEdgeExplorer, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    protected boolean toEntryCanBeSkipped() {
+<b class="nc">&nbsp;        return entryIsStallable(currTo, bestWeightMapTo, outEdgeExplorer, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean entryIsStallable(SPTEntry entry, IntObjectMap&lt;SPTEntry&gt; bestWeightMap, RoutingCHEdgeExplorer edgeExplorer,
+&nbsp;                                     boolean reverse) {
+&nbsp;        // We check for all &#39;incoming&#39; edges if we can prove that the current node (that is about to be settled) is 
+&nbsp;        // reached via a suboptimal path. We do this regardless of the CH level of the adjacent nodes.
+<b class="nc">&nbsp;        RoutingCHEdgeIterator iter = edgeExplorer.setBaseNode(entry.adjNode);</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+&nbsp;            // no need to inspect the edge we are coming from
+<b class="nc">&nbsp;            if (iter.getEdge() == entry.edge) {</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            SPTEntry adjNode = bestWeightMap.get(iter.getAdjNode());</b>
+&nbsp;            // we have to be careful because of rounded shortcut weights in combination with virtual via nodes, see #1574
+<b class="nc">&nbsp;            final double precision = 0.001;</b>
+<b class="nc">&nbsp;            if (adjNode != null &amp;&amp;</b>
+<b class="nc">&nbsp;                    adjNode.weight + calcWeight(iter, !reverse, getIncomingEdge(entry)) - entry.weight &lt; -precision) {</b>
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String getName() {
+<b class="nc">&nbsp;        return &quot;dijkstrabi|ch&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

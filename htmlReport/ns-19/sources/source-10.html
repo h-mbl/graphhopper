@@ -1,0 +1,236 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > FootPriorityParser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util.parsers</a>
+</div>
+
+<h1>Coverage Summary for Class: FootPriorityParser (com.graphhopper.routing.util.parsers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FootPriorityParser</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/73)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util.parsers;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.util.FerrySpeedCalculator;
+&nbsp;import com.graphhopper.routing.util.PriorityCode;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.ev.RouteNetwork.*;
+&nbsp;import static com.graphhopper.routing.util.PriorityCode.*;
+&nbsp;import static com.graphhopper.routing.util.parsers.AbstractAccessParser.INTENDED;
+&nbsp;import static com.graphhopper.routing.util.parsers.AbstractAverageSpeedParser.getMaxSpeed;
+&nbsp;import static com.graphhopper.routing.util.parsers.AbstractAverageSpeedParser.isValidSpeed;
+&nbsp;
+&nbsp;public class FootPriorityParser implements TagParser {
+<b class="nc">&nbsp;    final Set&lt;String&gt; safeHighwayTags = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;    final Map&lt;String, PriorityCode&gt; avoidHighwayTags = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    protected HashSet&lt;String&gt; sidewalkValues = new HashSet&lt;&gt;(5);</b>
+<b class="nc">&nbsp;    protected HashSet&lt;String&gt; sidewalksNoValues = new HashSet&lt;&gt;(5);</b>
+&nbsp;    protected final DecimalEncodedValue priorityWayEncoder;
+&nbsp;    protected EnumEncodedValue&lt;RouteNetwork&gt; footRouteEnc;
+<b class="nc">&nbsp;    protected Map&lt;RouteNetwork, Integer&gt; routeMap = new HashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;    public FootPriorityParser(EncodedValueLookup lookup) {
+<b class="nc">&nbsp;        this(lookup.getDecimalEncodedValue(VehiclePriority.key(&quot;foot&quot;)),</b>
+<b class="nc">&nbsp;                lookup.getEnumEncodedValue(FootNetwork.KEY, RouteNetwork.class)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    protected FootPriorityParser(DecimalEncodedValue priorityEnc, EnumEncodedValue&lt;RouteNetwork&gt; footRouteEnc) {</b>
+<b class="nc">&nbsp;        this.footRouteEnc = footRouteEnc;</b>
+<b class="nc">&nbsp;        priorityWayEncoder = priorityEnc;</b>
+&nbsp;
+<b class="nc">&nbsp;        sidewalksNoValues.add(&quot;no&quot;);</b>
+<b class="nc">&nbsp;        sidewalksNoValues.add(&quot;none&quot;);</b>
+&nbsp;        // see #712
+<b class="nc">&nbsp;        sidewalksNoValues.add(&quot;separate&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        sidewalkValues.add(&quot;yes&quot;);</b>
+<b class="nc">&nbsp;        sidewalkValues.add(&quot;both&quot;);</b>
+<b class="nc">&nbsp;        sidewalkValues.add(&quot;left&quot;);</b>
+<b class="nc">&nbsp;        sidewalkValues.add(&quot;right&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;footway&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;path&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;steps&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;pedestrian&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;living_street&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;track&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;residential&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;service&quot;);</b>
+<b class="nc">&nbsp;        safeHighwayTags.add(&quot;platform&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;motorway&quot;, REACH_DESTINATION); // could be allowed when they have sidewalks</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;motorway_link&quot;, REACH_DESTINATION);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;trunk&quot;, REACH_DESTINATION);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;trunk_link&quot;, REACH_DESTINATION);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;primary&quot;, BAD);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;primary_link&quot;, BAD);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;secondary&quot;, BAD);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;secondary_link&quot;, BAD);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;tertiary&quot;, AVOID);</b>
+<b class="nc">&nbsp;        avoidHighwayTags.put(&quot;tertiary_link&quot;, AVOID);</b>
+&nbsp;
+<b class="nc">&nbsp;        routeMap.put(INTERNATIONAL, UNCHANGED.getValue());</b>
+<b class="nc">&nbsp;        routeMap.put(NATIONAL, UNCHANGED.getValue());</b>
+<b class="nc">&nbsp;        routeMap.put(REGIONAL, UNCHANGED.getValue());</b>
+<b class="nc">&nbsp;        routeMap.put(LOCAL, UNCHANGED.getValue());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+<b class="nc">&nbsp;        String highwayValue = way.getTag(&quot;highway&quot;);</b>
+<b class="nc">&nbsp;        Integer priorityFromRelation = routeMap.get(footRouteEnc.getEnum(false, edgeId, edgeIntAccess));</b>
+<b class="nc">&nbsp;        if (highwayValue == null) {</b>
+<b class="nc">&nbsp;            if (FerrySpeedCalculator.isFerry(way))</b>
+<b class="nc">&nbsp;                priorityWayEncoder.setDecimal(false, edgeId, edgeIntAccess, PriorityCode.getValue(handlePriority(way, priorityFromRelation)));</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            priorityWayEncoder.setDecimal(false, edgeId, edgeIntAccess, PriorityCode.getValue(handlePriority(way, priorityFromRelation)));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public int handlePriority(ReaderWay way, Integer priorityFromRelation) {
+<b class="nc">&nbsp;        TreeMap&lt;Double, PriorityCode&gt; weightToPrioMap = new TreeMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        if (priorityFromRelation == null)</b>
+<b class="nc">&nbsp;            weightToPrioMap.put(0d, UNCHANGED);</b>
+&nbsp;        else
+<b class="nc">&nbsp;            weightToPrioMap.put(110d, PriorityCode.valueOf(priorityFromRelation));</b>
+&nbsp;
+<b class="nc">&nbsp;        collect(way, weightToPrioMap);</b>
+&nbsp;
+&nbsp;        // pick priority with the biggest order value
+<b class="nc">&nbsp;        return weightToPrioMap.lastEntry().getValue().getValue();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param weightToPrioMap associate a weight with every priority. This sorted map allows
+&nbsp;     *                        subclasses to &#39;insert&#39; more important priorities as well as overwrite determined priorities.
+&nbsp;     */
+&nbsp;    void collect(ReaderWay way, TreeMap&lt;Double, PriorityCode&gt; weightToPrioMap) {
+<b class="nc">&nbsp;        String highway = way.getTag(&quot;highway&quot;);</b>
+<b class="nc">&nbsp;        if (way.hasTag(&quot;foot&quot;, &quot;designated&quot;))</b>
+<b class="nc">&nbsp;            weightToPrioMap.put(100d, PREFER);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (way.hasTag(&quot;foot&quot;, &quot;use_sidepath&quot;)) {</b>
+<b class="nc">&nbsp;            weightToPrioMap.put(100d, VERY_BAD); // see #3035</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        double maxSpeed = Math.max(getMaxSpeed(way, false), getMaxSpeed(way, true));</b>
+<b class="nc">&nbsp;        if (safeHighwayTags.contains(highway) || (isValidSpeed(maxSpeed) &amp;&amp; maxSpeed &lt;= 20)) {</b>
+<b class="nc">&nbsp;            weightToPrioMap.put(40d, PREFER);</b>
+<b class="nc">&nbsp;            if (way.hasTag(&quot;tunnel&quot;, INTENDED)) {</b>
+<b class="nc">&nbsp;                if (way.hasTag(&quot;sidewalk&quot;, sidewalksNoValues))</b>
+<b class="nc">&nbsp;                    weightToPrioMap.put(40d, AVOID);</b>
+&nbsp;                else
+<b class="nc">&nbsp;                    weightToPrioMap.put(40d, UNCHANGED);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } else if ((isValidSpeed(maxSpeed) &amp;&amp; maxSpeed &gt; 50) || avoidHighwayTags.containsKey(highway)) {</b>
+<b class="nc">&nbsp;            PriorityCode priorityCode = avoidHighwayTags.get(highway);</b>
+<b class="nc">&nbsp;            if (way.hasTag(&quot;sidewalk&quot;, sidewalksNoValues))</b>
+<b class="nc">&nbsp;                weightToPrioMap.put(40d, priorityCode == null ? BAD : priorityCode);</b>
+&nbsp;            else
+<b class="nc">&nbsp;                weightToPrioMap.put(40d, priorityCode == null ? AVOID : priorityCode.better().better());</b>
+<b class="nc">&nbsp;        } else if (way.hasTag(&quot;sidewalk&quot;, sidewalksNoValues))</b>
+<b class="nc">&nbsp;            weightToPrioMap.put(40d, AVOID);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (way.hasTag(&quot;bicycle&quot;, &quot;official&quot;) || way.hasTag(&quot;bicycle&quot;, &quot;designated&quot;))</b>
+<b class="nc">&nbsp;            weightToPrioMap.put(44d, SLIGHT_AVOID);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

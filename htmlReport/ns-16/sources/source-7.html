@@ -1,0 +1,420 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > EncodingManager</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: EncodingManager (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EncodingManager</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/31)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/78)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">EncodingManager$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/28)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/36)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/106)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.core.JsonProcessingException;
+&nbsp;import com.fasterxml.jackson.databind.node.ArrayNode;
+&nbsp;import com.graphhopper.jackson.Jackson;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;import com.graphhopper.storage.StorableProperties;
+&nbsp;import com.graphhopper.util.Constants;
+&nbsp;
+&nbsp;import java.io.UncheckedIOException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;/**
+&nbsp; * Manager class to register encoder, assign their flag values and check objects with all encoders
+&nbsp; * during parsing. Create one via:
+&nbsp; * &lt;p&gt;
+&nbsp; * EncodingManager.start(4).add(new CarFlagEncoder()).build();
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @author Nop
+&nbsp; */
+&nbsp;public class EncodingManager implements EncodedValueLookup {
+&nbsp;    private final LinkedHashMap&lt;String, EncodedValue&gt; encodedValueMap;
+&nbsp;    private final LinkedHashMap&lt;String, EncodedValue&gt; turnEncodedValueMap;
+&nbsp;    private int bytesForFlags;
+&nbsp;    private int intsForTurnCostFlags;
+&nbsp;
+&nbsp;    public static void putEncodingManagerIntoProperties(EncodingManager encodingManager, StorableProperties properties) {
+<b class="nc">&nbsp;        properties.put(&quot;graph.em.version&quot;, Constants.VERSION_EM);</b>
+<b class="nc">&nbsp;        properties.put(&quot;graph.em.bytes_for_flags&quot;, encodingManager.bytesForFlags);</b>
+<b class="nc">&nbsp;        properties.put(&quot;graph.em.ints_for_turn_cost_flags&quot;, encodingManager.intsForTurnCostFlags);</b>
+<b class="nc">&nbsp;        properties.put(&quot;graph.encoded_values&quot;, encodingManager.toEncodedValuesAsString());</b>
+<b class="nc">&nbsp;        properties.put(&quot;graph.turn_encoded_values&quot;, encodingManager.toTurnEncodedValuesAsString());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static EncodingManager fromProperties(StorableProperties properties) {
+<b class="nc">&nbsp;        if (properties.containsVersion())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;The GraphHopper file format is not compatible with the data you are &quot; +</b>
+&nbsp;                    &quot;trying to load. You either need to use an older version of GraphHopper or run a new import&quot;);
+&nbsp;
+<b class="nc">&nbsp;        String versionStr = properties.get(&quot;graph.em.version&quot;);</b>
+<b class="nc">&nbsp;        if (versionStr.isEmpty() || !String.valueOf(Constants.VERSION_EM).equals(versionStr))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Incompatible encoding version. You need to use the same GraphHopper version you used to import the graph, or run a new import. &quot;</b>
+<b class="nc">&nbsp;                    + &quot; Stored encoding version: &quot; + (versionStr.isEmpty() ? &quot;missing&quot; : versionStr) + &quot;, used encoding version: &quot; + Constants.VERSION_EM);</b>
+<b class="nc">&nbsp;        String encodedValueStr = properties.get(&quot;graph.encoded_values&quot;);</b>
+<b class="nc">&nbsp;        ArrayNode evList = deserializeEncodedValueList(encodedValueStr);</b>
+<b class="nc">&nbsp;        LinkedHashMap&lt;String, EncodedValue&gt; encodedValues = new LinkedHashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        evList.forEach(serializedEV -&gt; {</b>
+<b class="nc">&nbsp;            EncodedValue encodedValue = EncodedValueSerializer.deserializeEncodedValue(serializedEV.textValue());</b>
+<b class="nc">&nbsp;            if (encodedValues.put(encodedValue.getName(), encodedValue) != null)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Duplicate encoded value name: &quot; + encodedValue.getName() + &quot; in: graph.encoded_values=&quot; + encodedValueStr);</b>
+&nbsp;        });
+&nbsp;
+<b class="nc">&nbsp;        String turnEncodedValueStr = properties.get(&quot;graph.turn_encoded_values&quot;);</b>
+<b class="nc">&nbsp;        ArrayNode tevList = deserializeEncodedValueList(turnEncodedValueStr);</b>
+<b class="nc">&nbsp;        LinkedHashMap&lt;String, EncodedValue&gt; turnEncodedValues = new LinkedHashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        tevList.forEach(serializedEV -&gt; {</b>
+<b class="nc">&nbsp;            EncodedValue encodedValue = EncodedValueSerializer.deserializeEncodedValue(serializedEV.textValue());</b>
+<b class="nc">&nbsp;            if (turnEncodedValues.put(encodedValue.getName(), encodedValue) != null)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Duplicate turn encoded value name: &quot; + encodedValue.getName() + &quot; in: graph.turn_encoded_values=&quot; + turnEncodedValueStr);</b>
+&nbsp;        });
+&nbsp;
+<b class="nc">&nbsp;        return new EncodingManager(getIntegerProperty(properties, &quot;graph.em.bytes_for_flags&quot;), getIntegerProperty(properties, &quot;graph.em.ints_for_turn_cost_flags&quot;), encodedValues,</b>
+&nbsp;                turnEncodedValues
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    private static int getIntegerProperty(StorableProperties properties, String key) {
+<b class="nc">&nbsp;        String str = properties.get(key);</b>
+<b class="nc">&nbsp;        if (str.isEmpty())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Missing EncodingManager property: &#39;&quot; + key + &quot;&#39;&quot;);</b>
+<b class="nc">&nbsp;        return Integer.parseInt(str);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static ArrayNode deserializeEncodedValueList(String encodedValueStr) {
+&nbsp;        try {
+<b class="nc">&nbsp;            return Jackson.newObjectMapper().readValue(encodedValueStr, ArrayNode.class);</b>
+<b class="nc">&nbsp;        } catch (JsonProcessingException e) {</b>
+<b class="nc">&nbsp;            throw new UncheckedIOException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Starts the build process of an EncodingManager
+&nbsp;     */
+&nbsp;    public static Builder start() {
+<b class="nc">&nbsp;        return new Builder();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public EncodingManager(int bytesForFlags, int intsForTurnCostFlags,
+&nbsp;                           LinkedHashMap&lt;String, EncodedValue&gt; encodedValueMap,
+<b class="nc">&nbsp;                           LinkedHashMap&lt;String, EncodedValue&gt; turnEncodedValueMap) {</b>
+<b class="nc">&nbsp;        this.encodedValueMap = encodedValueMap;</b>
+<b class="nc">&nbsp;        this.turnEncodedValueMap = turnEncodedValueMap;</b>
+<b class="nc">&nbsp;        this.bytesForFlags = bytesForFlags;</b>
+<b class="nc">&nbsp;        this.intsForTurnCostFlags = intsForTurnCostFlags;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private EncodingManager() {
+<b class="nc">&nbsp;        this(0, 0, new LinkedHashMap&lt;&gt;(), new LinkedHashMap&lt;&gt;());</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public static class Builder {</b>
+<b class="nc">&nbsp;        private final EncodedValue.InitializerConfig edgeConfig = new EncodedValue.InitializerConfig();</b>
+<b class="nc">&nbsp;        private final EncodedValue.InitializerConfig turnCostConfig = new EncodedValue.InitializerConfig();</b>
+<b class="nc">&nbsp;        private EncodingManager em = new EncodingManager();</b>
+&nbsp;
+&nbsp;        public Builder add(EncodedValue encodedValue) {
+<b class="nc">&nbsp;            checkNotBuiltAlready();</b>
+<b class="nc">&nbsp;            if (em.hasEncodedValue(encodedValue.getName()))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;EncodedValue already exists: &quot; + encodedValue.getName());</b>
+<b class="nc">&nbsp;            if (em.hasTurnEncodedValue(encodedValue.getName()))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Already defined as &#39;turn&#39;-EncodedValue: &quot; + encodedValue.getName());</b>
+<b class="nc">&nbsp;            encodedValue.init(edgeConfig);</b>
+<b class="nc">&nbsp;            em.encodedValueMap.put(encodedValue.getName(), encodedValue);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public Builder addTurnCostEncodedValue(EncodedValue turnCostEnc) {
+<b class="nc">&nbsp;            checkNotBuiltAlready();</b>
+<b class="nc">&nbsp;            if (em.hasTurnEncodedValue(turnCostEnc.getName()))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Already defined: &quot; + turnCostEnc.getName());</b>
+<b class="nc">&nbsp;            if (em.hasEncodedValue(turnCostEnc.getName()))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Already defined as EncodedValue: &quot; + turnCostEnc.getName());</b>
+<b class="nc">&nbsp;            turnCostEnc.init(turnCostConfig);</b>
+<b class="nc">&nbsp;            em.turnEncodedValueMap.put(turnCostEnc.getName(), turnCostEnc);</b>
+<b class="nc">&nbsp;            return this;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private void checkNotBuiltAlready() {
+<b class="nc">&nbsp;            if (em == null)</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;Cannot call method after Builder.build() was called&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public EncodingManager build() {
+<b class="nc">&nbsp;            checkNotBuiltAlready();</b>
+<b class="nc">&nbsp;            em.bytesForFlags = edgeConfig.getRequiredBytes();</b>
+<b class="nc">&nbsp;            em.intsForTurnCostFlags = turnCostConfig.getRequiredInts();</b>
+<b class="nc">&nbsp;            EncodingManager result = em;</b>
+<b class="nc">&nbsp;            em = null;</b>
+<b class="nc">&nbsp;            return result;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getBytesForFlags() {
+<b class="nc">&nbsp;        return bytesForFlags;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean hasEncodedValue(String key) {
+<b class="nc">&nbsp;        return encodedValueMap.get(key) != null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean hasTurnEncodedValue(String key) {
+<b class="nc">&nbsp;        return turnEncodedValueMap.get(key) != null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return list of all prefixes of xy_access and xy_average_speed encoded values.
+&nbsp;     */
+&nbsp;    public List&lt;String&gt; getVehicles() {
+<b class="nc">&nbsp;        return getEncodedValues().stream()</b>
+<b class="nc">&nbsp;                .filter(ev -&gt; ev.getName().endsWith(&quot;_access&quot;))</b>
+<b class="nc">&nbsp;                .map(ev -&gt; ev.getName().replaceAll(&quot;_access&quot;, &quot;&quot;))</b>
+<b class="nc">&nbsp;                .filter(v -&gt; getEncodedValues().stream().anyMatch(ev -&gt; ev.getName().contains(VehicleSpeed.key(v))))</b>
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toEncodedValuesAsString() {
+<b class="nc">&nbsp;        List&lt;String&gt; serializedEVsList = encodedValueMap.values().stream().map(EncodedValueSerializer::serializeEncodedValue).collect(Collectors.toList());</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            return Jackson.newObjectMapper().writeValueAsString(serializedEVsList);</b>
+<b class="nc">&nbsp;        } catch (JsonProcessingException e) {</b>
+<b class="nc">&nbsp;            throw new UncheckedIOException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return String.join(&quot;,&quot;, getVehicles());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // TODO hide IntsRef even more in a later version: https://gist.github.com/karussell/f4c2b2b1191be978d7ee9ec8dd2cd48f
+&nbsp;    public IntsRef createEdgeFlags() {
+<b class="nc">&nbsp;        return new IntsRef((int) Math.ceil((double) getBytesForFlags() / 4));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public IntsRef createRelationFlags() {
+&nbsp;        // for backward compatibility use 2 ints
+<b class="nc">&nbsp;        return new IntsRef(2);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean needsTurnCostsSupport() {
+<b class="nc">&nbsp;        return intsForTurnCostFlags &gt; 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;EncodedValue&gt; getEncodedValues() {
+<b class="nc">&nbsp;        return Collections.unmodifiableList(new ArrayList&lt;&gt;(encodedValueMap.values()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BooleanEncodedValue getBooleanEncodedValue(String key) {
+<b class="nc">&nbsp;        return getEncodedValue(key, BooleanEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public IntEncodedValue getIntEncodedValue(String key) {
+<b class="nc">&nbsp;        return getEncodedValue(key, IntEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public DecimalEncodedValue getDecimalEncodedValue(String key) {
+<b class="nc">&nbsp;        return getEncodedValue(key, DecimalEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    @Override
+&nbsp;    public &lt;T extends Enum&lt;?&gt;&gt; EnumEncodedValue&lt;T&gt; getEnumEncodedValue(String key, Class&lt;T&gt; type) {
+<b class="nc">&nbsp;        return getEncodedValue(key, EnumEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public StringEncodedValue getStringEncodedValue(String key) {
+<b class="nc">&nbsp;        return getEncodedValue(key, StringEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public &lt;T extends EncodedValue&gt; T getEncodedValue(String key, Class&lt;T&gt; encodedValueType) {
+<b class="nc">&nbsp;        EncodedValue ev = encodedValueMap.get(key);</b>
+&nbsp;        // todo: why do we not just return null when EV is missing? just like java.util.Map? -&gt; https://github.com/graphhopper/graphhopper/pull/2561#discussion_r859770067
+<b class="nc">&nbsp;        if (ev == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot find EncodedValue &#39;&quot; + key + &quot;&#39; in collection: &quot; + encodedValueMap.keySet());</b>
+<b class="nc">&nbsp;        return (T) ev;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;EncodedValue&gt; getTurnEncodedValues() {
+<b class="nc">&nbsp;        return Collections.unmodifiableList(new ArrayList&lt;&gt;(turnEncodedValueMap.values()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public DecimalEncodedValue getTurnDecimalEncodedValue(String key) {
+<b class="nc">&nbsp;        return getTurnEncodedValue(key, DecimalEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BooleanEncodedValue getTurnBooleanEncodedValue(String key) {
+<b class="nc">&nbsp;        return getTurnEncodedValue(key, BooleanEncodedValue.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public &lt;T extends EncodedValue&gt; T getTurnEncodedValue(String key, Class&lt;T&gt; encodedValueType) {
+<b class="nc">&nbsp;        EncodedValue ev = turnEncodedValueMap.get(key);</b>
+&nbsp;        // todo: why do we not just return null when EV is missing? just like java.util.Map? -&gt; https://github.com/graphhopper/graphhopper/pull/2561#discussion_r859770067
+<b class="nc">&nbsp;        if (ev == null)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot find Turn-EncodedValue &quot; + key + &quot; in collection: &quot; + encodedValueMap.keySet());</b>
+<b class="nc">&nbsp;        return (T) ev;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String toTurnEncodedValuesAsString() {
+<b class="nc">&nbsp;        List&lt;String&gt; serializedEVsList = turnEncodedValueMap.values().stream().map(EncodedValueSerializer::serializeEncodedValue).collect(Collectors.toList());</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            return Jackson.newObjectMapper().writeValueAsString(serializedEVsList);</b>
+<b class="nc">&nbsp;        } catch (JsonProcessingException e) {</b>
+<b class="nc">&nbsp;            throw new UncheckedIOException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String getKey(String prefix, String str) {
+<b class="nc">&nbsp;        return prefix + &quot;_&quot; + str;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

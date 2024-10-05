@@ -1,0 +1,198 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > DistanceCalc</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: DistanceCalc (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">DistanceCalc</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;/**
+&nbsp; * Calculates the distance of two points or one point and an edge on earth via haversine formula.
+&nbsp; * Allows subclasses to implement less or more precise calculations.
+&nbsp; * &lt;p&gt;
+&nbsp; * See http://en.wikipedia.org/wiki/Haversine_formula
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public interface DistanceCalc {
+&nbsp;    BBox createBBox(double lat, double lon, double radiusInMeter);
+&nbsp;
+&nbsp;    double calcCircumference(double lat);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates distance of (from, to) in meter.
+&nbsp;     */
+&nbsp;    double calcDist(double fromLat, double fromLon, double toLat, double toLon);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates 3d distance of (from, to) in meter.
+&nbsp;     */
+&nbsp;    double calcDist3D(double fromLat, double fromLon, double fromEle, double toLat, double toLon, double toEle);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the specified length in normalized meter.
+&nbsp;     */
+&nbsp;    double calcNormalizedDist(double dist);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Inverse to calcNormalizedDist. Returned the length in meter.
+&nbsp;     */
+&nbsp;    double calcDenormalizedDist(double normedDist);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates in normalized meter
+&nbsp;     */
+&nbsp;    double calcNormalizedDist(double fromLat, double fromLon, double toLat, double toLon);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method decides for case 1: if we should use distance(r to edge) where r=(lat,lon) or
+&nbsp;     * case 2: min(distance(r to a), distance(r to b)) where edge=(a to b). Note that due to
+&nbsp;     * rounding errors it cannot properly detect if it is case 1 or 90°.
+&nbsp;     * &lt;pre&gt;
+&nbsp;     * case 1 (including ):
+&nbsp;     *   r
+&nbsp;     *  .
+&nbsp;     * a-------b
+&nbsp;     * &lt;/pre&gt;
+&nbsp;     * &lt;pre&gt;
+&nbsp;     * case 2:
+&nbsp;     * r
+&nbsp;     *  .
+&nbsp;     *    a-------b
+&nbsp;     * &lt;/pre&gt;
+&nbsp;     *
+&nbsp;     * @return true for case 1 which is &quot;on edge&quot; or the special case of 90° to the edge
+&nbsp;     */
+&nbsp;    boolean validEdgeDistance(double r_lat_deg, double r_lon_deg,
+&nbsp;                              double a_lat_deg, double a_lon_deg,
+&nbsp;                              double b_lat_deg, double b_lon_deg);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method calculates the distance from r to edge (a, b) where the crossing point is c
+&nbsp;     *
+&nbsp;     * @return the distance in normalized meter
+&nbsp;     */
+&nbsp;    double calcNormalizedEdgeDistance(double r_lat_deg, double r_lon_deg,
+&nbsp;                                      double a_lat_deg, double a_lon_deg,
+&nbsp;                                      double b_lat_deg, double b_lon_deg);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method calculates the distance from r to edge (a, b) where the crossing point is c including elevation
+&nbsp;     *
+&nbsp;     * @return the distance in normalized meter
+&nbsp;     */
+&nbsp;    double calcNormalizedEdgeDistance3D(double r_lat_deg, double r_lon_deg, double r_ele_m,
+&nbsp;                                        double a_lat_deg, double a_lon_deg, double a_ele_m,
+&nbsp;                                        double b_lat_deg, double b_lon_deg, double b_ele_m);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the crossing point c of the vertical line from r to line (a, b)
+&nbsp;     */
+&nbsp;    GHPoint calcCrossingPointToEdge(double r_lat_deg, double r_lon_deg,
+&nbsp;                                    double a_lat_deg, double a_lon_deg,
+&nbsp;                                    double b_lat_deg, double b_lon_deg);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This methods creates a point (lat, lon in degrees) in a certain distance and direction from the specified
+&nbsp;     * point (lat, lon in degrees). The heading is measured clockwise from north in degrees. The distance is passed in meter.
+&nbsp;     */
+&nbsp;    GHPoint projectCoordinate(double lat, double lon,
+&nbsp;                              double distanceInMeter, double headingClockwiseFromNorth);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This methods creates a point (lat, lon in degrees) a fraction of the distance along the path from (lat1, lon1)
+&nbsp;     * to (lat2, lon2).
+&nbsp;     */
+&nbsp;    GHPoint intermediatePoint(double f, double lat1, double lon1, double lat2, double lon2);
+&nbsp;
+&nbsp;    /*
+&nbsp;     * Simple heuristic to detect if the specified two points are crossing the boundary +-180°. See
+&nbsp;     * #667
+&nbsp;     */
+&nbsp;    boolean isCrossBoundary(double lon1, double lon2);
+&nbsp;
+&nbsp;    double calcDistance(PointList pointList);
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

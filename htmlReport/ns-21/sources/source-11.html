@@ -1,0 +1,777 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > GHUtility</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: GHUtility (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GHUtility</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/345)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import com.bedatadriven.jackson.datatype.jts.JtsModule;
+&nbsp;import com.carrotsearch.hppc.IntArrayList;
+&nbsp;import com.carrotsearch.hppc.IntIndexedContainer;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.graphhopper.jackson.Jackson;
+&nbsp;import com.graphhopper.routing.Path;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.Country;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.State;
+&nbsp;import com.graphhopper.routing.util.AccessFilter;
+&nbsp;import com.graphhopper.routing.util.AllEdgesIterator;
+&nbsp;import com.graphhopper.routing.util.CustomArea;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.*;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.storage.index.Snap;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;import org.locationtech.jts.geom.Coordinate;
+&nbsp;import org.locationtech.jts.geom.GeometryFactory;
+&nbsp;import org.locationtech.jts.geom.Polygon;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.nio.charset.StandardCharsets;
+&nbsp;import java.util.*;
+&nbsp;import java.util.concurrent.ExecutionException;
+&nbsp;import java.util.concurrent.ForkJoinPool;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;import java.util.stream.IntStream;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.ev.State.ISO_3166_2;
+&nbsp;import static com.graphhopper.util.DistanceCalcEarth.DIST_EARTH;
+&nbsp;import static com.graphhopper.util.Helper.readJSONFileWithoutComments;
+&nbsp;
+&nbsp;/**
+&nbsp; * A helper class to avoid cluttering the Graph interface with all the common methods. Most of the
+&nbsp; * methods are useful for unit tests or debugging only.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="nc">&nbsp;public class GHUtility {</b>
+<b class="nc">&nbsp;    public static final Logger OSM_WARNING_LOGGER = LoggerFactory.getLogger(&quot;com.graphhopper.osm_warnings&quot;);</b>
+<b class="nc">&nbsp;    private static final Logger LOGGER = LoggerFactory.getLogger(GHUtility.class);</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method could throw an exception if problems like index out of bounds etc
+&nbsp;     */
+&nbsp;    public static List&lt;String&gt; getProblems(Graph g) {
+<b class="nc">&nbsp;        List&lt;String&gt; problems = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        int nodes = g.getNodes();</b>
+<b class="nc">&nbsp;        int nodeIndex = 0;</b>
+<b class="nc">&nbsp;        NodeAccess na = g.getNodeAccess();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            EdgeExplorer explorer = g.createEdgeExplorer();</b>
+<b class="nc">&nbsp;            for (; nodeIndex &lt; nodes; nodeIndex++) {</b>
+<b class="nc">&nbsp;                double lat = na.getLat(nodeIndex);</b>
+<b class="nc">&nbsp;                if (lat &gt; 90 || lat &lt; -90)</b>
+<b class="nc">&nbsp;                    problems.add(&quot;latitude is not within its bounds &quot; + lat);</b>
+&nbsp;
+<b class="nc">&nbsp;                double lon = na.getLon(nodeIndex);</b>
+<b class="nc">&nbsp;                if (lon &gt; 180 || lon &lt; -180)</b>
+<b class="nc">&nbsp;                    problems.add(&quot;longitude is not within its bounds &quot; + lon);</b>
+&nbsp;
+<b class="nc">&nbsp;                EdgeIterator iter = explorer.setBaseNode(nodeIndex);</b>
+<b class="nc">&nbsp;                while (iter.next()) {</b>
+<b class="nc">&nbsp;                    if (iter.getAdjNode() &gt;= nodes) {</b>
+<b class="nc">&nbsp;                        problems.add(&quot;edge of &quot; + nodeIndex + &quot; has a node &quot; + iter.getAdjNode() + &quot; greater or equal to getNodes&quot;);</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    if (iter.getAdjNode() &lt; 0) {</b>
+<b class="nc">&nbsp;                        problems.add(&quot;edge of &quot; + nodeIndex + &quot; has a negative node &quot; + iter.getAdjNode());</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;problem with node &quot; + nodeIndex, ex);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+&nbsp;//        for (int i = 0; i &lt; nodes; i++) {
+&nbsp;//            new BreadthFirstSearch().start(g, i);
+&nbsp;//        }
+<b class="nc">&nbsp;        return problems;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Counts reachable edges.
+&nbsp;     */
+&nbsp;    public static int count(EdgeIterator iter) {
+<b class="nc">&nbsp;        int counter = 0;</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            counter++;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return counter;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static int count(RoutingCHEdgeIterator iter) {
+<b class="nc">&nbsp;        int counter = 0;</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            counter++;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return counter;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Set&lt;Integer&gt; asSet(int... values) {
+<b class="nc">&nbsp;        Set&lt;Integer&gt; s = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (int v : values) {</b>
+<b class="nc">&nbsp;            s.add(v);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return s;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Set&lt;Integer&gt; getNeighbors(RoutingCHEdgeIterator iter) {
+&nbsp;        // make iteration order over set static =&gt; linked
+<b class="nc">&nbsp;        Set&lt;Integer&gt; list = new LinkedHashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            list.add(iter.getAdjNode());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Set&lt;Integer&gt; getNeighbors(EdgeIterator iter) {
+&nbsp;        // make iteration order over set static =&gt; linked
+<b class="nc">&nbsp;        Set&lt;Integer&gt; list = new LinkedHashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            list.add(iter.getAdjNode());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;Integer&gt; getEdgeIds(EdgeIterator iter) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; list = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            list.add(iter.getEdge());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void printGraphForUnitTest(Graph g, DecimalEncodedValue speedEnc) {
+<b class="nc">&nbsp;        printGraphForUnitTest(g, speedEnc, new BBox(</b>
+&nbsp;                Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void printGraphForUnitTest(Graph g, DecimalEncodedValue speedEnc, BBox bBox) {
+<b class="nc">&nbsp;        NodeAccess na = g.getNodeAccess();</b>
+<b class="nc">&nbsp;        for (int node = 0; node &lt; g.getNodes(); ++node) {</b>
+<b class="nc">&nbsp;            if (bBox.contains(na.getLat(node), na.getLon(node))) {</b>
+<b class="nc">&nbsp;                System.out.printf(Locale.ROOT, &quot;na.setNode(%d, %f, %f);\n&quot;, node, na.getLat(node), na.getLon(node));</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        AllEdgesIterator iter = g.getAllEdges();</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            if (bBox.contains(na.getLat(iter.getBaseNode()), na.getLon(iter.getBaseNode())) &amp;&amp;</b>
+<b class="nc">&nbsp;                    bBox.contains(na.getLat(iter.getAdjNode()), na.getLon(iter.getAdjNode()))) {</b>
+<b class="nc">&nbsp;                printUnitTestEdge(speedEnc, iter);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void printUnitTestEdge(DecimalEncodedValue speedEnc, EdgeIteratorState edge) {
+<b class="nc">&nbsp;        boolean fwd = edge.get(speedEnc) &gt; 0;</b>
+<b class="nc">&nbsp;        int from = fwd ? edge.getBaseNode() : edge.getAdjNode();</b>
+<b class="nc">&nbsp;        int to = fwd ? edge.getAdjNode() : edge.getBaseNode();</b>
+<b class="nc">&nbsp;        System.out.printf(Locale.ROOT,</b>
+&nbsp;                &quot;graph.edge(%d, %d).setDistance(%f).set(speedEnc, %f, %f); // edgeId=%s\n&quot;,
+<b class="nc">&nbsp;                from, to, edge.getDistance(), edge.get(speedEnc), edge.getReverse(speedEnc),</b>
+<b class="nc">&nbsp;                edge.getEdge());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param speed if null a random speed will be assigned to every edge
+&nbsp;     */
+&nbsp;    public static void buildRandomGraph(Graph graph, Random random, int numNodes, double meanDegree,
+&nbsp;                                        boolean allowZeroDistance, DecimalEncodedValue speedEnc, Double speed,
+&nbsp;                                        double pBothDir, double pRandomDistanceOffset) {
+<b class="nc">&nbsp;        if (numNodes &lt; 2 || meanDegree &lt; 1) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;numNodes must be &gt;= 2, meanDegree &gt;= 1&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        for (int i = 0; i &lt; numNodes; ++i) {</b>
+<b class="nc">&nbsp;            double lat = 49.4 + (random.nextDouble() * 0.01);</b>
+<b class="nc">&nbsp;            double lon = 9.7 + (random.nextDouble() * 0.01);</b>
+<b class="nc">&nbsp;            graph.getNodeAccess().setNode(i, lat, lon);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        double minDist = Double.MAX_VALUE;</b>
+<b class="nc">&nbsp;        double maxDist = Double.MIN_VALUE;</b>
+<b class="nc">&nbsp;        int totalNumEdges = (int) (0.5 * meanDegree * numNodes);</b>
+<b class="nc">&nbsp;        int numEdges = 0;</b>
+<b class="nc">&nbsp;        while (numEdges &lt; totalNumEdges) {</b>
+<b class="nc">&nbsp;            int from = random.nextInt(numNodes);</b>
+<b class="nc">&nbsp;            int to = random.nextInt(numNodes);</b>
+<b class="nc">&nbsp;            if (from == to)</b>
+<b class="nc">&nbsp;                continue;</b>
+<b class="nc">&nbsp;            double distance = GHUtility.getDistance(from, to, graph.getNodeAccess());</b>
+<b class="nc">&nbsp;            if (!allowZeroDistance) {</b>
+<b class="nc">&nbsp;                distance = Math.max(0.001, distance);</b>
+&nbsp;            }
+&nbsp;            // add some random offset, but also allow duplicate edges with same weight
+<b class="nc">&nbsp;            if (random.nextDouble() &lt; pRandomDistanceOffset)</b>
+<b class="nc">&nbsp;                distance += random.nextDouble() * distance * 0.01;</b>
+<b class="nc">&nbsp;            minDist = Math.min(minDist, distance);</b>
+<b class="nc">&nbsp;            maxDist = Math.max(maxDist, distance);</b>
+&nbsp;            // using bidirectional edges will increase mean degree of graph above given value
+<b class="nc">&nbsp;            boolean bothDirections = random.nextDouble() &lt; pBothDir;</b>
+<b class="nc">&nbsp;            EdgeIteratorState edge = graph.edge(from, to).setDistance(distance);</b>
+<b class="nc">&nbsp;            double fwdSpeed = 10 + random.nextDouble() * 110;</b>
+<b class="nc">&nbsp;            double bwdSpeed = 10 + random.nextDouble() * 110;</b>
+&nbsp;            // if an explicit speed is given we discard the random speeds and use the given one instead
+<b class="nc">&nbsp;            if (speed != null) {</b>
+<b class="nc">&nbsp;                fwdSpeed = bwdSpeed = speed;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (speedEnc != null) {</b>
+<b class="nc">&nbsp;                edge.set(speedEnc, fwdSpeed);</b>
+<b class="nc">&nbsp;                if (speedEnc.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                    edge.setReverse(speedEnc, !bothDirections ? 0 : bwdSpeed);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            numEdges++;</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        LOGGER.debug(String.format(Locale.ROOT, &quot;Finished building random graph&quot; +</b>
+&nbsp;                        &quot;, nodes: %d, edges: %d , min distance: %.2f, max distance: %.2f\n&quot;,
+<b class="nc">&nbsp;                graph.getNodes(), graph.getEdges(), minDist, maxDist));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static double getDistance(int from, int to, NodeAccess nodeAccess) {
+<b class="nc">&nbsp;        double fromLat = nodeAccess.getLat(from);</b>
+<b class="nc">&nbsp;        double fromLon = nodeAccess.getLon(from);</b>
+<b class="nc">&nbsp;        double toLat = nodeAccess.getLat(to);</b>
+<b class="nc">&nbsp;        double toLon = nodeAccess.getLon(to);</b>
+<b class="nc">&nbsp;        return DistancePlaneProjection.DIST_PLANE.calcDist(fromLat, fromLon, toLat, toLon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void addRandomTurnCosts(Graph graph, long seed, BooleanEncodedValue accessEnc, DecimalEncodedValue turnCostEnc, int maxTurnCost, TurnCostStorage turnCostStorage) {
+<b class="nc">&nbsp;        Random random = new Random(seed);</b>
+<b class="nc">&nbsp;        double pNodeHasTurnCosts = 0.3;</b>
+<b class="nc">&nbsp;        double pEdgePairHasTurnCosts = 0.6;</b>
+<b class="nc">&nbsp;        double pCostIsRestriction = 0.1;</b>
+&nbsp;
+<b class="nc">&nbsp;        EdgeExplorer inExplorer = graph.createEdgeExplorer(accessEnc == null ? edge -&gt; true : AccessFilter.inEdges(accessEnc));</b>
+<b class="nc">&nbsp;        EdgeExplorer outExplorer = graph.createEdgeExplorer(accessEnc == null ? edge -&gt; true : AccessFilter.outEdges(accessEnc));</b>
+<b class="nc">&nbsp;        for (int node = 0; node &lt; graph.getNodes(); ++node) {</b>
+<b class="nc">&nbsp;            if (random.nextDouble() &lt; pNodeHasTurnCosts) {</b>
+<b class="nc">&nbsp;                EdgeIterator inIter = inExplorer.setBaseNode(node);</b>
+<b class="nc">&nbsp;                while (inIter.next()) {</b>
+<b class="nc">&nbsp;                    EdgeIterator outIter = outExplorer.setBaseNode(node);</b>
+<b class="nc">&nbsp;                    while (outIter.next()) {</b>
+<b class="nc">&nbsp;                        if (inIter.getEdge() == outIter.getEdge()) {</b>
+&nbsp;                            // leave u-turns as they are
+<b class="nc">&nbsp;                            continue;</b>
+&nbsp;                        }
+<b class="nc">&nbsp;                        if (random.nextDouble() &lt; pEdgePairHasTurnCosts) {</b>
+<b class="nc">&nbsp;                            double cost = random.nextDouble() &lt; pCostIsRestriction ? Double.POSITIVE_INFINITY : random.nextDouble() * maxTurnCost;</b>
+<b class="nc">&nbsp;                            turnCostStorage.set(turnCostEnc, inIter.getEdge(), node, outIter.getEdge(), cost);</b>
+<b class="nc">&nbsp;                        }</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                }</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;Snap&gt; createRandomSnaps(BBox bbox, LocationIndex locationIndex, Random rnd, int numPoints, boolean acceptTower, EdgeFilter filter) {
+<b class="nc">&nbsp;        int maxTries = numPoints * 100;</b>
+<b class="nc">&nbsp;        int tries = 0;</b>
+<b class="nc">&nbsp;        List&lt;Snap&gt; snaps = new ArrayList&lt;&gt;(numPoints);</b>
+<b class="nc">&nbsp;        while (snaps.size() &lt; numPoints) {</b>
+<b class="nc">&nbsp;            if (tries &gt; maxTries)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Could not create &quot; + numPoints + &quot; random points. tries: &quot; + tries + &quot;, maxTries: &quot; + maxTries);</b>
+<b class="nc">&nbsp;            Snap snap = getRandomSnap(locationIndex, rnd, bbox, filter);</b>
+<b class="nc">&nbsp;            boolean accepted = snap.isValid();</b>
+<b class="nc">&nbsp;            if (!acceptTower)</b>
+<b class="nc">&nbsp;                accepted = accepted &amp;&amp; !snap.getSnappedPosition().equals(Snap.Position.TOWER);</b>
+<b class="nc">&nbsp;            if (accepted)</b>
+<b class="nc">&nbsp;                snaps.add(snap);</b>
+<b class="nc">&nbsp;            tries++;</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return snaps;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static Snap getRandomSnap(LocationIndex locationIndex, Random rnd, BBox bbox, EdgeFilter filter) {
+<b class="nc">&nbsp;        return locationIndex.findClosest(</b>
+<b class="nc">&nbsp;                randomDoubleInRange(rnd, bbox.minLat, bbox.maxLat),</b>
+<b class="nc">&nbsp;                randomDoubleInRange(rnd, bbox.minLon, bbox.maxLon),</b>
+&nbsp;                filter
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    public static double randomDoubleInRange(Random rnd, double min, double max) {
+<b class="nc">&nbsp;        return min + rnd.nextDouble() * (max - min);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static int getAdjNode(Graph g, int edge, int adjNode) {
+<b class="nc">&nbsp;        if (EdgeIterator.Edge.isValid(edge)) {</b>
+<b class="nc">&nbsp;            EdgeIteratorState iterTo = g.getEdgeIteratorState(edge, adjNode);</b>
+<b class="nc">&nbsp;            return iterTo.getAdjNode();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return adjNode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void checkDAVersion(String name, int expectedVersion, int version) {
+<b class="nc">&nbsp;        if (version != expectedVersion) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Unexpected version for &#39;&quot; + name + &quot;&#39;. Got: &quot; + version + &quot;, &quot; +</b>
+&nbsp;                    &quot;expected: &quot; + expectedVersion + &quot;. &quot;
+&nbsp;                    + &quot;Make sure you are using the same GraphHopper version for reading the files that was used for creating them. &quot;
+&nbsp;                    + &quot;See https://discuss.graphhopper.com/t/722&quot;);
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the edge between base and adj, or null if there is no such edge
+&nbsp;     * @throws IllegalArgumentException when there are multiple edges
+&nbsp;     */
+&nbsp;    public static EdgeIteratorState getEdge(Graph graph, int base, int adj) {
+<b class="nc">&nbsp;        EdgeExplorer explorer = graph.createEdgeExplorer();</b>
+<b class="nc">&nbsp;        int count = count(explorer.setBaseNode(base), adj);</b>
+<b class="nc">&nbsp;        if (count &gt; 1)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;There are multiple edges between nodes &quot; + base + &quot; and &quot; + adj);</b>
+<b class="nc">&nbsp;        else if (count == 0)</b>
+<b class="nc">&nbsp;            return null;</b>
+<b class="nc">&nbsp;        EdgeIterator iter = explorer.setBaseNode(base);</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            if (iter.getAdjNode() == adj)</b>
+<b class="nc">&nbsp;                return iter;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        throw new IllegalStateException(&quot;There should be an edge&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the number of edges with the given adj node
+&nbsp;     */
+&nbsp;    public static int count(EdgeIterator iterator, int adj) {
+<b class="nc">&nbsp;        int count = 0;</b>
+<b class="nc">&nbsp;        while (iterator.next()) {</b>
+<b class="nc">&nbsp;            if (iterator.getAdjNode() == adj)</b>
+<b class="nc">&nbsp;                count++;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return count;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates an edge key, i.e. an integer number that encodes an edge ID and the direction of an edge
+&nbsp;     */
+&nbsp;    public static int createEdgeKey(int edgeId, boolean reverse) {
+&nbsp;        // edge state in storage direction -&gt; edge key is even
+&nbsp;        // edge state against storage direction -&gt; edge key is odd
+<b class="nc">&nbsp;        return (edgeId &lt;&lt; 1) + (reverse ? 1 : 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the edgeKey of the opposite direction
+&nbsp;     */
+&nbsp;    public static int reverseEdgeKey(int edgeKey) {
+<b class="nc">&nbsp;        return edgeKey % 2 == 0 ? edgeKey + 1 : edgeKey - 1;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return edge ID for edgeKey
+&nbsp;     */
+&nbsp;    public static int getEdgeFromEdgeKey(int edgeKey) {
+<b class="nc">&nbsp;        return edgeKey / 2;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the common node of two edges
+&nbsp;     * @throws IllegalArgumentException if one of the edges doesn&#39;t exist or is a loop or the edges
+&nbsp;     *                                  aren&#39;t connected at exactly one distinct node
+&nbsp;     */
+&nbsp;    public static int getCommonNode(BaseGraph baseGraph, int edge1, int edge2) {
+<b class="nc">&nbsp;        EdgeIteratorState e1 = baseGraph.getEdgeIteratorState(edge1, Integer.MIN_VALUE);</b>
+<b class="nc">&nbsp;        EdgeIteratorState e2 = baseGraph.getEdgeIteratorState(edge2, Integer.MIN_VALUE);</b>
+<b class="nc">&nbsp;        if (e1.getBaseNode() == e1.getAdjNode())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;edge1: &quot; + edge1 + &quot; is a loop at node &quot; + e1.getBaseNode());</b>
+<b class="nc">&nbsp;        if (e2.getBaseNode() == e2.getAdjNode())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;edge2: &quot; + edge2 + &quot; is a loop at node &quot; + e2.getBaseNode());</b>
+&nbsp;
+<b class="nc">&nbsp;        if ((e1.getBaseNode() == e2.getBaseNode() &amp;&amp; e1.getAdjNode() == e2.getAdjNode()) || (e1.getBaseNode() == e2.getAdjNode() &amp;&amp; e1.getAdjNode() == e2.getBaseNode()))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;edge1: &quot; + edge1 + &quot; and edge2: &quot; + edge2 + &quot; form a circle&quot;);</b>
+<b class="nc">&nbsp;        else if (e1.getBaseNode() == e2.getBaseNode() || e1.getBaseNode() == e2.getAdjNode())</b>
+<b class="nc">&nbsp;            return e1.getBaseNode();</b>
+<b class="nc">&nbsp;        else if (e1.getAdjNode() == e2.getAdjNode() || e1.getAdjNode() == e2.getBaseNode())</b>
+<b class="nc">&nbsp;            return e1.getAdjNode();</b>
+&nbsp;        else
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;edge1: &quot; + edge1 + &quot; and edge2: &quot; + edge2 + &quot; aren&#39;t connected&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void setSpeed(double fwdSpeed, double bwdSpeed, BooleanEncodedValue accessEnc, DecimalEncodedValue speedEnc, EdgeIteratorState... edges) {
+<b class="nc">&nbsp;        setSpeed(fwdSpeed, bwdSpeed, accessEnc, speedEnc, Arrays.asList(edges));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void setSpeed(double fwdSpeed, double bwdSpeed, BooleanEncodedValue accessEnc, DecimalEncodedValue speedEnc, Collection&lt;EdgeIteratorState&gt; edges) {
+<b class="nc">&nbsp;        if (fwdSpeed &lt; 0 || bwdSpeed &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Speed must be positive but wasn&#39;t! fwdSpeed:&quot; + fwdSpeed + &quot;, bwdSpeed:&quot; + bwdSpeed);</b>
+<b class="nc">&nbsp;        for (EdgeIteratorState edge : edges) {</b>
+<b class="nc">&nbsp;            edge.set(speedEnc, fwdSpeed);</b>
+<b class="nc">&nbsp;            if (fwdSpeed &gt; 0)</b>
+<b class="nc">&nbsp;                edge.set(accessEnc, true);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (bwdSpeed &gt; 0 &amp;&amp; (fwdSpeed != bwdSpeed || speedEnc.isStoreTwoDirections())) {</b>
+<b class="nc">&nbsp;                if (!speedEnc.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;EncodedValue &quot; + speedEnc.getName() + &quot; supports only one direction &quot; +</b>
+&nbsp;                            &quot;but two different speeds were specified &quot; + fwdSpeed + &quot; &quot; + bwdSpeed);
+<b class="nc">&nbsp;                edge.setReverse(speedEnc, bwdSpeed);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (bwdSpeed &gt; 0)</b>
+<b class="nc">&nbsp;                edge.setReverse(accessEnc, true);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static EdgeIteratorState setSpeed(double averageSpeed, boolean fwd, boolean bwd, BooleanEncodedValue accessEnc, DecimalEncodedValue avSpeedEnc, EdgeIteratorState edge) {
+<b class="nc">&nbsp;        if (averageSpeed &lt; 0.0001 &amp;&amp; (fwd || bwd))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Zero speed is only allowed if edge will get inaccessible. Otherwise Weighting can produce inconsistent results&quot;);</b>
+<b class="nc">&nbsp;        edge.set(accessEnc, fwd, bwd);</b>
+<b class="nc">&nbsp;        if (fwd)</b>
+<b class="nc">&nbsp;            edge.set(avSpeedEnc, averageSpeed);</b>
+<b class="nc">&nbsp;        if (bwd &amp;&amp; avSpeedEnc.isStoreTwoDirections())</b>
+<b class="nc">&nbsp;            edge.setReverse(avSpeedEnc, averageSpeed);</b>
+<b class="nc">&nbsp;        return edge;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void updateDistancesFor(Graph g, int node, double... latlonele) {
+<b class="nc">&nbsp;        NodeAccess na = g.getNodeAccess();</b>
+<b class="nc">&nbsp;        if (latlonele.length == 3)</b>
+<b class="nc">&nbsp;            na.setNode(node, latlonele[0], latlonele[1], latlonele[2]);</b>
+<b class="nc">&nbsp;        else if (latlonele.length == 2) {</b>
+<b class="nc">&nbsp;            if (na.is3D()) throw new IllegalArgumentException(&quot;graph requires elevation&quot;);</b>
+<b class="nc">&nbsp;            na.setNode(node, latlonele[0], latlonele[1]);</b>
+&nbsp;        } else
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;illegal number of arguments &quot; + latlonele.length);</b>
+<b class="nc">&nbsp;        EdgeIterator iter = g.createEdgeExplorer().setBaseNode(node);</b>
+<b class="nc">&nbsp;        while (iter.next()) {</b>
+<b class="nc">&nbsp;            iter.setDistance(DIST_EARTH.calcDistance(iter.fetchWayGeometry(FetchMode.ALL)));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the weight of a given edge like {@link Weighting#calcEdgeWeight} and adds the transition
+&nbsp;     * cost (the turn weight, {@link Weighting#calcTurnWeight}) associated with transitioning from/to the edge with ID prevOrNextEdgeId.
+&nbsp;     *
+&nbsp;     * @param prevOrNextEdgeId if reverse is false this has to be the previous edgeId, if true it
+&nbsp;     *                         has to be the next edgeId in the direction from start to end.
+&nbsp;     */
+&nbsp;    public static double calcWeightWithTurnWeight(Weighting weighting, EdgeIteratorState edgeState, boolean reverse, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        final double edgeWeight = weighting.calcEdgeWeight(edgeState, reverse);</b>
+<b class="nc">&nbsp;        if (!EdgeIterator.Edge.isValid(prevOrNextEdgeId)) {</b>
+<b class="nc">&nbsp;            return edgeWeight;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        double turnWeight = reverse</b>
+<b class="nc">&nbsp;                ? weighting.calcTurnWeight(edgeState.getEdge(), edgeState.getBaseNode(), prevOrNextEdgeId)</b>
+<b class="nc">&nbsp;                : weighting.calcTurnWeight(prevOrNextEdgeId, edgeState.getBaseNode(), edgeState.getEdge());</b>
+<b class="nc">&nbsp;        return edgeWeight + turnWeight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @see #calcWeightWithTurnWeight(Weighting, EdgeIteratorState, boolean, int)
+&nbsp;     */
+&nbsp;    public static long calcMillisWithTurnMillis(Weighting weighting, EdgeIteratorState edgeState, boolean reverse, int prevOrNextEdgeId) {
+<b class="nc">&nbsp;        long edgeMillis = weighting.calcEdgeMillis(edgeState, reverse);</b>
+<b class="nc">&nbsp;        if (edgeMillis == Long.MAX_VALUE)</b>
+<b class="nc">&nbsp;            return edgeMillis;</b>
+<b class="nc">&nbsp;        if (!EdgeIterator.Edge.isValid(prevOrNextEdgeId))</b>
+<b class="nc">&nbsp;            return edgeMillis;</b>
+&nbsp;        // should we also separate weighting vs. time for turn? E.g. a fast but dangerous turn - is this common?
+&nbsp;        // todo: why no first/last orig edge here as in calcWeight ?
+&nbsp;//        final int origEdgeId = reverse ? edgeState.getOrigEdgeLast() : edgeState.getOrigEdgeFirst();
+<b class="nc">&nbsp;        final int origEdgeId = edgeState.getEdge();</b>
+<b class="nc">&nbsp;        long turnMillis = reverse</b>
+<b class="nc">&nbsp;                ? weighting.calcTurnMillis(origEdgeId, edgeState.getBaseNode(), prevOrNextEdgeId)</b>
+<b class="nc">&nbsp;                : weighting.calcTurnMillis(prevOrNextEdgeId, edgeState.getBaseNode(), origEdgeId);</b>
+<b class="nc">&nbsp;        if (turnMillis == Long.MAX_VALUE)</b>
+<b class="nc">&nbsp;            return turnMillis;</b>
+<b class="nc">&nbsp;        return edgeMillis + turnMillis;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Reads the country borders from the countries.geojson resource file
+&nbsp;     */
+&nbsp;    public static List&lt;CustomArea&gt; readCountries() {
+<b class="nc">&nbsp;        ObjectMapper objectMapper = new ObjectMapper();</b>
+<b class="nc">&nbsp;        objectMapper.registerModule(new JtsModule());</b>
+&nbsp;
+<b class="nc">&nbsp;        Set&lt;String&gt; enumSet = new HashSet&lt;&gt;(Country.values().length * 2);</b>
+<b class="nc">&nbsp;        for (Country c : Country.values()) {</b>
+<b class="nc">&nbsp;            if (c == Country.MISSING) continue;</b>
+<b class="nc">&nbsp;            if (c.getStates().isEmpty()) enumSet.add(c.getAlpha2());</b>
+<b class="nc">&nbsp;            else for (State s : c.getStates()) enumSet.add(s.getStateCode());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        try (Reader reader = new InputStreamReader(GHUtility.class.getResourceAsStream(&quot;/com/graphhopper/countries/countries.geojson&quot;), StandardCharsets.UTF_8)) {</b>
+<b class="nc">&nbsp;            JsonFeatureCollection jsonFeatureCollection = objectMapper.readValue(reader, JsonFeatureCollection.class);</b>
+<b class="nc">&nbsp;            return jsonFeatureCollection.getFeatures().stream()</b>
+&nbsp;                    // exclude areas not in the list of Country enums like FX =&gt; Metropolitan France
+<b class="nc">&nbsp;                    .filter(customArea -&gt; enumSet.contains(getIdOrPropertiesId(customArea)))</b>
+<b class="nc">&nbsp;                    .map((f) -&gt; {</b>
+<b class="nc">&nbsp;                        CustomArea ca = CustomArea.fromJsonFeature(f);</b>
+&nbsp;                        // the Feature does not include &quot;id&quot; but we expect it
+<b class="nc">&nbsp;                        if (f.getId() == null) f.setId(getIdOrPropertiesId(f));</b>
+<b class="nc">&nbsp;                        ca.getProperties().put(ISO_3166_2, f.getId());</b>
+<b class="nc">&nbsp;                        return ca;</b>
+&nbsp;                    })
+<b class="nc">&nbsp;                    .collect(Collectors.toList());</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new UncheckedIOException(e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String getIdOrPropertiesId(JsonFeature feature) {
+<b class="nc">&nbsp;        if (feature.getId() != null) return feature.getId();</b>
+<b class="nc">&nbsp;        if (feature.getProperties() != null) return (String) feature.getProperties().get(&quot;id&quot;);</b>
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void runConcurrently(Stream&lt;Runnable&gt; runnables, int threads) {
+<b class="nc">&nbsp;        ForkJoinPool pool = new ForkJoinPool(threads);</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            pool.submit(() -&gt; runnables.parallel().forEach(Runnable::run)).get();</b>
+<b class="nc">&nbsp;        } catch (InterruptedException | ExecutionException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(e);</b>
+&nbsp;        } finally {
+<b class="nc">&nbsp;            pool.shutdown();</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static BBox createBBox(EdgeIteratorState edgeState) {
+<b class="nc">&nbsp;        PointList towerNodes = edgeState.fetchWayGeometry(FetchMode.TOWER_ONLY);</b>
+<b class="nc">&nbsp;        int secondIndex = towerNodes.size() == 1 ? 0 : 1;</b>
+<b class="nc">&nbsp;        return BBox.fromPoints(towerNodes.getLat(0), towerNodes.getLon(0),</b>
+<b class="nc">&nbsp;                towerNodes.getLat(secondIndex), towerNodes.getLon(secondIndex));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static JsonFeature createCircle(String id, double centerLat, double centerLon, double radius) {
+<b class="nc">&nbsp;        final int n = 36;</b>
+<b class="nc">&nbsp;        final double delta = 360.0 / n;</b>
+<b class="nc">&nbsp;        Coordinate[] coordinates = IntStream.range(0, n + 1)</b>
+<b class="nc">&nbsp;                .mapToObj(i -&gt; DIST_EARTH.projectCoordinate(centerLat, centerLon, radius, (i * delta) % 360))</b>
+<b class="nc">&nbsp;                .map(p -&gt; new Coordinate(p.lon, p.lat)).toArray(Coordinate[]::new);</b>
+<b class="nc">&nbsp;        Polygon polygon = new GeometryFactory().createPolygon(coordinates);</b>
+<b class="nc">&nbsp;        JsonFeature result = new JsonFeature();</b>
+<b class="nc">&nbsp;        result.setId(id);</b>
+<b class="nc">&nbsp;        result.setGeometry(polygon);</b>
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static JsonFeature createRectangle(String id, double minLat, double minLon, double maxLat, double maxLon) {
+<b class="nc">&nbsp;        Coordinate[] coordinates = new Coordinate[]{</b>
+&nbsp;                new Coordinate(minLon, minLat),
+&nbsp;                new Coordinate(minLon, maxLat),
+&nbsp;                new Coordinate(maxLon, maxLat),
+&nbsp;                new Coordinate(maxLon, minLat),
+&nbsp;                new Coordinate(minLon, minLat)
+&nbsp;        };
+<b class="nc">&nbsp;        Polygon polygon = new GeometryFactory().createPolygon(coordinates);</b>
+<b class="nc">&nbsp;        JsonFeature result = new JsonFeature();</b>
+<b class="nc">&nbsp;        result.setId(id);</b>
+<b class="nc">&nbsp;        result.setGeometry(polygon);</b>
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;String&gt; comparePaths(Path refPath, Path path, int source, int target, long seed) {
+<b class="nc">&nbsp;        List&lt;String&gt; strictViolations = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        double refWeight = refPath.getWeight();</b>
+<b class="nc">&nbsp;        double weight = path.getWeight();</b>
+<b class="nc">&nbsp;        if (Math.abs(refWeight - weight) &gt; 1.e-2) {</b>
+<b class="nc">&nbsp;            LOGGER.warn(&quot;expected: &quot; + refPath.calcNodes());</b>
+<b class="nc">&nbsp;            LOGGER.warn(&quot;given:    &quot; + path.calcNodes());</b>
+<b class="nc">&nbsp;            LOGGER.warn(&quot;seed: &quot; + seed);</b>
+<b class="nc">&nbsp;            fail(&quot;wrong weight: &quot; + source + &quot;-&gt;&quot; + target + &quot;\nexpected: &quot; + refWeight + &quot;\ngiven:    &quot; + weight + &quot;\nseed: &quot; + seed);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (Math.abs(path.getDistance() - refPath.getDistance()) &gt; 1.e-1) {</b>
+<b class="nc">&nbsp;            strictViolations.add(&quot;wrong distance &quot; + source + &quot;-&gt;&quot; + target + &quot;, expected: &quot; + refPath.getDistance() + &quot;, given: &quot; + path.getDistance());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (Math.abs(path.getTime() - refPath.getTime()) &gt; 50) {</b>
+<b class="nc">&nbsp;            strictViolations.add(&quot;wrong time &quot; + source + &quot;-&gt;&quot; + target + &quot;, expected: &quot; + refPath.getTime() + &quot;, given: &quot; + path.getTime());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        IntIndexedContainer refNodes = refPath.calcNodes();</b>
+<b class="nc">&nbsp;        IntIndexedContainer pathNodes = path.calcNodes();</b>
+<b class="nc">&nbsp;        if (!refNodes.equals(pathNodes)) {</b>
+&nbsp;            // sometimes there are paths including an edge a-c that has the same distance as the two edges a-b-c. in this
+&nbsp;            // case both options are valid best paths. we only check for this most simple and frequent case here...
+<b class="nc">&nbsp;            if (path.getGraph() != refPath.getGraph())</b>
+<b class="nc">&nbsp;                fail(&quot;path and refPath graphs are different&quot;);</b>
+<b class="nc">&nbsp;            if (!pathsEqualExceptOneEdge(path.getGraph(), refNodes, pathNodes))</b>
+<b class="nc">&nbsp;                strictViolations.add(&quot;wrong nodes &quot; + source + &quot;-&gt;&quot; + target + &quot;\nexpected: &quot; + refNodes + &quot;\ngiven:    &quot; + pathNodes);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return strictViolations;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sometimes the graph can contain edges like this:
+&nbsp;     * A--C
+&nbsp;     * \-B|
+&nbsp;     * where A-C is the same distance as A-B-C. In this case the shortest path is not well defined in terms of nodes.
+&nbsp;     * This method checks if two node-paths are equal except for such an edge.
+&nbsp;     */
+&nbsp;    private static boolean pathsEqualExceptOneEdge(Graph graph, IntIndexedContainer p1, IntIndexedContainer p2) {
+<b class="nc">&nbsp;        if (p1.equals(p2))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;paths are equal&quot;);</b>
+<b class="nc">&nbsp;        if (Math.abs(p1.size() - p2.size()) != 1)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        IntIndexedContainer shorterPath = p1.size() &lt; p2.size() ? p1 : p2;</b>
+<b class="nc">&nbsp;        IntIndexedContainer longerPath = p1.size() &lt; p2.size() ? p2 : p1;</b>
+<b class="nc">&nbsp;        if (shorterPath.size() &lt; 2)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        IntArrayList indicesWithDifferentNodes = new IntArrayList();</b>
+<b class="nc">&nbsp;        for (int i = 1; i &lt; shorterPath.size(); i++) {</b>
+<b class="nc">&nbsp;            if (shorterPath.get(i - indicesWithDifferentNodes.size()) != longerPath.get(i)) {</b>
+<b class="nc">&nbsp;                indicesWithDifferentNodes.add(i);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        if (indicesWithDifferentNodes.size() != 1)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        int b = indicesWithDifferentNodes.get(0);</b>
+<b class="nc">&nbsp;        int a = b - 1;</b>
+<b class="nc">&nbsp;        int c = b + 1;</b>
+<b class="nc">&nbsp;        assert shorterPath.get(a) == longerPath.get(a);</b>
+<b class="nc">&nbsp;        assert shorterPath.get(b) != longerPath.get(b);</b>
+<b class="nc">&nbsp;        if (shorterPath.get(b) != longerPath.get(c))</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        double distABC = getMinDist(graph, longerPath.get(a), longerPath.get(b)) + getMinDist(graph, longerPath.get(b), longerPath.get(c));</b>
+&nbsp;
+<b class="nc">&nbsp;        double distAC = getMinDist(graph, shorterPath.get(a), longerPath.get(c));</b>
+<b class="nc">&nbsp;        if (Math.abs(distABC - distAC) &gt; 0.1)</b>
+<b class="nc">&nbsp;            return false;</b>
+<b class="nc">&nbsp;        LOGGER.info(&quot;Distance &quot; + shorterPath.get(a) + &quot;-&quot; + longerPath.get(c) + &quot; is the same as distance &quot; +</b>
+<b class="nc">&nbsp;                longerPath.get(a) + &quot;-&quot; + longerPath.get(b) + &quot;-&quot; + longerPath.get(c) + &quot; -&gt; there are multiple possibilities &quot; +</b>
+&nbsp;                &quot;for shortest paths&quot;);
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static double getMinDist(Graph graph, int p, int q) {
+<b class="nc">&nbsp;        EdgeExplorer explorer = graph.createEdgeExplorer();</b>
+<b class="nc">&nbsp;        EdgeIterator iter = explorer.setBaseNode(p);</b>
+<b class="nc">&nbsp;        double distance = Double.MAX_VALUE;</b>
+<b class="nc">&nbsp;        while (iter.next())</b>
+<b class="nc">&nbsp;            if (iter.getAdjNode() == q)</b>
+<b class="nc">&nbsp;                distance = Math.min(distance, iter.getDistance());</b>
+<b class="nc">&nbsp;        return distance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void fail(String message) {
+<b class="nc">&nbsp;        throw new AssertionError(message);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static CustomModel loadCustomModelFromJar(String name) {
+&nbsp;        try {
+<b class="nc">&nbsp;            InputStream is = GHUtility.class.getResourceAsStream(&quot;/com/graphhopper/custom_models/&quot; + name);</b>
+<b class="nc">&nbsp;            if (is == null)</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;There is no built-in custom model &#39;&quot; + name + &quot;&#39;&quot;);</b>
+<b class="nc">&nbsp;            String json = readJSONFileWithoutComments(new InputStreamReader(is));</b>
+<b class="nc">&nbsp;            ObjectMapper objectMapper = Jackson.newObjectMapper();</b>
+<b class="nc">&nbsp;            return objectMapper.readValue(json, CustomModel.class);</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Could not load built-in custom model &#39;&quot; + name + &quot;&#39;&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

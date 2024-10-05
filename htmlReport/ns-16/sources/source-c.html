@@ -1,0 +1,331 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > NameSimilarityEdgeFilter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: NameSimilarityEdgeFilter (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NameSimilarityEdgeFilter</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/52)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">NameSimilarityEdgeFilter$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/64)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.graphhopper.apache.commons.lang3.StringUtils;
+&nbsp;import com.graphhopper.debatty.java.stringsimilarity.JaroWinkler;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.FetchMode;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;import com.graphhopper.util.shapes.Circle;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.regex.Matcher;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Helper.toLowerCase;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class defines the basis for NameSimilarity matching using an EdgeFilter. It is not thread-safe.
+&nbsp; * The typical use-case is to match not the nearest edge in
+&nbsp; * {@link com.graphhopper.storage.index.LocationIndex#findClosest(double, double, EdgeFilter)}
+&nbsp; * but the edge with the name that is similar to the specified pointHint and still close.
+&nbsp; * &lt;p&gt;
+&nbsp; * Names that are similar to each other are (n1 name1, n2 name2):
+&nbsp; * &lt;ul&gt;
+&nbsp; * &lt;li&gt;n1 == n2&lt;/li&gt;
+&nbsp; * &lt;li&gt;n1 is significant substring of n2, e.g: n1=&quot;Main Road&quot;, n2=&quot;Main Road, New York&quot;&lt;/li&gt;
+&nbsp; * &lt;li&gt;n1 and n2 contain a reasonable longest common substring, e.g.: n1=&quot;Cape Point / Cape of Good Hope&quot;,
+&nbsp; *     n2=&quot;Cape Point Rd, Cape Peninsula, Cape Town, 8001, Afrique du Sud&quot;&lt;/li&gt;
+&nbsp; * &lt;/ul&gt;
+&nbsp; * &lt;p&gt;
+&nbsp; * The aim is to allow minor typos/differences of the substrings, without having too much false positives.
+&nbsp; *
+&nbsp; * @author Robin Boldt
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class NameSimilarityEdgeFilter implements EdgeFilter {
+&nbsp;
+<b class="nc">&nbsp;    private static final Map&lt;String, String&gt; DEFAULT_REWRITE_MAP = new HashMap&lt;String, String&gt;() {{</b>
+&nbsp;        // Words with 2 characters like &quot;Dr&quot; (Drive) will be ignored, so it is not required to list them here.
+&nbsp;        // Words with 3 and more characters should be listed here to remove or rename them.
+<b class="nc">&nbsp;        for (String remove : Arrays.asList(</b>
+&nbsp;                &quot;ally&quot;, &quot;alley&quot;,
+&nbsp;                &quot;arc&quot;, &quot;arcade&quot;,
+&nbsp;                &quot;bvd&quot;, &quot;bvd.&quot;, &quot;boulevard&quot;,
+&nbsp;                &quot;av.&quot;, &quot;avenue&quot;, &quot;avenida&quot;, &quot;ave&quot;,
+&nbsp;                &quot;calle&quot;,
+&nbsp;                &quot;cl.&quot;, &quot;close&quot;,
+&nbsp;                &quot;crescend&quot;, &quot;cres&quot;, &quot;cres.&quot;,
+&nbsp;                &quot;rd.&quot;, &quot;road&quot;,
+&nbsp;                &quot;ln.&quot;, &quot;lane&quot;,
+&nbsp;                &quot;pde.&quot;, &quot;pde&quot;, &quot;parade&quot;,
+&nbsp;                &quot;pl.&quot;, &quot;place&quot;, &quot;plaza&quot;,
+&nbsp;                &quot;rte&quot;, &quot;route&quot;,
+&nbsp;                &quot;str.&quot;, &quot;str&quot;, &quot;straße&quot;, &quot;strasse&quot;, &quot;st.&quot;, &quot;street&quot;, &quot;strada&quot;,
+&nbsp;                &quot;sq.&quot;, &quot;square&quot;,
+&nbsp;                &quot;tr.&quot;, &quot;track&quot;,
+&nbsp;                &quot;via&quot;)) {
+<b class="nc">&nbsp;            put(remove, &quot;&quot;);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;        // expand instead of remove as significant part of the road name
+<b class="nc">&nbsp;        put(&quot;n&quot;, &quot;north&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;s&quot;, &quot;south&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;w&quot;, &quot;west&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;e&quot;, &quot;east&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;ne&quot;, &quot;northeast&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;nw&quot;, &quot;northwest&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;se&quot;, &quot;southeast&quot;);</b>
+<b class="nc">&nbsp;        put(&quot;sw&quot;, &quot;southwest&quot;);</b>
+&nbsp;    }};
+<b class="nc">&nbsp;    private static final Pattern WORD_CHAR = Pattern.compile(&quot;\\p{LD}+&quot;);</b>
+<b class="nc">&nbsp;    private static final JaroWinkler jaroWinkler = new JaroWinkler();</b>
+&nbsp;    private static final double JARO_WINKLER_ACCEPT_FACTOR = .9;
+&nbsp;    private final EdgeFilter edgeFilter;
+&nbsp;    private final String pointHint;
+&nbsp;    private final Map&lt;String, String&gt; rewriteMap;
+&nbsp;    private final Circle pointCircle;
+&nbsp;
+&nbsp;    public NameSimilarityEdgeFilter(EdgeFilter edgeFilter, String pointHint, GHPoint point, double radius) {
+<b class="nc">&nbsp;        this(edgeFilter, pointHint, point, radius, DEFAULT_REWRITE_MAP);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param radius     the searchable region about the point in meters
+&nbsp;     * @param rewriteMap maps abbreviations to its longer form
+&nbsp;     */
+<b class="nc">&nbsp;    public NameSimilarityEdgeFilter(EdgeFilter edgeFilter, String pointHint, GHPoint point, double radius, Map&lt;String, String&gt; rewriteMap) {</b>
+<b class="nc">&nbsp;        this.edgeFilter = edgeFilter;</b>
+<b class="nc">&nbsp;        this.rewriteMap = rewriteMap;</b>
+<b class="nc">&nbsp;        this.pointHint = prepareName(removeRelation(pointHint == null ? &quot;&quot; : pointHint));</b>
+<b class="nc">&nbsp;        this.pointCircle = new Circle(point.lat, point.lon, radius);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    String getNormalizedPointHint() {
+<b class="nc">&nbsp;        return pointHint;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Removes any characters in the String that we don&#39;t care about in the matching procedure
+&nbsp;     * TODO Currently limited to certain &#39;western&#39; languages
+&nbsp;     */
+&nbsp;    private String prepareName(String name) {
+<b class="nc">&nbsp;        StringBuilder sb = new StringBuilder(name.length());</b>
+<b class="nc">&nbsp;        Matcher wordCharMatcher = WORD_CHAR.matcher(name);</b>
+<b class="nc">&nbsp;        while (wordCharMatcher.find()) {</b>
+<b class="nc">&nbsp;            String normalizedToken = toLowerCase(wordCharMatcher.group());</b>
+<b class="nc">&nbsp;            String rewrite = rewriteMap.get(normalizedToken);</b>
+<b class="nc">&nbsp;            if (rewrite != null)</b>
+<b class="nc">&nbsp;                normalizedToken = rewrite;</b>
+<b class="nc">&nbsp;            if (normalizedToken.isEmpty())</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;            // Ignore matching short phrases like de, la, ... except it is a number
+<b class="nc">&nbsp;            if (normalizedToken.length() &gt; 2) {</b>
+<b class="nc">&nbsp;                sb.append(normalizedToken);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                if (Character.isDigit(normalizedToken.charAt(0)) &amp;&amp; (normalizedToken.length() == 1 || Character.isDigit(normalizedToken.charAt(1)))) {</b>
+<b class="nc">&nbsp;                    sb.append(normalizedToken);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return sb.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String removeRelation(String edgeName) {
+<b class="nc">&nbsp;        int index = edgeName.lastIndexOf(&quot;, &quot;);</b>
+<b class="nc">&nbsp;        return index &gt;= 0 ? edgeName.substring(0, index) : edgeName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public final boolean accept(EdgeIteratorState iter) {
+<b class="nc">&nbsp;        if (!edgeFilter.accept(iter)) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (pointHint.isEmpty()) {</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        String name = iter.getName();</b>
+<b class="nc">&nbsp;        if (name == null || name.isEmpty()) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        BBox bbox = createBBox(iter);</b>
+<b class="nc">&nbsp;        if (!pointCircle.intersects(bbox)) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        name = removeRelation(name);</b>
+<b class="nc">&nbsp;        String edgeName = prepareName(name);</b>
+&nbsp;
+<b class="nc">&nbsp;        return isJaroWinklerSimilar(pointHint, edgeName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static BBox createBBox(EdgeIteratorState edgeState) {
+&nbsp;        // we should include the entire geometry, see #2319
+<b class="nc">&nbsp;        PointList geometry = edgeState.fetchWayGeometry(FetchMode.ALL);</b>
+<b class="nc">&nbsp;        BBox bbox = new BBox(180, -180, 90, -90);</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; geometry.size(); i++)</b>
+<b class="nc">&nbsp;            bbox.update(geometry.getLat(i), geometry.getLon(i));</b>
+<b class="nc">&nbsp;        return bbox;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isJaroWinklerSimilar(String str1, String str2) {
+<b class="nc">&nbsp;        double jwSimilarity = jaroWinkler.similarity(str1, str2);</b>
+&nbsp;        // System.out.println(str1 + &quot; vs. edge:&quot; + str2 + &quot;, &quot; + jwSimilarity);
+<b class="nc">&nbsp;        return jwSimilarity &gt; JARO_WINKLER_ACCEPT_FACTOR;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isLevenshteinSimilar(String hint, String name) {
+&nbsp;        // too big length difference
+<b class="nc">&nbsp;        if (Math.min(name.length(), hint.length()) * 4 &lt; Math.max(name.length(), hint.length()))</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+&nbsp;        // The part &#39;abs(pointHint.length - name.length)&#39; tries to make differences regarding length less important
+&nbsp;        // Ie. &#39;hauptstraßedresden&#39; vs. &#39;hauptstr.&#39; should be considered a match, but &#39;hauptstraßedresden&#39; vs. &#39;klingestraßedresden&#39; should not match
+<b class="nc">&nbsp;        int factor = 1 + Math.abs(hint.length() - name.length());</b>
+<b class="nc">&nbsp;        int levDistance = StringUtils.getLevenshteinDistance(hint, name);</b>
+&nbsp;        // System.out.println(hint + &quot; vs. edge:&quot; + name + &quot;, &quot; + levDistance + &quot; &lt;= &quot; + factor);
+<b class="nc">&nbsp;        return levDistance &lt;= factor;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

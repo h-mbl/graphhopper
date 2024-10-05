@@ -1,0 +1,184 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > SPTEntry</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing</a>
+</div>
+
+<h1>Coverage Summary for Class: SPTEntry (com.graphhopper.routing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SPTEntry</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing;
+&nbsp;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class is used to create the shortest-path-tree from linked entities.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class SPTEntry implements Comparable&lt;SPTEntry&gt; {
+&nbsp;    public int edge;
+&nbsp;    public int adjNode;
+&nbsp;    public double weight;
+&nbsp;    public SPTEntry parent;
+&nbsp;    public boolean deleted;
+&nbsp;
+&nbsp;    public SPTEntry(int node, double weight) {
+<b class="nc">&nbsp;        this(EdgeIterator.NO_EDGE, node, weight, null);</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public SPTEntry(int edgeId, int adjNode, double weight, SPTEntry parent) {</b>
+<b class="nc">&nbsp;        this.edge = edgeId;</b>
+<b class="nc">&nbsp;        this.adjNode = adjNode;</b>
+<b class="nc">&nbsp;        this.weight = weight;</b>
+<b class="nc">&nbsp;        this.parent = parent;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setDeleted() {
+<b class="nc">&nbsp;        deleted = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isDeleted() {
+<b class="nc">&nbsp;        return deleted;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method returns the weight to the origin e.g. to the start for the forward SPT and to the
+&nbsp;     * destination for the backward SPT. Where the variable &#39;weight&#39; is used to let heap select
+&nbsp;     * smallest *full* weight (from start to destination).
+&nbsp;     */
+&nbsp;    public double getWeightOfVisitedPath() {
+<b class="nc">&nbsp;        return weight;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public SPTEntry getParent() {
+<b class="nc">&nbsp;        return parent;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int compareTo(SPTEntry o) {
+<b class="nc">&nbsp;        if (weight &lt; o.weight)</b>
+<b class="nc">&nbsp;            return -1;</b>
+&nbsp;
+&nbsp;        // assumption no NaN and no -0        
+<b class="nc">&nbsp;        return weight &gt; o.weight ? 1 : 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return adjNode + &quot; (&quot; + edge + &quot;) weight: &quot; + weight;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

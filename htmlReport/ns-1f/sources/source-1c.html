@@ -1,0 +1,204 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > DataAccess</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: DataAccess (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">DataAccess</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import java.io.Closeable;
+&nbsp;
+&nbsp;/**
+&nbsp; * Life cycle: (1) object creation, (2) configuration (e.g. segment size), (3) create or
+&nbsp; * loadExisting, (4) usage and calling ensureCapacity if necessary, (5) close
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public interface DataAccess extends Closeable {
+&nbsp;    /**
+&nbsp;     * The logical identification of this object.
+&nbsp;     */
+&nbsp;    String getName();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Set 4 bytes at position &#39;bytePos&#39; to the specified value
+&nbsp;     */
+&nbsp;    void setInt(long bytePos, int value);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get 4 bytes from position &#39;bytePos&#39;
+&nbsp;     */
+&nbsp;    int getInt(long bytePos);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Set 2 bytes at position &#39;index&#39; to the specified value
+&nbsp;     */
+&nbsp;    void setShort(long bytePos, short value);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get 2 bytes from position &#39;index&#39;
+&nbsp;     */
+&nbsp;    short getShort(long bytePos);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Set bytes from position &#39;index&#39; to the specified values
+&nbsp;     */
+&nbsp;    void setBytes(long bytePos, byte[] values, int length);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get bytes from position &#39;index&#39;
+&nbsp;     *
+&nbsp;     * @param values acts as output
+&nbsp;     */
+&nbsp;    void getBytes(long bytePos, byte[] values, int length);
+&nbsp;
+&nbsp;    void setByte(long currentPointer, byte value);
+&nbsp;
+&nbsp;    byte getByte(long currentPointer);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Set 4 bytes at the header space index to the specified value
+&nbsp;     */
+&nbsp;    void setHeader(int bytePos, int value);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get 4 bytes from the header at &#39;index&#39;
+&nbsp;     */
+&nbsp;    int getHeader(int bytePos);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The first time you use a DataAccess object after configuring it you need to call this method.
+&nbsp;     * After that first call you have to use ensureCapacity to ensure that enough space is reserved.
+&nbsp;     */
+&nbsp;    DataAccess create(long bytes);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method makes sure that the underlying data is written to the storage. Keep in mind that
+&nbsp;     * a disc normally has an IO cache so that flush() is (less) probably not save against power
+&nbsp;     * loses.
+&nbsp;     */
+&nbsp;    void flush();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method makes sure that the underlying used resources are released. WARNING: it does NOT
+&nbsp;     * flush on close!
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    void close();
+&nbsp;
+&nbsp;    boolean isClosed();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if successfully loaded from persistent storage.
+&nbsp;     */
+&nbsp;    boolean loadExisting();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the allocated storage size in bytes
+&nbsp;     */
+&nbsp;    long getCapacity();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Ensures that the capacity of this object is at least the specified bytes. The first time you
+&nbsp;     * have to call &#39;create&#39; instead.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @return true if size was increased
+&nbsp;     * @see #create(long)
+&nbsp;     */
+&nbsp;    boolean ensureCapacity(long bytes);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the size of one segment in bytes
+&nbsp;     */
+&nbsp;    int getSegmentSize();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the number of segments.
+&nbsp;     */
+&nbsp;    int getSegments();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the data access type of this object.
+&nbsp;     */
+&nbsp;    DAType getType();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

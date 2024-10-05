@@ -1,0 +1,351 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > CustomWeighting</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.weighting.custom</a>
+</div>
+
+<h1>Coverage Summary for Class: CustomWeighting (com.graphhopper.routing.weighting.custom)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CustomWeighting</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/33)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CustomWeighting$EdgeToDoubleMapping</td>
+  </tr>
+  <tr>
+    <td class="name">CustomWeighting$MaxCalc</td>
+  </tr>
+  <tr>
+    <td class="name">CustomWeighting$Parameters</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/46)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.weighting.custom;
+&nbsp;
+&nbsp;import com.graphhopper.routing.weighting.TurnCostProvider;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.util.CustomModel;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.weighting.TurnCostProvider.NO_TURN_COST_PROVIDER;
+&nbsp;
+&nbsp;/**
+&nbsp; * The CustomWeighting allows adjusting the edge weights relative to those we&#39;d obtain for a given base flag encoder.
+&nbsp; * For example a car flag encoder already provides speeds and access flags for every edge depending on certain edge
+&nbsp; * properties. By default the CustomWeighting simply makes use of these values, but it is possible to adjust them by
+&nbsp; * setting up rules that apply changes depending on the edges&#39; encoded values.
+&nbsp; * &lt;p&gt;
+&nbsp; * The formula for the edge weights is as follows:
+&nbsp; * &lt;p&gt;
+&nbsp; * weight = distance/speed + distance_costs + stress_costs
+&nbsp; * &lt;p&gt;
+&nbsp; * The first term simply corresponds to the time it takes to travel along the edge.
+&nbsp; * The second term adds a fixed per-distance cost that is proportional to the distance but *independent* of the edge
+&nbsp; * properties, i.e. it reads
+&nbsp; * &lt;p&gt;
+&nbsp; * distance_costs = distance * distance_influence
+&nbsp; * &lt;p&gt;
+&nbsp; * The third term is also proportional to the distance but compared to the second it describes additional costs that *do*
+&nbsp; * depend on the edge properties. It can represent any kind of costs that depend on the edge (like inconvenience or
+&nbsp; * dangers encountered on &#39;high-stress&#39; roads for bikes, toll roads (because they cost money), stairs (because they are
+&nbsp; * awkward when going by bike) etc.). This &#39;stress&#39; term reads
+&nbsp; * &lt;p&gt;
+&nbsp; * stress_costs = distance * stress_per_meter
+&nbsp; * &lt;p&gt;
+&nbsp; * and just like the distance term it describes costs measured in seconds. When modelling it, one always has to &#39;convert&#39;
+&nbsp; * the costs into some time equivalent (e.g. for toll roads one has to think about how much money can be spent to save
+&nbsp; * a certain amount of time). Note that the distance_costs described by the second term in general cannot be properly
+&nbsp; * described by the stress costs, because the distance term allows increasing the per-distance costs per-se (regardless
+&nbsp; * of the type of the road). Also note that both the second and third term are different to the first in that they can
+&nbsp; * increase the edge costs but do *not* modify the travel *time*.
+&nbsp; * &lt;p&gt;
+&nbsp; * Instead of letting you set the speed directly, `CustomWeighting` allows changing the speed relative to the speed we
+&nbsp; * get from the base flag encoder. The stress costs can be specified by using a factor between 0 and 1 that is called
+&nbsp; * &#39;priority&#39;.
+&nbsp; * &lt;p&gt;
+&nbsp; * Therefore the full edge weight formula reads:
+&nbsp; * &lt;pre&gt;
+&nbsp; * weight = distance / (base_speed * speed_factor * priority)
+&nbsp; *        + distance * distance_influence
+&nbsp; * &lt;/pre&gt;
+&nbsp; * &lt;p&gt;
+&nbsp; * The open parameters that we can adjust are therefore: speed_factor, priority and distance_influence and they are
+&nbsp; * specified via the `{@link CustomModel}`. The speed can also be restricted to a maximum value, in which case the value
+&nbsp; * calculated via the speed_factor is simply overwritten. Edges that are not accessible according to the access flags of
+&nbsp; * the base vehicle always get assigned an infinite weight and this cannot be changed (yet) using this weighting.
+&nbsp; */
+&nbsp;public final class CustomWeighting implements Weighting {
+&nbsp;    public static final String NAME = &quot;custom&quot;;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Converting to seconds is not necessary but makes adding other penalties easier (e.g. turn
+&nbsp;     * costs or traffic light costs etc)
+&nbsp;     */
+&nbsp;    private final static double SPEED_CONV = 3.6;
+&nbsp;    private final double distanceInfluence;
+&nbsp;    private final double headingPenaltySeconds;
+&nbsp;    private final EdgeToDoubleMapping edgeToSpeedMapping;
+&nbsp;    private final EdgeToDoubleMapping edgeToPriorityMapping;
+&nbsp;    private final TurnCostProvider turnCostProvider;
+&nbsp;    private final MaxCalc maxPrioCalc;
+&nbsp;    private final MaxCalc maxSpeedCalc;
+&nbsp;
+<b class="nc">&nbsp;    public CustomWeighting(TurnCostProvider turnCostProvider, Parameters parameters) {</b>
+<b class="nc">&nbsp;        if (!Weighting.isValidName(getName()))</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Not a valid name for a Weighting: &quot; + getName());</b>
+<b class="nc">&nbsp;        this.turnCostProvider = turnCostProvider;</b>
+&nbsp;
+<b class="nc">&nbsp;        this.edgeToSpeedMapping = parameters.getEdgeToSpeedMapping();</b>
+<b class="nc">&nbsp;        this.maxSpeedCalc = parameters.getMaxSpeedCalc();</b>
+&nbsp;
+<b class="nc">&nbsp;        this.edgeToPriorityMapping = parameters.getEdgeToPriorityMapping();</b>
+<b class="nc">&nbsp;        this.maxPrioCalc = parameters.getMaxPrioCalc();</b>
+&nbsp;
+<b class="nc">&nbsp;        this.headingPenaltySeconds = parameters.getHeadingPenaltySeconds();</b>
+&nbsp;
+&nbsp;        // given unit is s/km -&gt; convert to s/m
+<b class="nc">&nbsp;        this.distanceInfluence = parameters.getDistanceInfluence() / 1000.0;</b>
+<b class="nc">&nbsp;        if (this.distanceInfluence &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;distance_influence cannot be negative &quot; + this.distanceInfluence);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcMinWeightPerDistance() {
+<b class="nc">&nbsp;        return 1d / (maxSpeedCalc.calcMax() / SPEED_CONV) / maxPrioCalc.calcMax() + distanceInfluence;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcEdgeWeight(EdgeIteratorState edgeState, boolean reverse) {
+<b class="nc">&nbsp;        double priority = edgeToPriorityMapping.get(edgeState, reverse);</b>
+<b class="nc">&nbsp;        if (priority == 0) return Double.POSITIVE_INFINITY;</b>
+&nbsp;
+<b class="nc">&nbsp;        final double distance = edgeState.getDistance();</b>
+<b class="nc">&nbsp;        double seconds = calcSeconds(distance, edgeState, reverse);</b>
+<b class="nc">&nbsp;        if (Double.isInfinite(seconds)) return Double.POSITIVE_INFINITY;</b>
+&nbsp;        // add penalty at start/stop/via points
+<b class="nc">&nbsp;        if (edgeState.get(EdgeIteratorState.UNFAVORED_EDGE)) seconds += headingPenaltySeconds;</b>
+<b class="nc">&nbsp;        double distanceCosts = distance * distanceInfluence;</b>
+<b class="nc">&nbsp;        if (Double.isInfinite(distanceCosts)) return Double.POSITIVE_INFINITY;</b>
+<b class="nc">&nbsp;        return seconds / priority + distanceCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    double calcSeconds(double distance, EdgeIteratorState edgeState, boolean reverse) {
+<b class="nc">&nbsp;        double speed = edgeToSpeedMapping.get(edgeState, reverse);</b>
+<b class="nc">&nbsp;        if (speed == 0)</b>
+<b class="nc">&nbsp;            return Double.POSITIVE_INFINITY;</b>
+<b class="nc">&nbsp;        if (speed &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Speed cannot be negative&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        return distance / speed * SPEED_CONV;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long calcEdgeMillis(EdgeIteratorState edgeState, boolean reverse) {
+<b class="nc">&nbsp;        return Math.round(calcSeconds(edgeState.getDistance(), edgeState, reverse) * 1000);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double calcTurnWeight(int inEdge, int viaNode, int outEdge) {
+<b class="nc">&nbsp;        return turnCostProvider.calcTurnWeight(inEdge, viaNode, outEdge);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long calcTurnMillis(int inEdge, int viaNode, int outEdge) {
+<b class="nc">&nbsp;        return turnCostProvider.calcTurnMillis(inEdge, viaNode, outEdge);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean hasTurnCosts() {
+<b class="nc">&nbsp;        return turnCostProvider != NO_TURN_COST_PROVIDER;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String getName() {
+<b class="nc">&nbsp;        return NAME;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @FunctionalInterface
+&nbsp;    public interface EdgeToDoubleMapping {
+&nbsp;        double get(EdgeIteratorState edge, boolean reverse);
+&nbsp;    }
+&nbsp;
+&nbsp;    @FunctionalInterface
+&nbsp;    public interface MaxCalc {
+&nbsp;        double calcMax();
+&nbsp;    }
+&nbsp;
+&nbsp;    public static class Parameters {
+&nbsp;        private final EdgeToDoubleMapping edgeToSpeedMapping;
+&nbsp;        private final EdgeToDoubleMapping edgeToPriorityMapping;
+&nbsp;        private final MaxCalc maxSpeedCalc;
+&nbsp;        private final MaxCalc maxPrioCalc;
+&nbsp;        private final double distanceInfluence;
+&nbsp;        private final double headingPenaltySeconds;
+&nbsp;
+&nbsp;        public Parameters(EdgeToDoubleMapping edgeToSpeedMapping, MaxCalc maxSpeedCalc,
+&nbsp;                          EdgeToDoubleMapping edgeToPriorityMapping, MaxCalc maxPrioCalc,
+<b class="nc">&nbsp;                          double distanceInfluence, double headingPenaltySeconds) {</b>
+<b class="nc">&nbsp;            this.edgeToSpeedMapping = edgeToSpeedMapping;</b>
+<b class="nc">&nbsp;            this.maxSpeedCalc = maxSpeedCalc;</b>
+<b class="nc">&nbsp;            this.edgeToPriorityMapping = edgeToPriorityMapping;</b>
+<b class="nc">&nbsp;            this.maxPrioCalc = maxPrioCalc;</b>
+<b class="nc">&nbsp;            this.distanceInfluence = distanceInfluence;</b>
+<b class="nc">&nbsp;            this.headingPenaltySeconds = headingPenaltySeconds;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public EdgeToDoubleMapping getEdgeToSpeedMapping() {
+<b class="nc">&nbsp;            return edgeToSpeedMapping;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public EdgeToDoubleMapping getEdgeToPriorityMapping() {
+<b class="nc">&nbsp;            return edgeToPriorityMapping;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public MaxCalc getMaxSpeedCalc() {
+<b class="nc">&nbsp;            return maxSpeedCalc;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public MaxCalc getMaxPrioCalc() {
+<b class="nc">&nbsp;            return maxPrioCalc;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public double getDistanceInfluence() {
+<b class="nc">&nbsp;            return distanceInfluence;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public double getHeadingPenaltySeconds() {
+<b class="nc">&nbsp;            return headingPenaltySeconds;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

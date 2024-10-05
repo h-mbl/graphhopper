@@ -1,0 +1,285 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > RamerDouglasPeucker</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: RamerDouglasPeucker (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RamerDouglasPeucker</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/68)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;/**
+&nbsp; * Simplifies a list of 2D points which are not too far away.
+&nbsp; * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+&nbsp; * &lt;p&gt;
+&nbsp; * Calling simplify is thread safe.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class RamerDouglasPeucker {
+&nbsp;    private double normedMaxDist;
+&nbsp;    private double elevationMaxDistance;
+&nbsp;    private double maxDistance;
+&nbsp;    private DistanceCalc calc;
+&nbsp;    private boolean approx;
+&nbsp;
+<b class="nc">&nbsp;    public RamerDouglasPeucker() {</b>
+<b class="nc">&nbsp;        setApproximation(true);</b>
+&nbsp;        // 1m
+<b class="nc">&nbsp;        setMaxDistance(1);</b>
+&nbsp;        // elevation ignored by default
+<b class="nc">&nbsp;        setElevationMaxDistance(Double.MAX_VALUE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setApproximation(boolean a) {
+<b class="nc">&nbsp;        approx = a;</b>
+<b class="nc">&nbsp;        if (approx)</b>
+<b class="nc">&nbsp;            calc = DistancePlaneProjection.DIST_PLANE;</b>
+&nbsp;        else
+<b class="nc">&nbsp;            calc = DistanceCalcEarth.DIST_EARTH;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * maximum distance of discrepancy (from the normal way) in meter
+&nbsp;     */
+&nbsp;    public RamerDouglasPeucker setMaxDistance(double dist) {
+<b class="nc">&nbsp;        this.normedMaxDist = calc.calcNormalizedDist(dist);</b>
+<b class="nc">&nbsp;        this.maxDistance = dist;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * maximum elevation distance of discrepancy (from the normal way) in meters
+&nbsp;     */
+&nbsp;    public RamerDouglasPeucker setElevationMaxDistance(double dist) {
+<b class="nc">&nbsp;        this.elevationMaxDistance = dist;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Simplifies the &lt;code&gt;points&lt;/code&gt;, from index 0 to size-1.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * It is a wrapper method for {@link RamerDouglasPeucker#simplify(PointList, int, int)}.
+&nbsp;     *
+&nbsp;     * @return The number removed points
+&nbsp;     */
+&nbsp;    public int simplify(PointList points) {
+<b class="nc">&nbsp;        return simplify(points, 0, points.size() - 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int simplify(PointList points, int fromIndex, int lastIndex) {
+<b class="nc">&nbsp;        return simplify(points, fromIndex, lastIndex, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Simplifies a part of the &lt;code&gt;points&lt;/code&gt;. The &lt;code&gt;fromIndex&lt;/code&gt; and &lt;code&gt;lastIndex&lt;/code&gt;
+&nbsp;     * are guaranteed to be kept.
+&nbsp;     *
+&nbsp;     * @param points    The PointList to simplify
+&nbsp;     * @param fromIndex Start index to simplify, should be &lt;= &lt;code&gt;lastIndex&lt;/code&gt;
+&nbsp;     * @param lastIndex Simplify up to this index
+&nbsp;     * @param compress  Whether the &lt;code&gt;points&lt;/code&gt; shall be compressed or not, if set to false no points
+&nbsp;     *                  are actually removed, but instead their lat/lon/ele is only set to NaN
+&nbsp;     * @return The number of removed points
+&nbsp;     */
+&nbsp;    public int simplify(PointList points, int fromIndex, int lastIndex, boolean compress) {
+<b class="nc">&nbsp;        int removed = 0;</b>
+<b class="nc">&nbsp;        int size = lastIndex - fromIndex;</b>
+<b class="nc">&nbsp;        if (approx) {</b>
+<b class="nc">&nbsp;            int delta = 500;</b>
+<b class="nc">&nbsp;            int segments = size / delta + 1;</b>
+<b class="nc">&nbsp;            int start = fromIndex;</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; segments; i++) {</b>
+&nbsp;                // start of next is end of last segment, except for the last
+<b class="nc">&nbsp;                removed += subSimplify(points, start, Math.min(lastIndex, start + delta));</b>
+<b class="nc">&nbsp;                start += delta;</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            removed = subSimplify(points, fromIndex, lastIndex);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (removed &gt; 0 &amp;&amp; compress)</b>
+<b class="nc">&nbsp;            removeNaN(points);</b>
+&nbsp;
+<b class="nc">&nbsp;        return removed;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // keep the points of fromIndex and lastIndex
+&nbsp;    int subSimplify(PointList points, int fromIndex, int lastIndex) {
+<b class="nc">&nbsp;        if (lastIndex - fromIndex &lt; 2) {</b>
+<b class="nc">&nbsp;            return 0;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        int indexWithMaxDist = -1;</b>
+<b class="nc">&nbsp;        double maxDist = -1;</b>
+<b class="nc">&nbsp;        double elevationFactor = maxDistance / elevationMaxDistance;</b>
+<b class="nc">&nbsp;        double firstLat = points.getLat(fromIndex);</b>
+<b class="nc">&nbsp;        double firstLon = points.getLon(fromIndex);</b>
+<b class="nc">&nbsp;        double firstEle = points.getEle(fromIndex);</b>
+<b class="nc">&nbsp;        double lastLat = points.getLat(lastIndex);</b>
+<b class="nc">&nbsp;        double lastLon = points.getLon(lastIndex);</b>
+<b class="nc">&nbsp;        double lastEle = points.getEle(lastIndex);</b>
+<b class="nc">&nbsp;        for (int i = fromIndex + 1; i &lt; lastIndex; i++) {</b>
+<b class="nc">&nbsp;            double lat = points.getLat(i);</b>
+<b class="nc">&nbsp;            if (Double.isNaN(lat)) {</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            double lon = points.getLon(i);</b>
+<b class="nc">&nbsp;            double ele = points.getEle(i);</b>
+<b class="nc">&nbsp;            double dist = (points.is3D() &amp;&amp; elevationMaxDistance &lt; Double.MAX_VALUE &amp;&amp; !Double.isNaN(firstEle) &amp;&amp; !Double.isNaN(lastEle) &amp;&amp; !Double.isNaN(ele))</b>
+<b class="nc">&nbsp;                    ? calc.calcNormalizedEdgeDistance3D(</b>
+&nbsp;                    lat, lon, ele * elevationFactor,
+&nbsp;                    firstLat, firstLon, firstEle * elevationFactor,
+&nbsp;                    lastLat, lastLon, lastEle * elevationFactor)
+<b class="nc">&nbsp;                    : calc.calcNormalizedEdgeDistance(lat, lon, firstLat, firstLon, lastLat, lastLon);</b>
+<b class="nc">&nbsp;            if (maxDist &lt; dist) {</b>
+<b class="nc">&nbsp;                indexWithMaxDist = i;</b>
+<b class="nc">&nbsp;                maxDist = dist;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (indexWithMaxDist &lt; 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;maximum not found in [&quot; + fromIndex + &quot;,&quot; + lastIndex + &quot;]&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        int counter = 0;</b>
+<b class="nc">&nbsp;        if (maxDist &lt; normedMaxDist) {</b>
+<b class="nc">&nbsp;            for (int i = fromIndex + 1; i &lt; lastIndex; i++) {</b>
+<b class="nc">&nbsp;                points.set(i, Double.NaN, Double.NaN, Double.NaN);</b>
+<b class="nc">&nbsp;                counter++;</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            counter = subSimplify(points, fromIndex, indexWithMaxDist);</b>
+<b class="nc">&nbsp;            counter += subSimplify(points, indexWithMaxDist, lastIndex);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return counter;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Fills all entries of the point list that are NaN with the subsequent values (and therefore shortens the list)
+&nbsp;     */
+&nbsp;    static void removeNaN(PointList pointList) {
+<b class="nc">&nbsp;        int curr = 0;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; pointList.size(); i++) {</b>
+<b class="nc">&nbsp;            if (!Double.isNaN(pointList.getLat(i))) {</b>
+<b class="nc">&nbsp;                pointList.set(curr, pointList.getLat(i), pointList.getLon(i), pointList.getEle(i));</b>
+<b class="nc">&nbsp;                curr++;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        pointList.trimToSize(curr);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,222 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > GHPoint</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util.shapes</a>
+</div>
+
+<h1>Coverage Summary for Class: GHPoint (com.graphhopper.util.shapes)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GHPoint</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    26,7%
+  </span>
+  <span class="absValue">
+    (4/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    29,4%
+  </span>
+  <span class="absValue">
+    (10/34)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util.shapes;
+&nbsp;
+&nbsp;import com.graphhopper.util.NumHelper;
+&nbsp;import org.locationtech.jts.geom.Point;
+&nbsp;
+&nbsp;import java.util.Locale;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Peter Karich
+&nbsp; */
+&nbsp;public class GHPoint {
+<b class="fc">&nbsp;    public double lat = Double.NaN;</b>
+<b class="fc">&nbsp;    public double lon = Double.NaN;</b>
+&nbsp;
+<b class="fc">&nbsp;    public GHPoint() {</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public GHPoint(double lat, double lon) {</b>
+<b class="fc">&nbsp;        this.lat = lat;</b>
+<b class="fc">&nbsp;        this.lon = lon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static GHPoint create(Point point) {
+<b class="nc">&nbsp;        return new GHPoint(point.getY(), point.getX());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static GHPoint fromString(String str) {
+<b class="nc">&nbsp;        return fromString(str, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static GHPoint fromStringLonLat(String str) {
+<b class="nc">&nbsp;        return fromString(str, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static GHPoint fromJson(double[] xy) {
+<b class="nc">&nbsp;        return new GHPoint(xy[1], xy[0]);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static GHPoint fromString(String str, boolean lonLatOrder) {
+<b class="nc">&nbsp;        String[] fromStrs = str.split(&quot;,&quot;);</b>
+<b class="nc">&nbsp;        if (fromStrs.length != 2)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot parse point &#39;&quot; + str + &quot;&#39;&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            double fromLat = Double.parseDouble(fromStrs[0]);</b>
+<b class="nc">&nbsp;            double fromLon = Double.parseDouble(fromStrs[1]);</b>
+<b class="nc">&nbsp;            if (lonLatOrder) {</b>
+<b class="nc">&nbsp;                return new GHPoint(fromLon, fromLat);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                return new GHPoint(fromLat, fromLon);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (NumberFormatException ex) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot parse point &#39;&quot; + str + &quot;&#39;&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getLon() {
+<b class="nc">&nbsp;        return lon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double getLat() {
+<b class="nc">&nbsp;        return lat;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isValid() {
+<b class="fc">&nbsp;        return !Double.isNaN(lat) &amp;&amp; !Double.isNaN(lon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        int hash = 7;</b>
+<b class="nc">&nbsp;        hash = 83 * hash + (int) (Double.doubleToLongBits(this.lat) ^ (Double.doubleToLongBits(this.lat) &gt;&gt;&gt; 32));</b>
+<b class="nc">&nbsp;        hash = 83 * hash + (int) (Double.doubleToLongBits(this.lon) ^ (Double.doubleToLongBits(this.lon) &gt;&gt;&gt; 32));</b>
+<b class="nc">&nbsp;        return hash;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object obj) {
+<b class="fc">&nbsp;        if (obj == null)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        @SuppressWarnings(&quot;unchecked&quot;) final GHPoint other = (GHPoint) obj;</b>
+<b class="fc">&nbsp;        return NumHelper.equalsEps(lat, other.lat) &amp;&amp; NumHelper.equalsEps(lon, other.lon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return lat + &quot;,&quot; + lon;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toShortString() {
+<b class="nc">&nbsp;        return String.format(Locale.ROOT, &quot;%.8f,%.8f&quot;, lat, lon);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Attention: geoJson is LON,LAT
+&nbsp;     */
+&nbsp;    public Double[] toGeoJson() {
+<b class="nc">&nbsp;        return new Double[]{lon, lat};</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

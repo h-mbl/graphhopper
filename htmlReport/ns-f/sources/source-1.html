@@ -1,0 +1,474 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > PbfBlobDecoder</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.reader.osm.pbf</a>
+</div>
+
+<h1>Coverage Summary for Class: PbfBlobDecoder (com.graphhopper.reader.osm.pbf)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PbfBlobDecoder</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/140)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;// This software is released into the Public Domain.  See copying.txt for details.
+&nbsp;package com.graphhopper.reader.osm.pbf;
+&nbsp;
+&nbsp;import com.carrotsearch.hppc.LongIndexedContainer;
+&nbsp;import com.google.protobuf.InvalidProtocolBufferException;
+&nbsp;import com.graphhopper.reader.ReaderElement;
+&nbsp;import com.graphhopper.reader.ReaderNode;
+&nbsp;import com.graphhopper.reader.ReaderRelation;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.reader.osm.OSMFileHeader;
+&nbsp;import com.graphhopper.reader.osm.SkipOptions;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import org.openstreetmap.osmosis.osmbinary.Fileformat;
+&nbsp;import org.openstreetmap.osmosis.osmbinary.Osmformat;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.*;
+&nbsp;import java.util.zip.DataFormatException;
+&nbsp;import java.util.zip.Inflater;
+&nbsp;
+&nbsp;/**
+&nbsp; * Converts PBF block data into decoded entities ready to be passed into an Osmosis pipeline. This
+&nbsp; * class is designed to be passed into a pool of worker threads to allow multi-threaded decoding.
+&nbsp; * &lt;p&gt;
+&nbsp; *
+&nbsp; * @author Brett Henderson
+&nbsp; */
+&nbsp;public class PbfBlobDecoder implements Runnable {
+<b class="nc">&nbsp;    private static final Logger log = LoggerFactory.getLogger(PbfBlobDecoder.class);</b>
+<b class="nc">&nbsp;    private final boolean checkData = false;</b>
+&nbsp;    private final String blobType;
+&nbsp;    private final byte[] rawBlob;
+&nbsp;    private final PbfBlobDecoderListener listener;
+&nbsp;    private List&lt;ReaderElement&gt; decodedEntities;
+&nbsp;    private final SkipOptions skipOptions;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new instance.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param blobType The type of blob.
+&nbsp;     * @param rawBlob  The raw data of the blob.
+&nbsp;     * @param listener The listener for receiving decoding results.
+&nbsp;     */
+<b class="nc">&nbsp;    public PbfBlobDecoder(String blobType, byte[] rawBlob, PbfBlobDecoderListener listener, SkipOptions skipOptions) {</b>
+<b class="nc">&nbsp;        this.blobType = blobType;</b>
+<b class="nc">&nbsp;        this.rawBlob = rawBlob;</b>
+<b class="nc">&nbsp;        this.listener = listener;</b>
+<b class="nc">&nbsp;        this.skipOptions = skipOptions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private byte[] readBlobContent() throws IOException {
+<b class="nc">&nbsp;        Fileformat.Blob blob = Fileformat.Blob.parseFrom(rawBlob);</b>
+&nbsp;        byte[] blobData;
+&nbsp;
+<b class="nc">&nbsp;        if (blob.hasRaw()) {</b>
+<b class="nc">&nbsp;            blobData = blob.getRaw().toByteArray();</b>
+<b class="nc">&nbsp;        } else if (blob.hasZlibData()) {</b>
+<b class="nc">&nbsp;            Inflater inflater = new Inflater();</b>
+<b class="nc">&nbsp;            inflater.setInput(blob.getZlibData().toByteArray());</b>
+<b class="nc">&nbsp;            blobData = new byte[blob.getRawSize()];</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                inflater.inflate(blobData);</b>
+<b class="nc">&nbsp;            } catch (DataFormatException e) {</b>
+<b class="nc">&nbsp;                throw new RuntimeException(&quot;Unable to decompress PBF blob.&quot;, e);</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;            if (!inflater.finished()) {</b>
+<b class="nc">&nbsp;                throw new RuntimeException(&quot;PBF blob contains incomplete compressed data.&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            inflater.end();</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;PBF blob uses unsupported compression, only raw or zlib may be used.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return blobData;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void processOsmHeader(byte[] data) throws InvalidProtocolBufferException {
+<b class="nc">&nbsp;        Osmformat.HeaderBlock header = Osmformat.HeaderBlock.parseFrom(data);</b>
+&nbsp;
+&nbsp;        // Build the list of active and unsupported features in the file.
+<b class="nc">&nbsp;        List&lt;String&gt; supportedFeatures = Arrays.asList(&quot;OsmSchema-V0.6&quot;, &quot;DenseNodes&quot;);</b>
+<b class="nc">&nbsp;        List&lt;String&gt; unsupportedFeatures = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (String feature : header.getRequiredFeaturesList()) {</b>
+<b class="nc">&nbsp;            if (supportedFeatures.contains(feature)) {</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                unsupportedFeatures.add(feature);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // We can&#39;t continue if there are any unsupported features. We wait
+&nbsp;        // until now so that we can display all unsupported features instead of
+&nbsp;        // just the first one we encounter.
+<b class="nc">&nbsp;        if (unsupportedFeatures.size() &gt; 0) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;PBF file contains unsupported features &quot; + unsupportedFeatures);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        OSMFileHeader fileheader = new OSMFileHeader();</b>
+<b class="nc">&nbsp;        long milliSecondDate = header.getOsmosisReplicationTimestamp();</b>
+<b class="nc">&nbsp;        fileheader.setTag(&quot;timestamp&quot;, Helper.createFormatter().format(new Date(milliSecondDate * 1000)));</b>
+<b class="nc">&nbsp;        decodedEntities.add(fileheader);</b>
+&nbsp;
+&nbsp;        // Build a new bound object which corresponds to the header.
+&nbsp;/*
+&nbsp;         Bound bound;
+&nbsp;         if (header.hasBbox()) {
+&nbsp;         HeaderBBox bbox = header.getBbox();
+&nbsp;         bound = new Bound(bbox.getRight() * COORDINATE_SCALING_FACTOR, bbox.getLeft() * COORDINATE_SCALING_FACTOR,
+&nbsp;         bbox.getTop() * COORDINATE_SCALING_FACTOR, bbox.getBottom() * COORDINATE_SCALING_FACTOR,
+&nbsp;         header.getSource());
+&nbsp;         } else {
+&nbsp;         bound = new Bound(header.getSource());
+&nbsp;         }
+&nbsp;
+&nbsp;         // Add the bound object to the results.
+&nbsp;         decodedEntities.add(new BoundContainer(bound));
+&nbsp;         */
+&nbsp;    }
+&nbsp;
+&nbsp;    private Map&lt;String, Object&gt; buildTags(List&lt;Integer&gt; keys, List&lt;Integer&gt; values, PbfFieldDecoder fieldDecoder) {
+&nbsp;
+&nbsp;        // Ensure parallel lists are of equal size.
+&nbsp;        if (checkData) {
+&nbsp;            if (keys.size() != values.size()) {
+&nbsp;                throw new RuntimeException(&quot;Number of tag keys (&quot; + keys.size() + &quot;) and tag values (&quot;
+&nbsp;                        + values.size() + &quot;) don&#39;t match&quot;);
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Iterator&lt;Integer&gt; keyIterator = keys.iterator();</b>
+<b class="nc">&nbsp;        Iterator&lt;Integer&gt; valueIterator = values.iterator();</b>
+<b class="nc">&nbsp;        if (keyIterator.hasNext()) {</b>
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; tags = new HashMap&lt;&gt;(keys.size());</b>
+<b class="nc">&nbsp;            while (keyIterator.hasNext()) {</b>
+<b class="nc">&nbsp;                String key = fieldDecoder.decodeString(keyIterator.next());</b>
+<b class="nc">&nbsp;                String value = fieldDecoder.decodeString(valueIterator.next());</b>
+<b class="nc">&nbsp;                tags.put(key, value);</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;            return tags;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void processNodes(List&lt;Osmformat.Node&gt; nodes, PbfFieldDecoder fieldDecoder) {
+<b class="nc">&nbsp;        for (Osmformat.Node node : nodes) {</b>
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; tags = buildTags(node.getKeysList(), node.getValsList(), fieldDecoder);</b>
+&nbsp;
+<b class="nc">&nbsp;            ReaderNode osmNode = new ReaderNode(node.getId(), fieldDecoder.decodeLatitude(node</b>
+<b class="nc">&nbsp;                    .getLat()), fieldDecoder.decodeLatitude(node.getLon()));</b>
+<b class="nc">&nbsp;            osmNode.setTags(tags);</b>
+&nbsp;
+&nbsp;            // Add the bound object to the results.
+<b class="nc">&nbsp;            decodedEntities.add(osmNode);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void processNodes(Osmformat.DenseNodes nodes, PbfFieldDecoder fieldDecoder) {
+<b class="nc">&nbsp;        List&lt;Long&gt; idList = nodes.getIdList();</b>
+<b class="nc">&nbsp;        List&lt;Long&gt; latList = nodes.getLatList();</b>
+<b class="nc">&nbsp;        List&lt;Long&gt; lonList = nodes.getLonList();</b>
+&nbsp;
+&nbsp;        // Ensure parallel lists are of equal size.
+&nbsp;        if (checkData) {
+&nbsp;            if ((idList.size() != latList.size()) || (idList.size() != lonList.size())) {
+&nbsp;                throw new RuntimeException(&quot;Number of ids (&quot; + idList.size() + &quot;), latitudes (&quot; + latList.size()
+&nbsp;                        + &quot;), and longitudes (&quot; + lonList.size() + &quot;) don&#39;t match&quot;);
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Iterator&lt;Integer&gt; keysValuesIterator = nodes.getKeysValsList().iterator();</b>
+&nbsp;
+&nbsp;        /*
+&nbsp;         Osmformat.DenseInfo denseInfo;
+&nbsp;         if (nodes.hasDenseinfo()) {
+&nbsp;         denseInfo = nodes.getDenseinfo();
+&nbsp;         } else {
+&nbsp;         denseInfo = null;
+&nbsp;         }
+&nbsp;         */
+<b class="nc">&nbsp;        long nodeId = 0;</b>
+<b class="nc">&nbsp;        long latitude = 0;</b>
+<b class="nc">&nbsp;        long longitude = 0;</b>
+&nbsp;//		int userId = 0;
+&nbsp;//		int userSid = 0;
+&nbsp;//		long timestamp = 0;
+&nbsp;//		long changesetId = 0;
+<b class="nc">&nbsp;        for (int i = 0; i &lt; idList.size(); i++) {</b>
+&nbsp;            // Delta decode node fields.
+<b class="nc">&nbsp;            nodeId += idList.get(i);</b>
+<b class="nc">&nbsp;            latitude += latList.get(i);</b>
+<b class="nc">&nbsp;            longitude += lonList.get(i);</b>
+&nbsp;
+&nbsp;            /*
+&nbsp;             if (denseInfo != null) {
+&nbsp;             // Delta decode dense info fields.
+&nbsp;             userId += denseInfo.getUid(i);
+&nbsp;             userSid += denseInfo.getUserSid(i);
+&nbsp;             timestamp += denseInfo.getTimestamp(i);
+&nbsp;             changesetId += denseInfo.getChangeset(i);
+&nbsp;
+&nbsp;             // Build the user, but only if one exists.
+&nbsp;             OsmUser user;
+&nbsp;             if (userId &gt;= 0) {
+&nbsp;             user = new OsmUser(userId, fieldDecoder.decodeString(userSid));
+&nbsp;             } else {
+&nbsp;             user = OsmUser.NONE;
+&nbsp;             }
+&nbsp;
+&nbsp;             entityData = new CommonEntityData(nodeId, denseInfo.getVersion(i),
+&nbsp;             fieldDecoder.decodeTimestamp(timestamp), user, changesetId);
+&nbsp;             } else {
+&nbsp;             entityData = new CommonEntityData(nodeId, EMPTY_VERSION, EMPTY_TIMESTAMP, OsmUser.NONE,
+&nbsp;             EMPTY_CHANGESET);
+&nbsp;             }
+&nbsp;             */
+&nbsp;            // Build the tags. The key and value string indexes are sequential
+&nbsp;            // in the same PBF array. Each set of tags is delimited by an index
+&nbsp;            // with a value of 0.
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; tags = null;</b>
+<b class="nc">&nbsp;            while (keysValuesIterator.hasNext()) {</b>
+<b class="nc">&nbsp;                int keyIndex = keysValuesIterator.next();</b>
+<b class="nc">&nbsp;                if (keyIndex == 0) {</b>
+<b class="nc">&nbsp;                    break;</b>
+&nbsp;                }
+&nbsp;                if (checkData) {
+&nbsp;                    if (!keysValuesIterator.hasNext()) {
+&nbsp;                        throw new RuntimeException(
+&nbsp;                                &quot;The PBF DenseInfo keys/values list contains a key with no corresponding value.&quot;);
+&nbsp;                    }
+&nbsp;                }
+<b class="nc">&nbsp;                int valueIndex = keysValuesIterator.next();</b>
+&nbsp;
+<b class="nc">&nbsp;                if (tags == null) {</b>
+&nbsp;                    // divide by 2 as key&amp;value, multiple by 2 because of the better approximation
+<b class="nc">&nbsp;                    tags = new HashMap&lt;&gt;(Math.max(3, 2 * (nodes.getKeysValsList().size() / 2) / idList.size()));</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                tags.put(fieldDecoder.decodeString(keyIndex), fieldDecoder.decodeString(valueIndex));</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;
+<b class="nc">&nbsp;            ReaderNode node = new ReaderNode(nodeId, fieldDecoder.decodeLatitude(latitude), fieldDecoder.decodeLongitude(longitude));</b>
+<b class="nc">&nbsp;            node.setTags(tags);</b>
+&nbsp;
+&nbsp;            // Add the bound object to the results.
+<b class="nc">&nbsp;            decodedEntities.add(node);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void processWays(List&lt;Osmformat.Way&gt; ways, PbfFieldDecoder fieldDecoder) {
+<b class="nc">&nbsp;        for (Osmformat.Way way : ways) {</b>
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; tags = buildTags(way.getKeysList(), way.getValsList(), fieldDecoder);</b>
+<b class="nc">&nbsp;            ReaderWay osmWay = new ReaderWay(way.getId());</b>
+<b class="nc">&nbsp;            osmWay.setTags(tags);</b>
+&nbsp;
+&nbsp;            // Build up the list of way nodes for the way. The node ids are
+&nbsp;            // delta encoded meaning that each id is stored as a delta against
+&nbsp;            // the previous one.
+<b class="nc">&nbsp;            long nodeId = 0;</b>
+<b class="nc">&nbsp;            LongIndexedContainer wayNodes = osmWay.getNodes();</b>
+<b class="nc">&nbsp;            for (long nodeIdOffset : way.getRefsList()) {</b>
+<b class="nc">&nbsp;                nodeId += nodeIdOffset;</b>
+<b class="nc">&nbsp;                wayNodes.add(nodeId);</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;
+<b class="nc">&nbsp;            decodedEntities.add(osmWay);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void buildRelationMembers(ReaderRelation relation,
+&nbsp;                                      List&lt;Long&gt; memberIds, List&lt;Integer&gt; memberRoles, List&lt;Osmformat.Relation.MemberType&gt; memberTypes,
+&nbsp;                                      PbfFieldDecoder fieldDecoder) {
+&nbsp;
+&nbsp;        // Ensure parallel lists are of equal size.
+&nbsp;        if (checkData) {
+&nbsp;            if ((memberIds.size() != memberRoles.size()) || (memberIds.size() != memberTypes.size())) {
+&nbsp;                throw new RuntimeException(&quot;Number of member ids (&quot; + memberIds.size() + &quot;), member roles (&quot;
+&nbsp;                        + memberRoles.size() + &quot;), and member types (&quot; + memberTypes.size() + &quot;) don&#39;t match&quot;);
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Iterator&lt;Long&gt; memberIdIterator = memberIds.iterator();</b>
+<b class="nc">&nbsp;        Iterator&lt;Integer&gt; memberRoleIterator = memberRoles.iterator();</b>
+<b class="nc">&nbsp;        Iterator&lt;Osmformat.Relation.MemberType&gt; memberTypeIterator = memberTypes.iterator();</b>
+&nbsp;
+&nbsp;        // Build up the list of relation members for the way. The member ids are
+&nbsp;        // delta encoded meaning that each id is stored as a delta against
+&nbsp;        // the previous one.
+<b class="nc">&nbsp;        long refId = 0;</b>
+<b class="nc">&nbsp;        while (memberIdIterator.hasNext()) {</b>
+<b class="nc">&nbsp;            Osmformat.Relation.MemberType memberType = memberTypeIterator.next();</b>
+<b class="nc">&nbsp;            refId += memberIdIterator.next();</b>
+&nbsp;
+<b class="nc">&nbsp;            ReaderElement.Type entityType = ReaderElement.Type.NODE;</b>
+<b class="nc">&nbsp;            if (memberType == Osmformat.Relation.MemberType.WAY) {</b>
+<b class="nc">&nbsp;                entityType = ReaderElement.Type.WAY;</b>
+<b class="nc">&nbsp;            } else if (memberType == Osmformat.Relation.MemberType.RELATION) {</b>
+<b class="nc">&nbsp;                entityType = ReaderElement.Type.RELATION;</b>
+&nbsp;            }
+&nbsp;            if (checkData) {
+&nbsp;                if (entityType == ReaderElement.Type.NODE &amp;&amp; memberType != Osmformat.Relation.MemberType.NODE) {
+&nbsp;                    throw new RuntimeException(&quot;Member type of &quot; + memberType + &quot; is not supported.&quot;);
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            ReaderRelation.Member member = new ReaderRelation.Member(entityType, refId, fieldDecoder.decodeString(memberRoleIterator.next()));</b>
+<b class="nc">&nbsp;            relation.add(member);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void processRelations(List&lt;Osmformat.Relation&gt; relations, PbfFieldDecoder fieldDecoder) {
+<b class="nc">&nbsp;        for (Osmformat.Relation relation : relations) {</b>
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; tags = buildTags(relation.getKeysList(), relation.getValsList(), fieldDecoder);</b>
+&nbsp;
+<b class="nc">&nbsp;            ReaderRelation osmRelation = new ReaderRelation(relation.getId());</b>
+<b class="nc">&nbsp;            osmRelation.setTags(tags);</b>
+&nbsp;
+<b class="nc">&nbsp;            buildRelationMembers(osmRelation, relation.getMemidsList(), relation.getRolesSidList(),</b>
+<b class="nc">&nbsp;                    relation.getTypesList(), fieldDecoder);</b>
+&nbsp;
+&nbsp;            // Add the bound object to the results.
+<b class="nc">&nbsp;            decodedEntities.add(osmRelation);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void processOsmPrimitives(byte[] data) throws InvalidProtocolBufferException {
+<b class="nc">&nbsp;        Osmformat.PrimitiveBlock block = Osmformat.PrimitiveBlock.parseFrom(data);</b>
+<b class="nc">&nbsp;        PbfFieldDecoder fieldDecoder = new PbfFieldDecoder(block);</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Osmformat.PrimitiveGroup primitiveGroup : block.getPrimitivegroupList()) {</b>
+<b class="nc">&nbsp;            if (!skipOptions.isSkipNodes()) {</b>
+<b class="nc">&nbsp;                processNodes(primitiveGroup.getDense(), fieldDecoder);</b>
+<b class="nc">&nbsp;                processNodes(primitiveGroup.getNodesList(), fieldDecoder);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (!skipOptions.isSkipWays())</b>
+<b class="nc">&nbsp;                processWays(primitiveGroup.getWaysList(), fieldDecoder);</b>
+<b class="nc">&nbsp;            if (!skipOptions.isSkipRelations())</b>
+<b class="nc">&nbsp;                processRelations(primitiveGroup.getRelationsList(), fieldDecoder);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void runAndTrapExceptions() {
+&nbsp;        try {
+<b class="nc">&nbsp;            decodedEntities = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            if (&quot;OSMHeader&quot;.equals(blobType)) {</b>
+<b class="nc">&nbsp;                processOsmHeader(readBlobContent());</b>
+&nbsp;
+<b class="nc">&nbsp;            } else if (&quot;OSMData&quot;.equals(blobType)) {</b>
+<b class="nc">&nbsp;                processOsmPrimitives(readBlobContent());</b>
+&nbsp;
+<b class="nc">&nbsp;            } else if (log.isDebugEnabled())</b>
+<b class="nc">&nbsp;                log.debug(&quot;Skipping unrecognised blob type &quot; + blobType);</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Unable to process PBF blob&quot;, e);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void run() {
+&nbsp;        try {
+<b class="nc">&nbsp;            runAndTrapExceptions();</b>
+<b class="nc">&nbsp;            listener.complete(decodedEntities);</b>
+&nbsp;
+<b class="nc">&nbsp;        } catch (RuntimeException e) {</b>
+&nbsp;            // exception is properly rethrown in PbfDecoder.sendResultsToSink
+<b class="nc">&nbsp;            listener.error(e);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

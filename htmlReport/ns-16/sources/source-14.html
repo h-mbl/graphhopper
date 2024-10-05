@@ -1,0 +1,209 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > UrbanDensityCalculator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: UrbanDensityCalculator (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UrbanDensityCalculator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/33)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;import com.graphhopper.util.EdgeIteratorState;
+&nbsp;import com.graphhopper.util.StopWatch;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.util.function.ToDoubleFunction;
+&nbsp;
+<b class="nc">&nbsp;public class UrbanDensityCalculator {</b>
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(UrbanDensityCalculator.class);</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the urban density (rural/residential/city) for all edges of the graph.
+&nbsp;     * First a weighted road density is calculated for every edge to determine whether it belongs to a residential area.
+&nbsp;     * In a second step very dense residential areas are classified as &#39;city&#39;.
+&nbsp;     *
+&nbsp;     * @param residentialAreaRadius      radius used for residential area calculation in meters
+&nbsp;     * @param residentialAreaSensitivity Use higher values if there are too many residential areas that are not recognized. Use
+&nbsp;     *                                   smaller values if there are too many non-residential areas that are classified as residential.
+&nbsp;     * @param cityAreaRadius             in meters, see residentialAreaRadius
+&nbsp;     * @param cityAreaSensitivity        similar to residentialAreaSensitivity, but for the city classification
+&nbsp;     * @param threads                    number of threads used to calculate the road densities
+&nbsp;     */
+&nbsp;    public static void calcUrbanDensity(Graph graph, EnumEncodedValue&lt;UrbanDensity&gt; urbanDensityEnc,
+&nbsp;                                        EnumEncodedValue&lt;RoadClass&gt; roadClassEnc, BooleanEncodedValue roadClassLinkEnc,
+&nbsp;                                        double residentialAreaRadius, double residentialAreaSensitivity,
+&nbsp;                                        double cityAreaRadius, double cityAreaSensitivity,
+&nbsp;                                        int threads) {
+<b class="nc">&nbsp;        logger.info(&quot;Calculating residential areas ..., radius={}, sensitivity={}, threads={}&quot;, residentialAreaRadius, residentialAreaSensitivity, threads);</b>
+<b class="nc">&nbsp;        StopWatch sw = StopWatch.started();</b>
+<b class="nc">&nbsp;        calcResidential(graph, urbanDensityEnc, roadClassEnc, roadClassLinkEnc, residentialAreaRadius, residentialAreaSensitivity, threads);</b>
+<b class="nc">&nbsp;        logger.info(&quot;Finished calculating residential areas, took: &quot; + sw.stop().getSeconds() + &quot;s&quot;);</b>
+<b class="nc">&nbsp;        if (cityAreaRadius &gt; 1) {</b>
+<b class="nc">&nbsp;            logger.info(&quot;Calculating city areas ..., radius={}, sensitivity={}, threads={}&quot;, cityAreaRadius, cityAreaSensitivity, threads);</b>
+<b class="nc">&nbsp;            sw = StopWatch.started();</b>
+<b class="nc">&nbsp;            calcCity(graph, urbanDensityEnc, cityAreaRadius, cityAreaSensitivity, threads);</b>
+<b class="nc">&nbsp;            logger.info(&quot;Finished calculating city areas, took: &quot; + sw.stop().getSeconds() + &quot;s&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void calcResidential(Graph graph, EnumEncodedValue&lt;UrbanDensity&gt; urbanDensityEnc,
+&nbsp;                                        EnumEncodedValue&lt;RoadClass&gt; roadClassEnc, BooleanEncodedValue roadClassLinkEnc,
+&nbsp;                                        double radius, double sensitivity, int threads) {
+<b class="nc">&nbsp;        final ToDoubleFunction&lt;EdgeIteratorState&gt; calcRoadFactor = edge -&gt; {</b>
+<b class="nc">&nbsp;            RoadClass roadClass = edge.get(roadClassEnc);</b>
+&nbsp;            // we&#39;re interested in the road density of &#39;urban&#39; roads, so dense road clusters of outdoor
+&nbsp;            // roads like tracks or paths and road class links should not contribute to the residential density
+<b class="nc">&nbsp;            if (edge.get(roadClassLinkEnc) ||</b>
+&nbsp;                    roadClass == RoadClass.TRACK ||
+&nbsp;                    roadClass == RoadClass.SERVICE ||
+&nbsp;                    roadClass == RoadClass.PATH ||
+&nbsp;                    roadClass == RoadClass.BRIDLEWAY)
+<b class="nc">&nbsp;                return 0;</b>
+&nbsp;            else
+<b class="nc">&nbsp;                return 1;</b>
+&nbsp;        };
+&nbsp;        // temporarily write results to an external array for thread-safety
+<b class="nc">&nbsp;        boolean[] isResidential = new boolean[graph.getEdges()];</b>
+<b class="nc">&nbsp;        RoadDensityCalculator.calcRoadDensities(graph, (calculator, edge) -&gt; {</b>
+<b class="nc">&nbsp;            double roadDensity = calculator.calcRoadDensity(edge, radius, calcRoadFactor);</b>
+<b class="nc">&nbsp;            isResidential[edge.getEdge()] = roadDensity * sensitivity &gt;= 1.0;</b>
+&nbsp;        }, threads);
+<b class="nc">&nbsp;        for (int edge = 0; edge &lt; isResidential.length; edge++)</b>
+<b class="nc">&nbsp;            graph.getEdgeIteratorState(edge, Integer.MIN_VALUE).set(urbanDensityEnc, isResidential[edge] ? UrbanDensity.RESIDENTIAL : UrbanDensity.RURAL);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void calcCity(Graph graph, EnumEncodedValue&lt;UrbanDensity&gt; urbanDensityEnc,
+&nbsp;                                 double radius, double sensitivity, int threads) {
+&nbsp;        // do not modify the urban density values as long as we are still reading them -&gt; store city flags in this array first
+<b class="nc">&nbsp;        boolean[] isCity = new boolean[graph.getEdges()];</b>
+<b class="nc">&nbsp;        final ToDoubleFunction&lt;EdgeIteratorState&gt; calcRoadFactor = edge -&gt; edge.get(urbanDensityEnc) == UrbanDensity.RESIDENTIAL ? 1 : 0;</b>
+<b class="nc">&nbsp;        RoadDensityCalculator.calcRoadDensities(graph, (calculator, edge) -&gt; {</b>
+<b class="nc">&nbsp;            UrbanDensity urbanDensity = edge.get(urbanDensityEnc);</b>
+<b class="nc">&nbsp;            if (urbanDensity == UrbanDensity.RURAL)</b>
+&nbsp;                return;
+<b class="nc">&nbsp;            double roadDensity = calculator.calcRoadDensity(edge, radius, calcRoadFactor);</b>
+<b class="nc">&nbsp;            if (roadDensity * sensitivity &gt;= 1.0)</b>
+<b class="nc">&nbsp;                isCity[edge.getEdge()] = true;</b>
+&nbsp;        }, threads);
+<b class="nc">&nbsp;        for (int edge = 0; edge &lt; isCity.length; edge++)</b>
+<b class="nc">&nbsp;            if (isCity[edge])</b>
+<b class="nc">&nbsp;                graph.getEdgeIteratorState(edge, Integer.MIN_VALUE).set(urbanDensityEnc, UrbanDensity.CITY);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

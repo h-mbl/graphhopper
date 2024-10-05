@@ -1,0 +1,95 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > CHParameters</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ch</a>
+</div>
+
+<h1>Coverage Summary for Class: CHParameters (com.graphhopper.routing.ch)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">CHParameters</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.ch;
+&nbsp;
+&nbsp;import com.graphhopper.util.Parameters;
+&nbsp;
+&nbsp;public final class CHParameters {
+&nbsp;    // graph contraction order etc. 
+&nbsp;    public static final String PERIODIC_UPDATES = Parameters.CH.PREPARE + &quot;updates.periodic&quot;;
+&nbsp;    public static final String LAST_LAZY_NODES_UPDATES = Parameters.CH.PREPARE + &quot;updates.lazy&quot;;
+&nbsp;    public static final String NEIGHBOR_UPDATES = Parameters.CH.PREPARE + &quot;updates.neighbor&quot;;
+&nbsp;    public static final String NEIGHBOR_UPDATES_MAX = Parameters.CH.PREPARE + &quot;updates.neighbor_max&quot;;
+&nbsp;    public static final String CONTRACTED_NODES = Parameters.CH.PREPARE + &quot;contracted_nodes&quot;;
+&nbsp;    public static final String LOG_MESSAGES = Parameters.CH.PREPARE + &quot;log_messages&quot;;
+&nbsp;    // node contraction, node-based
+&nbsp;    public static final String EDGE_DIFFERENCE_WEIGHT = Parameters.CH.PREPARE + &quot;node.edge_difference_weight&quot;;
+&nbsp;    public static final String ORIGINAL_EDGE_COUNT_WEIGHT = Parameters.CH.PREPARE + &quot;node.original_edge_count_weight&quot;;
+&nbsp;    public static final String MAX_POLL_FACTOR_HEURISTIC_NODE = Parameters.CH.PREPARE + &quot;node.max_poll_factor_heuristic&quot;;
+&nbsp;    public static final String MAX_POLL_FACTOR_CONTRACTION_NODE = Parameters.CH.PREPARE + &quot;node.max_poll_factor_contraction&quot;;
+&nbsp;    // node contraction, edge-based
+&nbsp;    public static final String EDGE_QUOTIENT_WEIGHT = Parameters.CH.PREPARE + &quot;edge.edge_quotient_weight&quot;;
+&nbsp;    public static final String ORIGINAL_EDGE_QUOTIENT_WEIGHT = Parameters.CH.PREPARE + &quot;edge.original_edge_quotient_weight&quot;;
+&nbsp;    public static final String HIERARCHY_DEPTH_WEIGHT = Parameters.CH.PREPARE + &quot;edge.hierarchy_depth_weight&quot;;
+&nbsp;    public static final String MAX_POLL_FACTOR_HEURISTIC_EDGE = Parameters.CH.PREPARE + &quot;edge.max_poll_factor_heuristic&quot;;
+&nbsp;    public static final String MAX_POLL_FACTOR_CONTRACTION_EDGE = Parameters.CH.PREPARE + &quot;edge.max_poll_factor_contraction&quot;;
+&nbsp;
+&nbsp;    private CHParameters() {
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

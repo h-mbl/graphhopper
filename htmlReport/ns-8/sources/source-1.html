@@ -1,0 +1,264 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ContourBuilder</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.isochrone.algorithm</a>
+</div>
+
+<h1>Coverage Summary for Class: ContourBuilder (com.graphhopper.isochrone.algorithm)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ContourBuilder</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/78)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/* This program is free software: you can redistribute it and/or
+&nbsp; modify it under the terms of the GNU Lesser General Public License
+&nbsp; as published by the Free Software Foundation, either version 3 of
+&nbsp; the License, or (at your option) any later version.
+&nbsp;
+&nbsp; This program is distributed in the hope that it will be useful,
+&nbsp; but WITHOUT ANY WARRANTY; without even the implied warranty of
+&nbsp; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+&nbsp; GNU General Public License for more details.
+&nbsp;
+&nbsp; You should have received a copy of the GNU General Public License
+&nbsp; along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;. */
+&nbsp;
+&nbsp;package com.graphhopper.isochrone.algorithm;
+&nbsp;
+&nbsp;import org.locationtech.jts.algorithm.CGAlgorithms;
+&nbsp;import org.locationtech.jts.geom.*;
+&nbsp;import org.locationtech.jts.geom.prep.PreparedPolygon;
+&nbsp;import org.locationtech.jts.triangulate.quadedge.Vertex;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;import java.util.function.ToIntBiFunction;
+&nbsp;
+&nbsp;/**
+&nbsp; *
+&nbsp; * Adapted from org.opentripplanner.common.geometry.DelaunayIsolineBuilder,
+&nbsp; * which is under LGPL.
+&nbsp; *
+&nbsp; * @author laurent
+&nbsp; * @author michaz
+&nbsp; *
+&nbsp; */
+&nbsp;public class ContourBuilder {
+&nbsp;
+&nbsp;    private static final double EPSILON = 0.000001;
+&nbsp;
+&nbsp;    // OpenStreetMap has 1E7 (coordinates with 7 decimal places), and we walk on the edges of that grid,
+&nbsp;    // so we use 1E8 so we can, in theory, always wedge a point petween any two OSM points.
+<b class="nc">&nbsp;    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(1E8));</b>
+&nbsp;    private final ReadableTriangulation triangulation;
+&nbsp;
+<b class="nc">&nbsp;    public ContourBuilder(ReadableTriangulation triangulation) {</b>
+<b class="nc">&nbsp;        this.triangulation = triangulation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MultiPolygon computeIsoline(double z0, Collection&lt;ReadableQuadEdge&gt; seedEdges) {
+<b class="nc">&nbsp;        ToIntBiFunction&lt;Vertex, Vertex&gt; cut = (orig, dest) -&gt; {</b>
+<b class="nc">&nbsp;            double za = orig.getZ();</b>
+<b class="nc">&nbsp;            double zb = dest.getZ();</b>
+<b class="nc">&nbsp;            if (za &lt;= z0 &amp;&amp; zb &gt; z0) return 1;</b>
+<b class="nc">&nbsp;            if (za &gt; z0 &amp;&amp; zb &lt;= z0) return -1;</b>
+<b class="nc">&nbsp;            return 0;</b>
+&nbsp;        };
+<b class="nc">&nbsp;        return computeIsoline(cut, seedEdges);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MultiPolygon computeIsoline(ToIntBiFunction&lt;Vertex, Vertex&gt; cut, Collection&lt;ReadableQuadEdge&gt; seedEdges) {
+<b class="nc">&nbsp;        Set&lt;ReadableQuadEdge&gt; processed = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        List&lt;LinearRing&gt; rings = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (ReadableQuadEdge f : seedEdges) {</b>
+<b class="nc">&nbsp;            ReadableQuadEdge e = f.getPrimary();</b>
+<b class="nc">&nbsp;            if (processed.contains(e))</b>
+<b class="nc">&nbsp;                continue;</b>
+<b class="nc">&nbsp;            processed.add(e);</b>
+<b class="nc">&nbsp;            int cut0 = cut.applyAsInt(e.orig(), e.dest());</b>
+<b class="nc">&nbsp;            if (cut0 == 0) {</b>
+<b class="nc">&nbsp;                continue; // While, next edge</b>
+&nbsp;            }
+<b class="nc">&nbsp;            List&lt;Coordinate&gt; polyPoints = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            boolean ccw = cut0 &gt; 0;</b>
+&nbsp;            while (true) {
+&nbsp;                // Add a point to polyline
+&nbsp;                Coordinate cC;
+<b class="nc">&nbsp;                if (isFrameVertex(e.orig())) {</b>
+<b class="nc">&nbsp;                    cC = moveEpsilonTowards(e.dest().getCoordinate(), e.orig().getCoordinate());</b>
+<b class="nc">&nbsp;                } else if (isFrameVertex(e.dest())) {</b>
+<b class="nc">&nbsp;                    cC = moveEpsilonTowards(e.orig().getCoordinate(), e.dest().getCoordinate());</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    cC = e.orig().midPoint(e.dest()).getCoordinate();</b>
+&nbsp;                }
+&nbsp;                // Strip z coordinate
+<b class="nc">&nbsp;                polyPoints.add(new Coordinate(cC.x, cC.y));</b>
+<b class="nc">&nbsp;                processed.add(e);</b>
+<b class="nc">&nbsp;                ReadableQuadEdge E1 = ccw ? e.oNext().getPrimary() : e.oPrev().getPrimary();</b>
+<b class="nc">&nbsp;                ReadableQuadEdge E2 = ccw ? e.dPrev().getPrimary() : e.dNext().getPrimary();</b>
+<b class="nc">&nbsp;                int cut1 = E1 == null ? 0 : cut.applyAsInt(E1.orig(), E1.dest());</b>
+<b class="nc">&nbsp;                int cut2 = E2 == null ? 0 : cut.applyAsInt(E2.orig(), E2.dest());</b>
+<b class="nc">&nbsp;                boolean ok1 = cut1 != 0 &amp;&amp; !processed.contains(E1);</b>
+<b class="nc">&nbsp;                boolean ok2 = cut2 != 0 &amp;&amp; !processed.contains(E2);</b>
+<b class="nc">&nbsp;                if (ok1) {</b>
+<b class="nc">&nbsp;                    e = E1;</b>
+<b class="nc">&nbsp;                    ccw = cut1 &gt; 0;</b>
+<b class="nc">&nbsp;                } else if (ok2) {</b>
+<b class="nc">&nbsp;                    e = E2;</b>
+<b class="nc">&nbsp;                    ccw = cut2 &gt; 0;</b>
+&nbsp;                } else {
+&nbsp;                    // This must be the end of the polyline...
+&nbsp;                    break;
+&nbsp;                }
+<b class="nc">&nbsp;            }</b>
+&nbsp;            // Close the polyline
+<b class="nc">&nbsp;            polyPoints.add(polyPoints.get(0));</b>
+<b class="nc">&nbsp;            if (polyPoints.size() &gt;= 4) {</b>
+<b class="nc">&nbsp;                LinearRing ring = geometryFactory.createLinearRing(polyPoints</b>
+<b class="nc">&nbsp;                        .toArray(new Coordinate[polyPoints.size()]));</b>
+<b class="nc">&nbsp;                rings.add(ring);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        List&lt;Polygon&gt; isolinePolygons = punchHoles(rings);</b>
+<b class="nc">&nbsp;        return geometryFactory.createMultiPolygon(isolinePolygons.toArray(new Polygon[isolinePolygons.size()]));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isFrameVertex(Vertex v) {
+<b class="nc">&nbsp;        return v.getZ() == Double.MAX_VALUE;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Coordinate moveEpsilonTowards(Coordinate coordinate, Coordinate distantFrameCoordinate) {
+<b class="nc">&nbsp;        return new Coordinate(coordinate.x + EPSILON * (distantFrameCoordinate.x - coordinate.x), coordinate.y + EPSILON * (distantFrameCoordinate.y - coordinate.y));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    private List&lt;Polygon&gt; punchHoles(List&lt;LinearRing&gt; rings) {
+<b class="nc">&nbsp;        List&lt;PreparedPolygon&gt; shells = new ArrayList&lt;&gt;(rings.size());</b>
+<b class="nc">&nbsp;        List&lt;LinearRing&gt; holes = new ArrayList&lt;&gt;(rings.size() / 2);</b>
+&nbsp;        // 1. Split the polygon list in two: shells and holes (CCW and CW)
+<b class="nc">&nbsp;        for (LinearRing ring : rings) {</b>
+<b class="nc">&nbsp;            if (CGAlgorithms.signedArea(ring.getCoordinateSequence()) &gt; 0.0)</b>
+<b class="nc">&nbsp;                holes.add(ring);</b>
+&nbsp;            else
+<b class="nc">&nbsp;                shells.add(new PreparedPolygon(geometryFactory.createPolygon(ring)));</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;        // 2. Sort the shells based on number of points to optimize step 3.
+<b class="nc">&nbsp;        shells.sort((o1, o2) -&gt; o2.getGeometry().getNumPoints() - o1.getGeometry().getNumPoints());</b>
+<b class="nc">&nbsp;        for (PreparedPolygon shell : shells) {</b>
+<b class="nc">&nbsp;            shell.getGeometry().setUserData(new ArrayList&lt;LinearRing&gt;());</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;        // 3. For each hole, determine which shell it fits in.
+<b class="nc">&nbsp;        for (LinearRing hole : holes) {</b>
+&nbsp;            outer: {
+&nbsp;                // Probably most of the time, the first shell will be the one
+<b class="nc">&nbsp;                for (PreparedPolygon shell : shells) {</b>
+<b class="nc">&nbsp;                    if (shell.contains(hole)) {</b>
+<b class="nc">&nbsp;                        ((List&lt;LinearRing&gt;) shell.getGeometry().getUserData()).add(hole);</b>
+<b class="nc">&nbsp;                        break outer;</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                }</b>
+<b class="nc">&nbsp;                throw new RuntimeException(&quot;Found a hole without a shell.&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;        // 4. Build the list of punched polygons
+<b class="nc">&nbsp;        List&lt;Polygon&gt; punched = new ArrayList&lt;&gt;(shells.size());</b>
+<b class="nc">&nbsp;        for (PreparedPolygon shell : shells) {</b>
+<b class="nc">&nbsp;            List&lt;LinearRing&gt; shellHoles = ((List&lt;LinearRing&gt;) shell.getGeometry().getUserData());</b>
+<b class="nc">&nbsp;            punched.add(geometryFactory.createPolygon((LinearRing) (((Polygon) shell.getGeometry()).getExteriorRing()),</b>
+<b class="nc">&nbsp;                    shellHoles.toArray(new LinearRing[shellHoles.size()])));</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return punched;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

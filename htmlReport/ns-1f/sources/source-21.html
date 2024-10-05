@@ -1,0 +1,139 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > RoutingCHEdgeIteratorState</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: RoutingCHEdgeIteratorState (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">RoutingCHEdgeIteratorState</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;
+&nbsp;public interface RoutingCHEdgeIteratorState {
+&nbsp;    /**
+&nbsp;     * The CH edge ID of this edge state. This is generally not the same as {@link #getOrigEdge()}
+&nbsp;     */
+&nbsp;    int getEdge();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The original/base/query graph edge ID of the edge this CH edge state represents or {@link EdgeIterator#NO_EDGE}
+&nbsp;     * if this is edge state is a shortcut
+&nbsp;     */
+&nbsp;    int getOrigEdge();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * For shortcuts of an edge-based CH graph this is the key of the first original edge of this edge state
+&nbsp;     * *in the direction of the shortcut*, i.e. the one this shortcut starts with. Otherwise it is the key of the
+&nbsp;     * original/base/query graph edge this CH edge state represents.
+&nbsp;     * It is not so obvious how the direction of this key shall be defined. For base graph edges it is clear as we use
+&nbsp;     * the storage direction and the value of the key simply depends on which node is the base node
+&nbsp;     * (the one stored first or second). For shortcut edges we use the direction of the shortcut to define the direction
+&nbsp;     * of the first/last original edge key.
+&nbsp;     */
+&nbsp;    int getOrigEdgeKeyFirst();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @see #getOrigEdgeKeyFirst(), but for the last edge, i.e. the one the shortcut points to.
+&nbsp;     * For shortcuts of an edge-based CH graph this is the key of the last original edge of this edge state, otherwise
+&nbsp;     * it is the key of the original/base/query graph edge this CH edge state represents.
+&nbsp;     */
+&nbsp;    int getOrigEdgeKeyLast();
+&nbsp;
+&nbsp;    int getBaseNode();
+&nbsp;
+&nbsp;    int getAdjNode();
+&nbsp;
+&nbsp;    boolean isShortcut();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The CH edge ID of the first skipped edge/shortcut of this edge state
+&nbsp;     */
+&nbsp;    int getSkippedEdge1();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The CH edge ID of the second skipped edge/shortcut of this edge state
+&nbsp;     */
+&nbsp;    int getSkippedEdge2();
+&nbsp;
+&nbsp;    double getWeight(boolean reverse);
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

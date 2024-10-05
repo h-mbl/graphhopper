@@ -1,0 +1,168 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > FerrySpeedCalculator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: FerrySpeedCalculator (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FerrySpeedCalculator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/17)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.util.parsers.TagParser;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;
+&nbsp;public class FerrySpeedCalculator implements TagParser {
+&nbsp;    private final DecimalEncodedValue ferrySpeedEnc;
+&nbsp;
+<b class="nc">&nbsp;    public FerrySpeedCalculator(DecimalEncodedValue ferrySpeedEnc) {</b>
+<b class="nc">&nbsp;        this.ferrySpeedEnc = ferrySpeedEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean isFerry(ReaderWay way) {
+<b class="nc">&nbsp;        return way.hasTag(&quot;route&quot;, &quot;ferry&quot;) &amp;&amp; !way.hasTag(&quot;ferry&quot;, &quot;no&quot;) ||</b>
+&nbsp;                // TODO shuttle_train is sometimes also used in relations, e.g. https://www.openstreetmap.org/relation/1932780
+<b class="nc">&nbsp;                way.hasTag(&quot;route&quot;, &quot;shuttle_train&quot;) &amp;&amp; !way.hasTag(&quot;shuttle_train&quot;, &quot;no&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    static double getSpeed(ReaderWay way) {
+&nbsp;        // todo: We currently face two problems related to ferry speeds:
+&nbsp;        //       1) We cannot account for waiting times for short ferries (when we do the ferry speed is slower than the slowest we can store)
+&nbsp;        //       2) When the ferry speed is larger than the maximum speed of the encoder (like 15km/h for foot) the
+&nbsp;        //          ferry speed will be faster than what we can store.
+&nbsp;
+&nbsp;        // OSMReader adds the artificial &#39;speed_from_duration&#39; and &#39;way_distance&#39; tags that we can
+&nbsp;        // use to set the ferry speed. Otherwise we need to use fallback values.
+<b class="nc">&nbsp;        double speedInKmPerHour = way.getTag(&quot;speed_from_duration&quot;, Double.NaN);</b>
+<b class="nc">&nbsp;        if (!Double.isNaN(speedInKmPerHour)) {</b>
+&nbsp;            // we reduce the speed to account for waiting time (we increase the duration by 40%)
+<b class="nc">&nbsp;            return Math.round(speedInKmPerHour / 1.4);</b>
+&nbsp;        } else {
+&nbsp;            // we have no speed value to work with because there was no valid duration tag.
+&nbsp;            // we have to take a guess based on the distance.
+<b class="nc">&nbsp;            double wayDistance = way.getTag(&quot;edge_distance&quot;, Double.NaN);</b>
+<b class="nc">&nbsp;            if (Double.isNaN(wayDistance))</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;No &#39;edge_distance&#39; set for edge created for way: &quot; + way.getId());</b>
+<b class="nc">&nbsp;            else if (wayDistance &lt; 500)</b>
+&nbsp;                // Use the slowest possible speed for very short ferries. Note that sometimes these aren&#39;t really ferries
+&nbsp;                // that take you from one harbour to another, but rather ways that only represent the beginning of a
+&nbsp;                // longer ferry connection and that are used by multiple different connections, like here: https://www.openstreetmap.org/way/107913687
+&nbsp;                // It should not matter much which speed we use in this case, so we have no special handling for these.
+<b class="nc">&nbsp;                return 1;</b>
+&nbsp;            else {
+&nbsp;                // todo: distinguish speed based on the distance of the ferry, see #2532
+<b class="nc">&nbsp;                return 6;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static double minmax(double speed, DecimalEncodedValue avgSpeedEnc) {
+<b class="nc">&nbsp;        return Math.max(avgSpeedEnc.getSmallestNonZeroValue(), Math.min(speed, avgSpeedEnc.getMaxStorableDecimal()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+<b class="nc">&nbsp;        if (isFerry(way)) {</b>
+<b class="nc">&nbsp;            double ferrySpeed = minmax(getSpeed(way), ferrySpeedEnc);</b>
+<b class="nc">&nbsp;            ferrySpeedEnc.setDecimal(false, edgeId, edgeIntAccess, ferrySpeed);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

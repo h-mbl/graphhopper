@@ -1,0 +1,182 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > LandmarkSuggestion</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.lm</a>
+</div>
+
+<h1>Coverage Summary for Class: LandmarkSuggestion (com.graphhopper.routing.lm)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LandmarkSuggestion</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/31)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.lm;
+&nbsp;
+&nbsp;import com.graphhopper.routing.util.EdgeFilter;
+&nbsp;import com.graphhopper.storage.index.LocationIndex;
+&nbsp;import com.graphhopper.storage.index.Snap;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.shapes.BBox;
+&nbsp;import com.graphhopper.util.shapes.GHPoint;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class collects landmarks from an external source for one subnetwork to avoid the expensive and sometimes
+&nbsp; * suboptimal automatic landmark finding process.
+&nbsp; */
+&nbsp;public class LandmarkSuggestion {
+&nbsp;    private final List&lt;Integer&gt; nodeIds;
+&nbsp;    private final BBox box;
+&nbsp;
+<b class="nc">&nbsp;    public LandmarkSuggestion(List&lt;Integer&gt; nodeIds, BBox box) {</b>
+<b class="nc">&nbsp;        this.nodeIds = nodeIds;</b>
+<b class="nc">&nbsp;        this.box = box;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Integer&gt; getNodeIds() {
+<b class="nc">&nbsp;        return nodeIds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public BBox getBox() {
+<b class="nc">&nbsp;        return box;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The expected format is lon,lat per line where lines starting with characters will be ignored. You can create
+&nbsp;     * such a file manually via geojson.io -&gt; Save as CSV. Optionally add a second line with
+&nbsp;     * &lt;pre&gt;#BBOX:minLat,minLon,maxLat,maxLon&lt;/pre&gt;
+&nbsp;     * &lt;p&gt;
+&nbsp;     * to specify an explicit bounding box. TODO: support GeoJSON instead.
+&nbsp;     */
+&nbsp;    public static LandmarkSuggestion readLandmarks(String file, LocationIndex locationIndex) throws IOException {
+&nbsp;        // landmarks should be suited for all vehicles
+<b class="nc">&nbsp;        EdgeFilter edgeFilter = EdgeFilter.ALL_EDGES;</b>
+<b class="nc">&nbsp;        List&lt;String&gt; lines = Helper.readFile(file);</b>
+<b class="nc">&nbsp;        List&lt;Integer&gt; landmarkNodeIds = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        BBox bbox = BBox.createInverse(false);</b>
+<b class="nc">&nbsp;        int lmSuggestionIdx = 0;</b>
+<b class="nc">&nbsp;        String errors = &quot;&quot;;</b>
+<b class="nc">&nbsp;        for (String lmStr : lines) {</b>
+<b class="nc">&nbsp;            if (lmStr.startsWith(&quot;#BBOX:&quot;)) {</b>
+<b class="nc">&nbsp;                bbox = BBox.parseTwoPoints(lmStr.substring(&quot;#BBOX:&quot;.length()));</b>
+<b class="nc">&nbsp;                continue;</b>
+<b class="nc">&nbsp;            } else if (lmStr.isEmpty() || Character.isAlphabetic(lmStr.charAt(0))) {</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            GHPoint point = GHPoint.fromStringLonLat(lmStr);</b>
+<b class="nc">&nbsp;            if (point == null)</b>
+<b class="nc">&nbsp;                throw new RuntimeException(&quot;Invalid format &quot; + lmStr + &quot; for point &quot; + lmSuggestionIdx);</b>
+&nbsp;
+<b class="nc">&nbsp;            lmSuggestionIdx++;</b>
+<b class="nc">&nbsp;            Snap result = locationIndex.findClosest(point.lat, point.lon, edgeFilter);</b>
+<b class="nc">&nbsp;            if (!result.isValid()) {</b>
+<b class="nc">&nbsp;                errors += &quot;Cannot find close node found for landmark suggestion[&quot; + lmSuggestionIdx + &quot;]=&quot; + point + &quot;.\n&quot;;</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            bbox.update(point.lat, point.lon);</b>
+<b class="nc">&nbsp;            landmarkNodeIds.add(result.getClosestNode());</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!errors.isEmpty())</b>
+<b class="nc">&nbsp;            throw new RuntimeException(errors);</b>
+&nbsp;
+<b class="nc">&nbsp;        return new LandmarkSuggestion(landmarkNodeIds, bbox);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,193 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > SlopeCalculator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.util</a>
+</div>
+
+<h1>Coverage Summary for Class: SlopeCalculator (com.graphhopper.routing.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SlopeCalculator</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.routing.util;
+&nbsp;
+&nbsp;import com.graphhopper.reader.ReaderWay;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.util.parsers.TagParser;
+&nbsp;import com.graphhopper.storage.IntsRef;
+&nbsp;import com.graphhopper.util.DistanceCalcEarth;
+&nbsp;import com.graphhopper.util.PointList;
+&nbsp;
+&nbsp;public class SlopeCalculator implements TagParser {
+&nbsp;    private final DecimalEncodedValue maxSlopeEnc;
+&nbsp;    private final DecimalEncodedValue averageSlopeEnc;
+&nbsp;    // the elevation data fluctuates a lot and so the slope is not that precise for short edges.
+&nbsp;    private static final double MIN_LENGTH = 8;
+&nbsp;
+<b class="nc">&nbsp;    public SlopeCalculator(DecimalEncodedValue max, DecimalEncodedValue averageEnc) {</b>
+<b class="nc">&nbsp;        this.maxSlopeEnc = max;</b>
+<b class="nc">&nbsp;        this.averageSlopeEnc = averageEnc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void handleWayTags(int edgeId, EdgeIntAccess edgeIntAccess, ReaderWay way, IntsRef relationFlags) {
+<b class="nc">&nbsp;        PointList pointList = way.getTag(&quot;point_list&quot;, null);</b>
+<b class="nc">&nbsp;        if (pointList != null) {</b>
+<b class="nc">&nbsp;            if (pointList.isEmpty() || !pointList.is3D()) {</b>
+<b class="nc">&nbsp;                if (maxSlopeEnc != null)</b>
+<b class="nc">&nbsp;                    maxSlopeEnc.setDecimal(false, edgeId, edgeIntAccess, 0);</b>
+<b class="nc">&nbsp;                if (averageSlopeEnc != null)</b>
+<b class="nc">&nbsp;                    averageSlopeEnc.setDecimal(false, edgeId, edgeIntAccess, 0);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;            // Calculate 2d distance, although pointList might be 3D.
+&nbsp;            // This calculation is a bit expensive and edge_distance is available already, but this would be in 3D
+<b class="nc">&nbsp;            double distance2D = DistanceCalcEarth.calcDistance(pointList, false);</b>
+<b class="nc">&nbsp;            if (distance2D &lt; MIN_LENGTH) {</b>
+<b class="nc">&nbsp;                if (averageSlopeEnc != null)</b>
+&nbsp;                    // default is minimum of average_slope is negative so we have to explicitly set it to 0
+<b class="nc">&nbsp;                    averageSlopeEnc.setDecimal(false, edgeId, edgeIntAccess, 0);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            double towerNodeSlope = calcSlope(pointList.getEle(pointList.size() - 1) - pointList.getEle(0), distance2D);</b>
+<b class="nc">&nbsp;            if (Double.isNaN(towerNodeSlope))</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;average_slope was NaN for OSM way ID &quot; + way.getId());</b>
+&nbsp;
+<b class="nc">&nbsp;            if (averageSlopeEnc != null) {</b>
+<b class="nc">&nbsp;                if (towerNodeSlope &gt;= 0)</b>
+<b class="nc">&nbsp;                    averageSlopeEnc.setDecimal(false, edgeId, edgeIntAccess, Math.min(towerNodeSlope, averageSlopeEnc.getMaxStorableDecimal()));</b>
+&nbsp;                else
+<b class="nc">&nbsp;                    averageSlopeEnc.setDecimal(true, edgeId, edgeIntAccess, Math.min(Math.abs(towerNodeSlope), averageSlopeEnc.getMaxStorableDecimal()));</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (maxSlopeEnc != null) {</b>
+&nbsp;                // max_slope is more error-prone as the shorter distances increase the fluctuation
+&nbsp;                // so apply some more filtering (here we use the average elevation delta of the previous two points)
+<b class="nc">&nbsp;                double maxSlope = 0, prevDist = 0, prevLat = pointList.getLat(0), prevLon = pointList.getLon(0);</b>
+<b class="nc">&nbsp;                for (int i = 1; i &lt; pointList.size(); i++) {</b>
+<b class="nc">&nbsp;                    double pillarDistance2D = DistanceCalcEarth.DIST_EARTH.calcDist(prevLat, prevLon, pointList.getLat(i), pointList.getLon(i));</b>
+<b class="nc">&nbsp;                    if (i &gt; 1 &amp;&amp; prevDist &gt; MIN_LENGTH) {</b>
+<b class="nc">&nbsp;                        double averagedPrevEle = (pointList.getEle(i - 1) + pointList.getEle(i - 2)) / 2;</b>
+<b class="nc">&nbsp;                        double tmpSlope = calcSlope(pointList.getEle(i) - averagedPrevEle, pillarDistance2D + prevDist / 2);</b>
+<b class="nc">&nbsp;                        maxSlope = Math.abs(tmpSlope) &gt; Math.abs(maxSlope) ? tmpSlope : maxSlope;</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    prevDist = pillarDistance2D;</b>
+<b class="nc">&nbsp;                    prevLat = pointList.getLat(i);</b>
+<b class="nc">&nbsp;                    prevLon = pointList.getLon(i);</b>
+&nbsp;                }
+&nbsp;
+&nbsp;                // For tunnels and bridges we cannot trust the pillar node elevation and ignore all changes.
+&nbsp;                // Probably we should somehow recalculate even the average_slope after elevation interpolation? See EdgeElevationInterpolator
+<b class="nc">&nbsp;                if (way.hasTag(&quot;tunnel&quot;, &quot;yes&quot;) || way.hasTag(&quot;bridge&quot;, &quot;yes&quot;) || way.hasTag(&quot;highway&quot;, &quot;steps&quot;))</b>
+<b class="nc">&nbsp;                    maxSlope = towerNodeSlope;</b>
+&nbsp;                else
+<b class="nc">&nbsp;                    maxSlope = Math.abs(towerNodeSlope) &gt; Math.abs(maxSlope) ? towerNodeSlope : maxSlope;</b>
+&nbsp;
+<b class="nc">&nbsp;                if (Double.isNaN(maxSlope))</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;max_slope was NaN for OSM way ID &quot; + way.getId());</b>
+&nbsp;
+<b class="nc">&nbsp;                double val = Math.max(maxSlope, maxSlopeEnc.getMinStorableDecimal());</b>
+<b class="nc">&nbsp;                maxSlopeEnc.setDecimal(false, edgeId, edgeIntAccess, Math.min(maxSlopeEnc.getMaxStorableDecimal(), val));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    static double calcSlope(double eleDelta, double distance2D) {
+<b class="nc">&nbsp;        return eleDelta * 100 / distance2D;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

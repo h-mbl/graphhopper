@@ -1,0 +1,514 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > MMapDataAccess</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: MMapDataAccess (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MMapDataAccess</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/193)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.RandomAccessFile;
+&nbsp;import java.lang.reflect.Field;
+&nbsp;import java.lang.reflect.Method;
+&nbsp;import java.nio.ByteBuffer;
+&nbsp;import java.nio.MappedByteBuffer;
+&nbsp;import java.nio.channels.FileChannel;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * A DataAccess implementation using a memory-mapped file, i.e. a facility of the
+&nbsp; * operating system to access a file like an area of RAM.
+&nbsp; * &lt;p&gt;
+&nbsp; * Java presents the mapped memory as a ByteBuffer, and ByteBuffer is not
+&nbsp; * thread-safe, which means that access to a ByteBuffer must be externally
+&nbsp; * synchronized.
+&nbsp; * &lt;p&gt;
+&nbsp; * This class itself is intended to be as thread-safe as other DataAccess
+&nbsp; * implementations are.
+&nbsp; * &lt;p&gt;
+&nbsp; * The exact behavior of memory-mapping is reported to be wildly platform-dependent.
+&nbsp; *
+&nbsp; * @author Peter Karich
+&nbsp; * @author Michael Zilske
+&nbsp; */
+<b class="nc">&nbsp;public final class MMapDataAccess extends AbstractDataAccess {</b>
+&nbsp;
+&nbsp;    private final boolean allowWrites;
+&nbsp;    private RandomAccessFile raFile;
+<b class="nc">&nbsp;    private final List&lt;MappedByteBuffer&gt; segments = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;    MMapDataAccess(String name, String location, boolean allowWrites, int segmentSize) {
+<b class="nc">&nbsp;        super(name, location, segmentSize);</b>
+<b class="nc">&nbsp;        this.allowWrites = allowWrites;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void cleanMappedByteBuffer(final ByteBuffer buffer) {
+&nbsp;        // TODO avoid reflection on every call
+&nbsp;        try {
+&nbsp;            // &gt;=JDK9 class sun.misc.Unsafe { void invokeCleaner(ByteBuffer buf) }
+<b class="nc">&nbsp;            final Class&lt;?&gt; unsafeClass = Class.forName(&quot;sun.misc.Unsafe&quot;);</b>
+&nbsp;            // fetch the unsafe instance and bind it to the virtual MethodHandle
+<b class="nc">&nbsp;            final Field f = unsafeClass.getDeclaredField(&quot;theUnsafe&quot;);</b>
+<b class="nc">&nbsp;            f.setAccessible(true);</b>
+<b class="nc">&nbsp;            final Object theUnsafe = f.get(null);</b>
+<b class="nc">&nbsp;            final Method method = unsafeClass.getDeclaredMethod(&quot;invokeCleaner&quot;, ByteBuffer.class);</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                method.invoke(theUnsafe, buffer);</b>
+<b class="nc">&nbsp;            } catch (Throwable t) {</b>
+<b class="nc">&nbsp;                throw new RuntimeException(t);</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Unable to unmap the mapped buffer&quot;, ex);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void initRandomAccessFile() {
+<b class="nc">&nbsp;        if (raFile != null)</b>
+&nbsp;            return;
+&nbsp;
+&nbsp;        try {
+&nbsp;            // raFile necessary for loadExisting and create
+<b class="nc">&nbsp;            raFile = new RandomAccessFile(getFullName(), allowWrites ? &quot;rw&quot; : &quot;r&quot;);</b>
+<b class="nc">&nbsp;        } catch (IOException ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(ex);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public MMapDataAccess create(long bytes) {
+<b class="nc">&nbsp;        if (!segments.isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalThreadStateException(&quot;already created&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        initRandomAccessFile();</b>
+<b class="nc">&nbsp;        bytes = Math.max(10 * 4, bytes);</b>
+<b class="nc">&nbsp;        ensureCapacity(bytes);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean ensureCapacity(long bytes) {
+<b class="nc">&nbsp;        return mapIt(HEADER_OFFSET, bytes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean mapIt(long offset, long byteCount) {
+<b class="nc">&nbsp;        if (byteCount &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;new capacity has to be strictly positive&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (byteCount &lt;= getCapacity())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        long longSegmentSize = segmentSizeInBytes;</b>
+<b class="nc">&nbsp;        int segmentsToMap = (int) (byteCount / longSegmentSize);</b>
+<b class="nc">&nbsp;        if (segmentsToMap &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Too many segments needs to be allocated. Increase segmentSize.&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (byteCount % longSegmentSize != 0)</b>
+<b class="nc">&nbsp;            segmentsToMap++;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (segmentsToMap == 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;0 segments are not allowed.&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        long bufferStart = offset;</b>
+&nbsp;        int newSegments;
+<b class="nc">&nbsp;        int i = 0;</b>
+<b class="nc">&nbsp;        long newFileLength = offset + segmentsToMap * longSegmentSize;</b>
+&nbsp;        try {
+&nbsp;            // ugly remapping
+&nbsp;            // http://stackoverflow.com/q/14011919/194609
+&nbsp;            // This approach is probably problematic but a bit faster if done often.
+&nbsp;            // Here we rely on the OS+file system that increasing the file
+&nbsp;            // size has no effect on the old mappings!
+<b class="nc">&nbsp;            bufferStart += segments.size() * longSegmentSize;</b>
+<b class="nc">&nbsp;            newSegments = segmentsToMap - segments.size();</b>
+&nbsp;            // rely on automatically increasing when mapping
+&nbsp;            // raFile.setLength(newFileLength);
+<b class="nc">&nbsp;            for (; i &lt; newSegments; i++) {</b>
+<b class="nc">&nbsp;                segments.add(newByteBuffer(bufferStart, longSegmentSize));</b>
+<b class="nc">&nbsp;                bufferStart += longSegmentSize;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return true;</b>
+<b class="nc">&nbsp;        } catch (IOException ex) {</b>
+&nbsp;            // we could get an exception here if buffer is too small and area too large
+&nbsp;            // e.g. I got an exception for the 65421th buffer (probably around 2**16 == 65536)
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Couldn&#39;t map buffer &quot; + i + &quot; of &quot; + segmentsToMap + &quot; with &quot; + longSegmentSize</b>
+&nbsp;                    + &quot; for &quot; + name + &quot; at position &quot; + bufferStart + &quot; for &quot; + byteCount + &quot; bytes with offset &quot; + offset
+<b class="nc">&nbsp;                    + &quot;, new fileLength:&quot; + newFileLength + &quot;, &quot; + Helper.getMemInfo(), ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private MappedByteBuffer newByteBuffer(long offset, long byteCount) throws IOException {
+&nbsp;        // If we request a buffer larger than the file length, it will automatically increase the file length!
+&nbsp;        // Will this cause problems? http://stackoverflow.com/q/14011919/194609
+&nbsp;        // For trimTo we need to reset the file length later to reduce that size
+<b class="nc">&nbsp;        MappedByteBuffer buf = null;</b>
+<b class="nc">&nbsp;        IOException ioex = null;</b>
+&nbsp;        // One retry if it fails. It could fail e.g. if previously buffer wasn&#39;t yet unmapped from the jvm
+<b class="nc">&nbsp;        for (int trial = 0; trial &lt; 1; ) {</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                buf = raFile.getChannel().map(</b>
+<b class="nc">&nbsp;                        allowWrites ? FileChannel.MapMode.READ_WRITE : FileChannel.MapMode.READ_ONLY, offset, byteCount);</b>
+<b class="nc">&nbsp;                break;</b>
+<b class="nc">&nbsp;            } catch (IOException tmpex) {</b>
+<b class="nc">&nbsp;                ioex = tmpex;</b>
+<b class="nc">&nbsp;                trial++;</b>
+&nbsp;                try {
+&nbsp;                    // mini sleep to let JVM do unmapping
+<b class="nc">&nbsp;                    Thread.sleep(5);</b>
+<b class="nc">&nbsp;                } catch (InterruptedException iex) {</b>
+<b class="nc">&nbsp;                    throw new IOException(iex);</b>
+<b class="nc">&nbsp;                }</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (buf == null) {</b>
+<b class="nc">&nbsp;            if (ioex == null) {</b>
+<b class="nc">&nbsp;                throw new AssertionError(&quot;internal problem as the exception &#39;ioex&#39; shouldn&#39;t be null&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            throw ioex;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        buf.order(byteOrder);</b>
+<b class="nc">&nbsp;        return buf;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean loadExisting() {
+<b class="nc">&nbsp;        if (segments.size() &gt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;already initialized&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (isClosed())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;already closed&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        File file = new File(getFullName());</b>
+<b class="nc">&nbsp;        if (!file.exists() || file.length() == 0)</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        initRandomAccessFile();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            long byteCount = readHeader(raFile);</b>
+<b class="nc">&nbsp;            if (byteCount &lt; 0)</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;
+<b class="nc">&nbsp;            mapIt(HEADER_OFFSET, byteCount - HEADER_OFFSET);</b>
+<b class="nc">&nbsp;            return true;</b>
+<b class="nc">&nbsp;        } catch (IOException ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Problem while loading &quot; + getFullName(), ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void flush() {
+<b class="nc">&nbsp;        if (isClosed())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;already closed&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            for (MappedByteBuffer bb : segments) {</b>
+<b class="nc">&nbsp;                bb.force();</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;            writeHeader(raFile, raFile.length(), segmentSizeInBytes);</b>
+&nbsp;
+&nbsp;            // this could be necessary too
+&nbsp;            // http://stackoverflow.com/q/14011398/194609
+<b class="nc">&nbsp;            raFile.getFD().sync();</b>
+&nbsp;            // equivalent to raFile.getChannel().force(true);
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(ex);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Load memory mapped files into physical memory.
+&nbsp;     */
+&nbsp;    public void load(int percentage) {
+<b class="nc">&nbsp;        if (percentage &lt; 0 || percentage &gt; 100)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Percentage for MMapDataAccess.load for &quot; + getName() + &quot; must be in [0,100] but was &quot; + percentage);</b>
+<b class="nc">&nbsp;        int max = Math.round(segments.size() * percentage / 100f);</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; max; i++) {</b>
+<b class="nc">&nbsp;            segments.get(i).load();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void close() {
+<b class="nc">&nbsp;        super.close();</b>
+<b class="nc">&nbsp;        clean(0, segments.size());</b>
+<b class="nc">&nbsp;        segments.clear();</b>
+<b class="nc">&nbsp;        Helper.close(raFile);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setInt(long bytePos, int value) {
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        ByteBuffer b1 = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        if (index + 3 &gt;= segmentSizeInBytes) {</b>
+&nbsp;            // seldom and special case if int has to be written into two separate segments
+<b class="nc">&nbsp;            ByteBuffer b2 = segments.get(bufferIndex + 1);</b>
+<b class="nc">&nbsp;            if (index + 1 &gt;= segmentSizeInBytes) {</b>
+<b class="nc">&nbsp;                b2.putShort(1, (short) (value &gt;&gt;&gt; 16));</b>
+<b class="nc">&nbsp;                b2.put(0, (byte) (value &gt;&gt;&gt; 8));</b>
+<b class="nc">&nbsp;                b1.put(index, (byte) value);</b>
+<b class="nc">&nbsp;            } else if (index + 2 &gt;= segmentSizeInBytes) {</b>
+<b class="nc">&nbsp;                b2.putShort(0, (short) (value &gt;&gt;&gt; 16));</b>
+<b class="nc">&nbsp;                b1.putShort(index, (short) value);</b>
+&nbsp;            } else {
+&nbsp;                // index + 3 &gt;= segmentSizeInBytes
+<b class="nc">&nbsp;                b2.put(0, (byte) (value &gt;&gt;&gt; 24));</b>
+<b class="nc">&nbsp;                b1.putShort(index + 1, (short) (value &gt;&gt;&gt; 8));</b>
+<b class="nc">&nbsp;                b1.put(index, (byte) value);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            b1.putInt(index, value);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getInt(long bytePos) {
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        ByteBuffer b1 = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        if (index + 3 &gt;= segmentSizeInBytes) {</b>
+<b class="nc">&nbsp;            ByteBuffer b2 = segments.get(bufferIndex + 1);</b>
+<b class="nc">&nbsp;            if (index + 1 &gt;= segmentSizeInBytes)</b>
+<b class="nc">&nbsp;                return (b2.getShort(1) &amp; 0xFFFF) &lt;&lt; 16 | (b2.get(0) &amp; 0xFF) &lt;&lt; 8 | (b1.get(index) &amp; 0xFF);</b>
+<b class="nc">&nbsp;            if (index + 2 &gt;= segmentSizeInBytes)</b>
+<b class="nc">&nbsp;                return (b2.getShort(0) &amp; 0xFFFF) &lt;&lt; 16 | (b1.getShort(index) &amp; 0xFFFF);</b>
+&nbsp;            // index + 3 &gt;= segmentSizeInBytes
+<b class="nc">&nbsp;            return (b2.get(0) &amp; 0xFF) &lt;&lt; 24 | (b1.getShort(index + 1) &amp; 0xFFFF) &lt;&lt; 8 | (b1.get(index) &amp; 0xFF);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return b1.getInt(index);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setShort(long bytePos, short value) {
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        ByteBuffer byteBuffer = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        if (index + 1 &gt;= segmentSizeInBytes) {</b>
+<b class="nc">&nbsp;            ByteBuffer byteBufferNext = segments.get(bufferIndex + 1);</b>
+&nbsp;            // seldom and special case if short has to be written into two separate segments
+<b class="nc">&nbsp;            byteBuffer.put(index, (byte) value);</b>
+<b class="nc">&nbsp;            byteBufferNext.put(0, (byte) (value &gt;&gt;&gt; 8));</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            byteBuffer.putShort(index, value);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public short getShort(long bytePos) {
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        ByteBuffer byteBuffer = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        if (index + 1 &gt;= segmentSizeInBytes) {</b>
+<b class="nc">&nbsp;            ByteBuffer byteBufferNext = segments.get(bufferIndex + 1);</b>
+<b class="nc">&nbsp;            return (short) ((byteBufferNext.get(0) &amp; 0xFF) &lt;&lt; 8 | byteBuffer.get(index) &amp; 0xFF);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return byteBuffer.getShort(index);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setBytes(long bytePos, byte[] values, int length) {
+<b class="nc">&nbsp;        assert length &lt;= segmentSizeInBytes : &quot;the length has to be smaller or equal to the segment size: &quot; + length + &quot; vs. &quot; + segmentSizeInBytes;</b>
+<b class="nc">&nbsp;        final int bufferIndex = (int) (bytePos &gt;&gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        final int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        final int delta = index + length - segmentSizeInBytes;</b>
+<b class="nc">&nbsp;        final ByteBuffer bb1 = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        if (delta &gt; 0) {</b>
+<b class="nc">&nbsp;            length -= delta;</b>
+<b class="nc">&nbsp;            bb1.put(index, values, 0, length);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            bb1.put(index, values, 0, length);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (delta &gt; 0) {</b>
+<b class="nc">&nbsp;            final ByteBuffer bb2 = segments.get(bufferIndex + 1);</b>
+<b class="nc">&nbsp;            bb2.put(0, values, length, delta);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void getBytes(long bytePos, byte[] values, int length) {
+<b class="nc">&nbsp;        assert length &lt;= segmentSizeInBytes : &quot;the length has to be smaller or equal to the segment size: &quot; + length + &quot; vs. &quot; + segmentSizeInBytes;</b>
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        int delta = index + length - segmentSizeInBytes;</b>
+<b class="nc">&nbsp;        final ByteBuffer bb1 = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        if (delta &gt; 0) {</b>
+<b class="nc">&nbsp;            length -= delta;</b>
+<b class="nc">&nbsp;            bb1.get(index, values, 0, length);</b>
+&nbsp;
+<b class="nc">&nbsp;            final ByteBuffer bb2 = segments.get(bufferIndex + 1);</b>
+<b class="nc">&nbsp;            bb2.get(0, values, length, delta);</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            bb1.get(index, values, 0, length);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setByte(long bytePos, byte value) {
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        final ByteBuffer bb1 = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        bb1.put(index, value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public byte getByte(long bytePos) {
+<b class="nc">&nbsp;        int bufferIndex = (int) (bytePos &gt;&gt;&gt; segmentSizePower);</b>
+<b class="nc">&nbsp;        int index = (int) (bytePos &amp; indexDivisor);</b>
+<b class="nc">&nbsp;        final ByteBuffer bb1 = segments.get(bufferIndex);</b>
+<b class="nc">&nbsp;        return bb1.get(index);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public long getCapacity() {
+<b class="nc">&nbsp;        long cap = 0;</b>
+<b class="nc">&nbsp;        for (ByteBuffer bb : segments) {</b>
+<b class="nc">&nbsp;            cap += bb.capacity();</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return cap;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int getSegments() {
+<b class="nc">&nbsp;        return segments.size();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Cleans up MappedByteBuffers. Be sure you bring the segments list in a consistent state
+&nbsp;     * afterwards.
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param from inclusive
+&nbsp;     * @param to   exclusive
+&nbsp;     */
+&nbsp;    private void clean(int from, int to) {
+<b class="nc">&nbsp;        for (int i = from; i &lt; to; i++) {</b>
+<b class="nc">&nbsp;            ByteBuffer bb = segments.get(i);</b>
+<b class="nc">&nbsp;            cleanMappedByteBuffer(bb);</b>
+<b class="nc">&nbsp;            segments.set(i, null);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public DAType getType() {
+<b class="nc">&nbsp;        return DAType.MMAP;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,448 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > TurnCostStorage</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.storage</a>
+</div>
+
+<h1>Coverage Summary for Class: TurnCostStorage (com.graphhopper.storage)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TurnCostStorage</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/72)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TurnCostStorage$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TurnCostStorage$Iterator</td>
+  </tr>
+  <tr>
+    <td class="name">TurnCostStorage$Itr</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/32)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/107)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.storage;
+&nbsp;
+&nbsp;import com.graphhopper.routing.ev.BooleanEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.DecimalEncodedValue;
+&nbsp;import com.graphhopper.routing.ev.EdgeIntAccess;
+&nbsp;import com.graphhopper.routing.ev.IntsRefEdgeIntAccess;
+&nbsp;import com.graphhopper.util.Constants;
+&nbsp;import com.graphhopper.util.EdgeIterator;
+&nbsp;import com.graphhopper.util.GHUtility;
+&nbsp;
+&nbsp;/**
+&nbsp; * A key/value store, where the unique keys are triples (fromEdge, viaNode, toEdge) and the values
+&nbsp; * are integers that can be used to store encoded values.
+&nbsp; *
+&nbsp; * @author Karl Hübner
+&nbsp; * @author Peter Karich
+&nbsp; * @author Michael Zilske
+&nbsp; */
+&nbsp;public class TurnCostStorage {
+&nbsp;    static final int NO_TURN_ENTRY = -1;
+&nbsp;    // we store each turn cost entry in the format |from_edge|to_edge|flags|next|. each entry has 4 bytes -&gt; 16 bytes total
+&nbsp;    private static final int TC_FROM = 0;
+&nbsp;    private static final int TC_TO = 4;
+&nbsp;    private static final int TC_FLAGS = 8;
+&nbsp;    private static final int TC_NEXT = 12;
+&nbsp;    private static final int BYTES_PER_ENTRY = 16;
+&nbsp;
+&nbsp;    private final BaseGraph baseGraph;
+&nbsp;    private final DataAccess turnCosts;
+<b class="nc">&nbsp;    private final EdgeIntAccess edgeIntAccess = createEdgeIntAccess();</b>
+&nbsp;    private int turnCostsCount;
+&nbsp;
+<b class="nc">&nbsp;    public TurnCostStorage(BaseGraph baseGraph, DataAccess turnCosts) {</b>
+<b class="nc">&nbsp;        this.baseGraph = baseGraph;</b>
+<b class="nc">&nbsp;        this.turnCosts = turnCosts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TurnCostStorage create(long initBytes) {
+<b class="nc">&nbsp;        turnCosts.create(initBytes);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void flush() {
+<b class="nc">&nbsp;        turnCosts.setHeader(0, Constants.VERSION_TURN_COSTS);</b>
+<b class="nc">&nbsp;        turnCosts.setHeader(4, BYTES_PER_ENTRY);</b>
+<b class="nc">&nbsp;        turnCosts.setHeader(2 * 4, turnCostsCount);</b>
+<b class="nc">&nbsp;        turnCosts.flush();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void close() {
+<b class="nc">&nbsp;        turnCosts.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long getCapacity() {
+<b class="nc">&nbsp;        return turnCosts.getCapacity();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean loadExisting() {
+<b class="nc">&nbsp;        if (!turnCosts.loadExisting())</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        GHUtility.checkDAVersion(turnCosts.getName(), Constants.VERSION_TURN_COSTS, turnCosts.getHeader(0));</b>
+<b class="nc">&nbsp;        if (turnCosts.getHeader(4) != BYTES_PER_ENTRY) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Number of bytes per turn cost entry does not match the current configuration: &quot; + turnCosts.getHeader(0) + &quot; vs. &quot; + BYTES_PER_ENTRY);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        turnCostsCount = turnCosts.getHeader(8);</b>
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void set(BooleanEncodedValue bev, int fromEdge, int viaNode, int toEdge, boolean value) {
+<b class="nc">&nbsp;        int index = findOrCreateTurnCostEntry(fromEdge, viaNode, toEdge);</b>
+<b class="nc">&nbsp;        if (index &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Invalid index: &quot; + index + &quot; at (&quot; + fromEdge + &quot;, &quot; + viaNode + &quot;, &quot; + toEdge + &quot;)&quot;);</b>
+<b class="nc">&nbsp;        bev.setBool(false, index, edgeIntAccess, value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sets the turn cost at the viaNode when going from &quot;fromEdge&quot; to &quot;toEdge&quot;
+&nbsp;     */
+&nbsp;    public void set(DecimalEncodedValue turnCostEnc, int fromEdge, int viaNode, int toEdge, double cost) {
+<b class="nc">&nbsp;        int index = findOrCreateTurnCostEntry(fromEdge, viaNode, toEdge);</b>
+<b class="nc">&nbsp;        if (index &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Invalid index: &quot; + index + &quot; at (&quot; + fromEdge + &quot;, &quot; + viaNode + &quot;, &quot; + toEdge + &quot;)&quot;);</b>
+<b class="nc">&nbsp;        turnCostEnc.setDecimal(false, index, edgeIntAccess, cost);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int findOrCreateTurnCostEntry(int fromEdge, int viaNode, int toEdge) {
+<b class="nc">&nbsp;        int index = findIndex(fromEdge, viaNode, toEdge);</b>
+<b class="nc">&nbsp;        if (index &lt; 0) {</b>
+&nbsp;            // create a new entry
+<b class="nc">&nbsp;            index = turnCostsCount;</b>
+<b class="nc">&nbsp;            ensureTurnCostIndex(index);</b>
+<b class="nc">&nbsp;            int prevIndex = baseGraph.getNodeAccess().getTurnCostIndex(viaNode);</b>
+<b class="nc">&nbsp;            baseGraph.getNodeAccess().setTurnCostIndex(viaNode, index);</b>
+<b class="nc">&nbsp;            long pointer = (long) index * BYTES_PER_ENTRY;</b>
+<b class="nc">&nbsp;            turnCosts.setInt(pointer + TC_FROM, fromEdge);</b>
+<b class="nc">&nbsp;            turnCosts.setInt(pointer + TC_TO, toEdge);</b>
+<b class="nc">&nbsp;            turnCosts.setInt(pointer + TC_NEXT, prevIndex);</b>
+<b class="nc">&nbsp;            turnCostsCount++;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return index;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double get(DecimalEncodedValue dev, int fromEdge, int viaNode, int toEdge) {
+<b class="nc">&nbsp;        int index = findIndex(fromEdge, viaNode, toEdge);</b>
+&nbsp;        // todo: should we rather pass 0 to the encoded value so it can decide what this means?
+<b class="nc">&nbsp;        if (index &lt; 0) return 0;</b>
+<b class="nc">&nbsp;        return dev.getDecimal(false, index, edgeIntAccess);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean get(BooleanEncodedValue bev, int fromEdge, int viaNode, int toEdge) {
+<b class="nc">&nbsp;        int index = findIndex(fromEdge, viaNode, toEdge);</b>
+&nbsp;        // todo: should we rather pass 0 to the encoded value so it can decide what this means?
+<b class="nc">&nbsp;        if (index &lt; 0) return false;</b>
+<b class="nc">&nbsp;        return bev.getBool(false, index, edgeIntAccess);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private EdgeIntAccess createEdgeIntAccess() {
+<b class="nc">&nbsp;        return new EdgeIntAccess() {</b>
+&nbsp;            @Override
+&nbsp;            public int getInt(int entryIndex, int index) {
+<b class="nc">&nbsp;                return turnCosts.getInt((long) entryIndex * BYTES_PER_ENTRY + TC_FLAGS);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            @Override
+&nbsp;            public void setInt(int entryIndex, int index, int value) {
+<b class="nc">&nbsp;                turnCosts.setInt((long) entryIndex * BYTES_PER_ENTRY + TC_FLAGS, value);</b>
+&nbsp;            }
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    private void ensureTurnCostIndex(int nodeIndex) {
+<b class="nc">&nbsp;        turnCosts.ensureCapacity(((long) nodeIndex + 1) * BYTES_PER_ENTRY);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int findIndex(int fromEdge, int viaNode, int toEdge) {
+<b class="nc">&nbsp;        if (!EdgeIterator.Edge.isValid(fromEdge) || !EdgeIterator.Edge.isValid(toEdge))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;from and to edge cannot be NO_EDGE&quot;);</b>
+<b class="nc">&nbsp;        if (viaNode &lt; 0)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;via node cannot be negative&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        final int maxEntries = 1000;</b>
+<b class="nc">&nbsp;        int index = baseGraph.getNodeAccess().getTurnCostIndex(viaNode);</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; maxEntries; ++i) {</b>
+<b class="nc">&nbsp;            if (index == NO_TURN_ENTRY) return -1;</b>
+<b class="nc">&nbsp;            long pointer = (long) index * BYTES_PER_ENTRY;</b>
+<b class="nc">&nbsp;            if (fromEdge == turnCosts.getInt(pointer + TC_FROM) &amp;&amp; toEdge == turnCosts.getInt(pointer + TC_TO))</b>
+<b class="nc">&nbsp;                return index;</b>
+<b class="nc">&nbsp;            index = turnCosts.getInt(pointer + TC_NEXT);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        throw new IllegalStateException(&quot;Turn cost list for node: &quot; + viaNode + &quot; is longer than expected, max: &quot; + maxEntries);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getTurnCostsCount() {
+<b class="nc">&nbsp;        return turnCostsCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getTurnCostsCount(int node) {
+<b class="nc">&nbsp;        int index = baseGraph.getNodeAccess().getTurnCostIndex(node);</b>
+<b class="nc">&nbsp;        int count = 0;</b>
+<b class="nc">&nbsp;        while (index != NO_TURN_ENTRY) {</b>
+<b class="nc">&nbsp;            long pointer = (long) index * BYTES_PER_ENTRY;</b>
+<b class="nc">&nbsp;            index = turnCosts.getInt(pointer + TC_NEXT);</b>
+<b class="nc">&nbsp;            count++;</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return count;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean isClosed() {
+<b class="nc">&nbsp;        return turnCosts.isClosed();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return &quot;turn_cost&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // TODO: Maybe some of the stuff above could now be re-implemented in a simpler way with some of the stuff below.
+&nbsp;    // For now, I just wanted to iterate over all entries.
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns an iterator over all entries.
+&nbsp;     *
+&nbsp;     * @return an iterator over all entries.
+&nbsp;     */
+&nbsp;    public Iterator getAllTurnCosts() {
+<b class="nc">&nbsp;        return new Itr();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface Iterator {
+&nbsp;        int getFromEdge();
+&nbsp;
+&nbsp;        int getViaNode();
+&nbsp;
+&nbsp;        int getToEdge();
+&nbsp;
+&nbsp;        boolean get(BooleanEncodedValue booleanEncodedValue);
+&nbsp;
+&nbsp;        double getCost(DecimalEncodedValue encodedValue);
+&nbsp;
+&nbsp;        boolean next();
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private class Itr implements Iterator {</b>
+<b class="nc">&nbsp;        private int viaNode = -1;</b>
+<b class="nc">&nbsp;        private int turnCostIndex = -1;</b>
+<b class="nc">&nbsp;        private final IntsRef intsRef = new IntsRef(1);</b>
+<b class="nc">&nbsp;        private final EdgeIntAccess edgeIntAccess = new IntsRefEdgeIntAccess(intsRef);</b>
+&nbsp;
+&nbsp;        private long turnCostPtr() {
+<b class="nc">&nbsp;            return (long) turnCostIndex * BYTES_PER_ENTRY;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getFromEdge() {
+<b class="nc">&nbsp;            return turnCosts.getInt(turnCostPtr() + TC_FROM);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getViaNode() {
+<b class="nc">&nbsp;            return viaNode;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public int getToEdge() {
+<b class="nc">&nbsp;            return turnCosts.getInt(turnCostPtr() + TC_TO);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean get(BooleanEncodedValue booleanEncodedValue) {
+<b class="nc">&nbsp;            intsRef.ints[0] = turnCosts.getInt(turnCostPtr() + TC_FLAGS);</b>
+<b class="nc">&nbsp;            return booleanEncodedValue.getBool(false, -1, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public double getCost(DecimalEncodedValue encodedValue) {
+<b class="nc">&nbsp;            intsRef.ints[0] = turnCosts.getInt(turnCostPtr() + TC_FLAGS);</b>
+<b class="nc">&nbsp;            return encodedValue.getDecimal(false, -1, edgeIntAccess);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public boolean next() {
+<b class="nc">&nbsp;            boolean gotNextTci = nextTci();</b>
+<b class="nc">&nbsp;            if (!gotNextTci) {</b>
+<b class="nc">&nbsp;                turnCostIndex = NO_TURN_ENTRY;</b>
+<b class="nc">&nbsp;                boolean gotNextNode = true;</b>
+<b class="nc">&nbsp;                while (turnCostIndex == NO_TURN_ENTRY &amp;&amp; (gotNextNode = nextNode())) {</b>
+&nbsp;
+&nbsp;                }
+<b class="nc">&nbsp;                if (!gotNextNode) {</b>
+<b class="nc">&nbsp;                    return false;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private boolean nextNode() {
+<b class="nc">&nbsp;            viaNode++;</b>
+<b class="nc">&nbsp;            if (viaNode &gt;= baseGraph.getNodes()) {</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            turnCostIndex = baseGraph.getNodeAccess().getTurnCostIndex(viaNode);</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private boolean nextTci() {
+<b class="nc">&nbsp;            if (turnCostIndex == NO_TURN_ENTRY) {</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            turnCostIndex = turnCosts.getInt(turnCostPtr() + TC_NEXT);</b>
+<b class="nc">&nbsp;            if (turnCostIndex == NO_TURN_ENTRY) {</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

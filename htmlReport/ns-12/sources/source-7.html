@@ -1,0 +1,423 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > Country</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ev</a>
+</div>
+
+<h1>Coverage Summary for Class: Country (com.graphhopper.routing.ev)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Country</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/236)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.ev;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;import static com.graphhopper.routing.ev.State.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * The enum constants correspond to the ISO3166-1:alpha3 code of the corresponding country.
+&nbsp; */
+<b class="nc">&nbsp;public enum Country {</b>
+&nbsp;
+<b class="nc">&nbsp;    MISSING(&quot;missing&quot;, &quot;---&quot;, &quot;--&quot;),</b>
+<b class="nc">&nbsp;    AFG(&quot;Afghanistan&quot;, &quot;AFG&quot;, &quot;AF&quot;),</b>
+<b class="nc">&nbsp;    AGO(&quot;Angola&quot;, &quot;AGO&quot;, &quot;AO&quot;),</b>
+<b class="nc">&nbsp;    AIA(&quot;Anguilla&quot;, &quot;AIA&quot;, &quot;AI&quot;),</b>
+<b class="nc">&nbsp;    ALB(&quot;Albania&quot;, &quot;ALB&quot;, &quot;AL&quot;),</b>
+<b class="nc">&nbsp;    AND(&quot;Andorra&quot;, &quot;AND&quot;, &quot;AD&quot;),</b>
+<b class="nc">&nbsp;    ARE(&quot;United Arab Emirates&quot;, &quot;ARE&quot;, &quot;AE&quot;),</b>
+<b class="nc">&nbsp;    ARG(&quot;Argentina&quot;, &quot;ARG&quot;, &quot;AR&quot;),</b>
+<b class="nc">&nbsp;    ARM(&quot;Armenia&quot;, &quot;ARM&quot;, &quot;AM&quot;),</b>
+<b class="nc">&nbsp;    ATG(&quot;Antigua and Barbuda&quot;, &quot;ATG&quot;, &quot;AG&quot;),</b>
+<b class="nc">&nbsp;    AUS(&quot;Australia&quot;, &quot;AUS&quot;, &quot;AU&quot;, AU_ACT, AU_NSW, AU_NT, AU_QLD, AU_SA, AU_TAS, AU_VIC, AU_WA),</b>
+<b class="nc">&nbsp;    AUT(&quot;Austria&quot;, &quot;AUT&quot;, &quot;AT&quot;),</b>
+<b class="nc">&nbsp;    AZE(&quot;Azerbaijan&quot;, &quot;AZE&quot;, &quot;AZ&quot;),</b>
+<b class="nc">&nbsp;    BDI(&quot;Burundi&quot;, &quot;BDI&quot;, &quot;BI&quot;),</b>
+<b class="nc">&nbsp;    BEL(&quot;Belgium&quot;, &quot;BEL&quot;, &quot;BE&quot;),</b>
+<b class="nc">&nbsp;    BEN(&quot;Benin&quot;, &quot;BEN&quot;, &quot;BJ&quot;),</b>
+<b class="nc">&nbsp;    BFA(&quot;Burkina Faso&quot;, &quot;BFA&quot;, &quot;BF&quot;),</b>
+<b class="nc">&nbsp;    BGD(&quot;Bangladesh&quot;, &quot;BGD&quot;, &quot;BD&quot;),</b>
+<b class="nc">&nbsp;    BGR(&quot;Bulgaria&quot;, &quot;BGR&quot;, &quot;BG&quot;),</b>
+<b class="nc">&nbsp;    BHR(&quot;Bahrain&quot;, &quot;BHR&quot;, &quot;BH&quot;),</b>
+<b class="nc">&nbsp;    BHS(&quot;The Bahamas&quot;, &quot;BHS&quot;, &quot;BS&quot;),</b>
+<b class="nc">&nbsp;    BIH(&quot;Bosnia and Herzegovina&quot;, &quot;BIH&quot;, &quot;BA&quot;),</b>
+<b class="nc">&nbsp;    BLR(&quot;Belarus&quot;, &quot;BLR&quot;, &quot;BY&quot;),</b>
+<b class="nc">&nbsp;    BLZ(&quot;Belize&quot;, &quot;BLZ&quot;, &quot;BZ&quot;),</b>
+<b class="nc">&nbsp;    BMU(&quot;Bermuda&quot;, &quot;BMU&quot;, &quot;BM&quot;),</b>
+<b class="nc">&nbsp;    BOL(&quot;Bolivia&quot;, &quot;BOL&quot;, &quot;BO&quot;),</b>
+<b class="nc">&nbsp;    BRA(&quot;Brazil&quot;, &quot;BRA&quot;, &quot;BR&quot;),</b>
+<b class="nc">&nbsp;    BRB(&quot;Barbados&quot;, &quot;BRB&quot;, &quot;BB&quot;),</b>
+<b class="nc">&nbsp;    BRN(&quot;Brunei&quot;, &quot;BRN&quot;, &quot;BN&quot;),</b>
+<b class="nc">&nbsp;    BTN(&quot;Bhutan&quot;, &quot;BTN&quot;, &quot;BT&quot;),</b>
+<b class="nc">&nbsp;    BWA(&quot;Botswana&quot;, &quot;BWA&quot;, &quot;BW&quot;),</b>
+<b class="nc">&nbsp;    CAF(&quot;Central African Republic&quot;, &quot;CAF&quot;, &quot;CF&quot;),</b>
+<b class="nc">&nbsp;    CAN(&quot;Canada&quot;, &quot;CAN&quot;, &quot;CA&quot;, CA_AB, CA_BC, CA_MB, CA_NB, CA_NL, CA_NS, CA_NT, CA_NU, CA_ON, CA_PE, CA_QC, CA_SK, CA_YT),</b>
+<b class="nc">&nbsp;    CHE(&quot;Switzerland&quot;, &quot;CHE&quot;, &quot;CH&quot;),</b>
+<b class="nc">&nbsp;    CHL(&quot;Chile&quot;, &quot;CHL&quot;, &quot;CL&quot;),</b>
+<b class="nc">&nbsp;    CHN(&quot;China&quot;, &quot;CHN&quot;, &quot;CN&quot;),</b>
+<b class="nc">&nbsp;    CIV(&quot;Côte d&#39;Ivoire&quot;, &quot;CIV&quot;, &quot;CI&quot;),</b>
+<b class="nc">&nbsp;    CMR(&quot;Cameroon&quot;, &quot;CMR&quot;, &quot;CM&quot;),</b>
+<b class="nc">&nbsp;    COD(&quot;Democratic Republic of the Congo&quot;, &quot;COD&quot;, &quot;CD&quot;),</b>
+<b class="nc">&nbsp;    COG(&quot;Congo-Brazzaville&quot;, &quot;COG&quot;, &quot;CG&quot;),</b>
+<b class="nc">&nbsp;    COK(&quot;Cook Islands&quot;, &quot;COK&quot;, &quot;CK&quot;),</b>
+<b class="nc">&nbsp;    COL(&quot;Colombia&quot;, &quot;COL&quot;, &quot;CO&quot;),</b>
+<b class="nc">&nbsp;    COM(&quot;Comoros&quot;, &quot;COM&quot;, &quot;KM&quot;),</b>
+<b class="nc">&nbsp;    CPV(&quot;Cape Verde&quot;, &quot;CPV&quot;, &quot;CV&quot;),</b>
+<b class="nc">&nbsp;    CRI(&quot;Costa Rica&quot;, &quot;CRI&quot;, &quot;CR&quot;),</b>
+<b class="nc">&nbsp;    CUB(&quot;Cuba&quot;, &quot;CUB&quot;, &quot;CU&quot;),</b>
+<b class="nc">&nbsp;    CYM(&quot;Cayman Islands&quot;, &quot;CYM&quot;, &quot;KY&quot;),</b>
+<b class="nc">&nbsp;    CYP(&quot;Cyprus&quot;, &quot;CYP&quot;, &quot;CY&quot;),</b>
+<b class="nc">&nbsp;    CZE(&quot;Czechia&quot;, &quot;CZE&quot;, &quot;CZ&quot;),</b>
+<b class="nc">&nbsp;    DEU(&quot;Germany&quot;, &quot;DEU&quot;, &quot;DE&quot;),</b>
+<b class="nc">&nbsp;    DJI(&quot;Djibouti&quot;, &quot;DJI&quot;, &quot;DJ&quot;),</b>
+<b class="nc">&nbsp;    DMA(&quot;Dominica&quot;, &quot;DMA&quot;, &quot;DM&quot;),</b>
+<b class="nc">&nbsp;    DNK(&quot;Denmark&quot;, &quot;DNK&quot;, &quot;DK&quot;),</b>
+<b class="nc">&nbsp;    DOM(&quot;Dominican Republic&quot;, &quot;DOM&quot;, &quot;DO&quot;),</b>
+<b class="nc">&nbsp;    DZA(&quot;Algeria&quot;, &quot;DZA&quot;, &quot;DZ&quot;),</b>
+<b class="nc">&nbsp;    ECU(&quot;Ecuador&quot;, &quot;ECU&quot;, &quot;EC&quot;),</b>
+<b class="nc">&nbsp;    EGY(&quot;Egypt&quot;, &quot;EGY&quot;, &quot;EG&quot;),</b>
+<b class="nc">&nbsp;    ERI(&quot;Eritrea&quot;, &quot;ERI&quot;, &quot;ER&quot;),</b>
+<b class="nc">&nbsp;    ESP(&quot;Spain&quot;, &quot;ESP&quot;, &quot;ES&quot;),</b>
+<b class="nc">&nbsp;    EST(&quot;Estonia&quot;, &quot;EST&quot;, &quot;EE&quot;),</b>
+<b class="nc">&nbsp;    ETH(&quot;Ethiopia&quot;, &quot;ETH&quot;, &quot;ET&quot;),</b>
+<b class="nc">&nbsp;    FIN(&quot;Finland&quot;, &quot;FIN&quot;, &quot;FI&quot;),</b>
+<b class="nc">&nbsp;    FJI(&quot;Fiji&quot;, &quot;FJI&quot;, &quot;FJ&quot;),</b>
+<b class="nc">&nbsp;    FLK(&quot;Falkland Islands&quot;, &quot;FLK&quot;, &quot;FK&quot;),</b>
+<b class="nc">&nbsp;    FRA(&quot;France&quot;, &quot;FRA&quot;, &quot;FR&quot;),</b>
+<b class="nc">&nbsp;    FRO(&quot;Faroe Islands&quot;, &quot;FRO&quot;, &quot;FO&quot;),</b>
+<b class="nc">&nbsp;    FSM(&quot;Federated States of Micronesia&quot;, &quot;FSM&quot;, &quot;FM&quot;, FM_KSA, FM_PNI, FM_TRK, FM_YAP),</b>
+<b class="nc">&nbsp;    GAB(&quot;Gabon&quot;, &quot;GAB&quot;, &quot;GA&quot;),</b>
+<b class="nc">&nbsp;    GBR(&quot;United Kingdom&quot;, &quot;GBR&quot;, &quot;GB&quot;),</b>
+<b class="nc">&nbsp;    GEO(&quot;Georgia&quot;, &quot;GEO&quot;, &quot;GE&quot;),</b>
+<b class="nc">&nbsp;    GGY(&quot;Guernsey&quot;, &quot;GGY&quot;, &quot;GG&quot;),</b>
+<b class="nc">&nbsp;    GHA(&quot;Ghana&quot;, &quot;GHA&quot;, &quot;GH&quot;),</b>
+<b class="nc">&nbsp;    GIB(&quot;Gibraltar&quot;, &quot;GIB&quot;, &quot;GI&quot;),</b>
+<b class="nc">&nbsp;    GIN(&quot;Guinea&quot;, &quot;GIN&quot;, &quot;GN&quot;),</b>
+<b class="nc">&nbsp;    GMB(&quot;The Gambia&quot;, &quot;GMB&quot;, &quot;GM&quot;),</b>
+<b class="nc">&nbsp;    GNB(&quot;Guinea-Bissau&quot;, &quot;GNB&quot;, &quot;GW&quot;),</b>
+<b class="nc">&nbsp;    GNQ(&quot;Equatorial Guinea&quot;, &quot;GNQ&quot;, &quot;GQ&quot;),</b>
+<b class="nc">&nbsp;    GRC(&quot;Greece&quot;, &quot;GRC&quot;, &quot;GR&quot;),</b>
+<b class="nc">&nbsp;    GRD(&quot;Grenada&quot;, &quot;GRD&quot;, &quot;GD&quot;),</b>
+<b class="nc">&nbsp;    GRL(&quot;Greenland&quot;, &quot;GRL&quot;, &quot;GL&quot;),</b>
+<b class="nc">&nbsp;    GTM(&quot;Guatemala&quot;, &quot;GTM&quot;, &quot;GT&quot;),</b>
+<b class="nc">&nbsp;    GUY(&quot;Guyana&quot;, &quot;GUY&quot;, &quot;GY&quot;),</b>
+<b class="nc">&nbsp;    HND(&quot;Honduras&quot;, &quot;HND&quot;, &quot;HN&quot;),</b>
+<b class="nc">&nbsp;    HRV(&quot;Croatia&quot;, &quot;HRV&quot;, &quot;HR&quot;),</b>
+<b class="nc">&nbsp;    HTI(&quot;Haiti&quot;, &quot;HTI&quot;, &quot;HT&quot;),</b>
+<b class="nc">&nbsp;    HUN(&quot;Hungary&quot;, &quot;HUN&quot;, &quot;HU&quot;),</b>
+<b class="nc">&nbsp;    IDN(&quot;Indonesia&quot;, &quot;IDN&quot;, &quot;ID&quot;),</b>
+<b class="nc">&nbsp;    IMN(&quot;Isle of Man&quot;, &quot;IMN&quot;, &quot;IM&quot;),</b>
+<b class="nc">&nbsp;    IND(&quot;India&quot;, &quot;IND&quot;, &quot;IN&quot;),</b>
+<b class="nc">&nbsp;    IOT(&quot;British Indian Ocean Territory&quot;, &quot;IOT&quot;, &quot;IO&quot;),</b>
+<b class="nc">&nbsp;    IRL(&quot;Ireland&quot;, &quot;IRL&quot;, &quot;IE&quot;),</b>
+<b class="nc">&nbsp;    IRN(&quot;Iran&quot;, &quot;IRN&quot;, &quot;IR&quot;),</b>
+<b class="nc">&nbsp;    IRQ(&quot;Iraq&quot;, &quot;IRQ&quot;, &quot;IQ&quot;),</b>
+<b class="nc">&nbsp;    ISL(&quot;Iceland&quot;, &quot;ISL&quot;, &quot;IS&quot;),</b>
+<b class="nc">&nbsp;    ISR(&quot;Israel&quot;, &quot;ISR&quot;, &quot;IL&quot;),</b>
+<b class="nc">&nbsp;    ITA(&quot;Italy&quot;, &quot;ITA&quot;, &quot;IT&quot;),</b>
+<b class="nc">&nbsp;    JAM(&quot;Jamaica&quot;, &quot;JAM&quot;, &quot;JM&quot;),</b>
+<b class="nc">&nbsp;    JEY(&quot;Jersey&quot;, &quot;JEY&quot;, &quot;JE&quot;),</b>
+<b class="nc">&nbsp;    JOR(&quot;Jordan&quot;, &quot;JOR&quot;, &quot;JO&quot;),</b>
+<b class="nc">&nbsp;    JPN(&quot;Japan&quot;, &quot;JPN&quot;, &quot;JP&quot;),</b>
+<b class="nc">&nbsp;    KAZ(&quot;Kazakhstan&quot;, &quot;KAZ&quot;, &quot;KZ&quot;),</b>
+<b class="nc">&nbsp;    KEN(&quot;Kenya&quot;, &quot;KEN&quot;, &quot;KE&quot;),</b>
+<b class="nc">&nbsp;    KGZ(&quot;Kyrgyzstan&quot;, &quot;KGZ&quot;, &quot;KG&quot;),</b>
+<b class="nc">&nbsp;    KHM(&quot;Cambodia&quot;, &quot;KHM&quot;, &quot;KH&quot;),</b>
+<b class="nc">&nbsp;    KIR(&quot;Kiribati&quot;, &quot;KIR&quot;, &quot;KI&quot;),</b>
+<b class="nc">&nbsp;    KNA(&quot;Saint Kitts and Nevis&quot;, &quot;KNA&quot;, &quot;KN&quot;),</b>
+<b class="nc">&nbsp;    KOR(&quot;South Korea&quot;, &quot;KOR&quot;, &quot;KR&quot;),</b>
+<b class="nc">&nbsp;    KWT(&quot;Kuwait&quot;, &quot;KWT&quot;, &quot;KW&quot;),</b>
+<b class="nc">&nbsp;    LAO(&quot;Laos&quot;, &quot;LAO&quot;, &quot;LA&quot;),</b>
+<b class="nc">&nbsp;    LBN(&quot;Lebanon&quot;, &quot;LBN&quot;, &quot;LB&quot;),</b>
+<b class="nc">&nbsp;    LBR(&quot;Liberia&quot;, &quot;LBR&quot;, &quot;LR&quot;),</b>
+<b class="nc">&nbsp;    LBY(&quot;Libya&quot;, &quot;LBY&quot;, &quot;LY&quot;),</b>
+<b class="nc">&nbsp;    LCA(&quot;Saint Lucia&quot;, &quot;LCA&quot;, &quot;LC&quot;),</b>
+<b class="nc">&nbsp;    LIE(&quot;Liechtenstein&quot;, &quot;LIE&quot;, &quot;LI&quot;),</b>
+<b class="nc">&nbsp;    LKA(&quot;Sri Lanka&quot;, &quot;LKA&quot;, &quot;LK&quot;),</b>
+<b class="nc">&nbsp;    LSO(&quot;Lesotho&quot;, &quot;LSO&quot;, &quot;LS&quot;),</b>
+<b class="nc">&nbsp;    LTU(&quot;Lithuania&quot;, &quot;LTU&quot;, &quot;LT&quot;),</b>
+<b class="nc">&nbsp;    LUX(&quot;Luxembourg&quot;, &quot;LUX&quot;, &quot;LU&quot;),</b>
+<b class="nc">&nbsp;    LVA(&quot;Latvia&quot;, &quot;LVA&quot;, &quot;LV&quot;),</b>
+<b class="nc">&nbsp;    MAR(&quot;Morocco&quot;, &quot;MAR&quot;, &quot;MA&quot;),</b>
+<b class="nc">&nbsp;    MCO(&quot;Monaco&quot;, &quot;MCO&quot;, &quot;MC&quot;),</b>
+<b class="nc">&nbsp;    MDA(&quot;Moldova&quot;, &quot;MDA&quot;, &quot;MD&quot;),</b>
+<b class="nc">&nbsp;    MDG(&quot;Madagascar&quot;, &quot;MDG&quot;, &quot;MG&quot;),</b>
+<b class="nc">&nbsp;    MDV(&quot;Maldives&quot;, &quot;MDV&quot;, &quot;MV&quot;),</b>
+<b class="nc">&nbsp;    MEX(&quot;Mexico&quot;, &quot;MEX&quot;, &quot;MX&quot;),</b>
+<b class="nc">&nbsp;    MHL(&quot;Marshall Islands&quot;, &quot;MHL&quot;, &quot;MH&quot;),</b>
+<b class="nc">&nbsp;    MKD(&quot;North Macedonia&quot;, &quot;MKD&quot;, &quot;MK&quot;),</b>
+<b class="nc">&nbsp;    MLI(&quot;Mali&quot;, &quot;MLI&quot;, &quot;ML&quot;),</b>
+<b class="nc">&nbsp;    MLT(&quot;Malta&quot;, &quot;MLT&quot;, &quot;MT&quot;),</b>
+<b class="nc">&nbsp;    MMR(&quot;Myanmar&quot;, &quot;MMR&quot;, &quot;MM&quot;),</b>
+<b class="nc">&nbsp;    MNE(&quot;Montenegro&quot;, &quot;MNE&quot;, &quot;ME&quot;),</b>
+<b class="nc">&nbsp;    MNG(&quot;Mongolia&quot;, &quot;MNG&quot;, &quot;MN&quot;),</b>
+<b class="nc">&nbsp;    MOZ(&quot;Mozambique&quot;, &quot;MOZ&quot;, &quot;MZ&quot;),</b>
+<b class="nc">&nbsp;    MRT(&quot;Mauritania&quot;, &quot;MRT&quot;, &quot;MR&quot;),</b>
+<b class="nc">&nbsp;    MSR(&quot;Montserrat&quot;, &quot;MSR&quot;, &quot;MS&quot;),</b>
+<b class="nc">&nbsp;    MUS(&quot;Mauritius&quot;, &quot;MUS&quot;, &quot;MU&quot;),</b>
+<b class="nc">&nbsp;    MWI(&quot;Malawi&quot;, &quot;MWI&quot;, &quot;MW&quot;),</b>
+<b class="nc">&nbsp;    MYS(&quot;Malaysia&quot;, &quot;MYS&quot;, &quot;MY&quot;),</b>
+<b class="nc">&nbsp;    NAM(&quot;Namibia&quot;, &quot;NAM&quot;, &quot;NA&quot;),</b>
+<b class="nc">&nbsp;    NER(&quot;Niger&quot;, &quot;NER&quot;, &quot;NE&quot;),</b>
+<b class="nc">&nbsp;    NGA(&quot;Nigeria&quot;, &quot;NGA&quot;, &quot;NG&quot;),</b>
+<b class="nc">&nbsp;    NIC(&quot;Nicaragua&quot;, &quot;NIC&quot;, &quot;NI&quot;),</b>
+<b class="nc">&nbsp;    NIU(&quot;Niue&quot;, &quot;NIU&quot;, &quot;NU&quot;),</b>
+<b class="nc">&nbsp;    NLD(&quot;Netherlands&quot;, &quot;NLD&quot;, &quot;NL&quot;),</b>
+<b class="nc">&nbsp;    NOR(&quot;Norway&quot;, &quot;NOR&quot;, &quot;NO&quot;),</b>
+<b class="nc">&nbsp;    NPL(&quot;Nepal&quot;, &quot;NPL&quot;, &quot;NP&quot;),</b>
+<b class="nc">&nbsp;    NRU(&quot;Nauru&quot;, &quot;NRU&quot;, &quot;NR&quot;),</b>
+<b class="nc">&nbsp;    NZL(&quot;New Zealand&quot;, &quot;NZL&quot;, &quot;NZ&quot;),</b>
+<b class="nc">&nbsp;    OMN(&quot;Oman&quot;, &quot;OMN&quot;, &quot;OM&quot;),</b>
+<b class="nc">&nbsp;    PAK(&quot;Pakistan&quot;, &quot;PAK&quot;, &quot;PK&quot;),</b>
+<b class="nc">&nbsp;    PAN(&quot;Panama&quot;, &quot;PAN&quot;, &quot;PA&quot;),</b>
+<b class="nc">&nbsp;    PCN(&quot;Pitcairn Islands&quot;, &quot;PCN&quot;, &quot;PN&quot;),</b>
+<b class="nc">&nbsp;    PER(&quot;Peru&quot;, &quot;PER&quot;, &quot;PE&quot;),</b>
+<b class="nc">&nbsp;    PHL(&quot;Philippines&quot;, &quot;PHL&quot;, &quot;PH&quot;),</b>
+<b class="nc">&nbsp;    PLW(&quot;Palau&quot;, &quot;PLW&quot;, &quot;PW&quot;),</b>
+<b class="nc">&nbsp;    PNG(&quot;Papua New Guinea&quot;, &quot;PNG&quot;, &quot;PG&quot;),</b>
+<b class="nc">&nbsp;    POL(&quot;Poland&quot;, &quot;POL&quot;, &quot;PL&quot;),</b>
+<b class="nc">&nbsp;    PRK(&quot;North Korea&quot;, &quot;PRK&quot;, &quot;KP&quot;),</b>
+<b class="nc">&nbsp;    PRT(&quot;Portugal&quot;, &quot;PRT&quot;, &quot;PT&quot;),</b>
+<b class="nc">&nbsp;    PRY(&quot;Paraguay&quot;, &quot;PRY&quot;, &quot;PY&quot;),</b>
+<b class="nc">&nbsp;    PSE(&quot;Palestinian Territories&quot;, &quot;PSE&quot;, &quot;PS&quot;),</b>
+<b class="nc">&nbsp;    QAT(&quot;Qatar&quot;, &quot;QAT&quot;, &quot;QA&quot;),</b>
+<b class="nc">&nbsp;    ROU(&quot;Romania&quot;, &quot;ROU&quot;, &quot;RO&quot;),</b>
+<b class="nc">&nbsp;    RUS(&quot;Russia&quot;, &quot;RUS&quot;, &quot;RU&quot;),</b>
+<b class="nc">&nbsp;    RWA(&quot;Rwanda&quot;, &quot;RWA&quot;, &quot;RW&quot;),</b>
+<b class="nc">&nbsp;    SAU(&quot;Saudi Arabia&quot;, &quot;SAU&quot;, &quot;SA&quot;),</b>
+<b class="nc">&nbsp;    SDN(&quot;Sudan&quot;, &quot;SDN&quot;, &quot;SD&quot;),</b>
+<b class="nc">&nbsp;    SEN(&quot;Senegal&quot;, &quot;SEN&quot;, &quot;SN&quot;),</b>
+<b class="nc">&nbsp;    SGP(&quot;Singapore&quot;, &quot;SGP&quot;, &quot;SG&quot;),</b>
+<b class="nc">&nbsp;    SGS(&quot;South Georgia and the South Sandwich Islands&quot;, &quot;SGS&quot;, &quot;GS&quot;),</b>
+<b class="nc">&nbsp;    SHN(&quot;Saint Helena, Ascension and Tristan da Cunha&quot;, &quot;SHN&quot;, &quot;SH&quot;),</b>
+<b class="nc">&nbsp;    SLB(&quot;Solomon Islands&quot;, &quot;SLB&quot;, &quot;SB&quot;),</b>
+<b class="nc">&nbsp;    SLE(&quot;Sierra Leone&quot;, &quot;SLE&quot;, &quot;SL&quot;),</b>
+<b class="nc">&nbsp;    SLV(&quot;El Salvador&quot;, &quot;SLV&quot;, &quot;SV&quot;),</b>
+<b class="nc">&nbsp;    SMR(&quot;San Marino&quot;, &quot;SMR&quot;, &quot;SM&quot;),</b>
+<b class="nc">&nbsp;    SOM(&quot;Somalia&quot;, &quot;SOM&quot;, &quot;SO&quot;),</b>
+<b class="nc">&nbsp;    SRB(&quot;Serbia&quot;, &quot;SRB&quot;, &quot;RS&quot;),</b>
+<b class="nc">&nbsp;    SSD(&quot;South Sudan&quot;, &quot;SSD&quot;, &quot;SS&quot;),</b>
+<b class="nc">&nbsp;    STP(&quot;São Tomé and Príncipe&quot;, &quot;STP&quot;, &quot;ST&quot;),</b>
+<b class="nc">&nbsp;    SUR(&quot;Suriname&quot;, &quot;SUR&quot;, &quot;SR&quot;),</b>
+<b class="nc">&nbsp;    SVK(&quot;Slovakia&quot;, &quot;SVK&quot;, &quot;SK&quot;),</b>
+<b class="nc">&nbsp;    SVN(&quot;Slovenia&quot;, &quot;SVN&quot;, &quot;SI&quot;),</b>
+<b class="nc">&nbsp;    SWE(&quot;Sweden&quot;, &quot;SWE&quot;, &quot;SE&quot;),</b>
+<b class="nc">&nbsp;    SWZ(&quot;Eswatini&quot;, &quot;SWZ&quot;, &quot;SZ&quot;),</b>
+<b class="nc">&nbsp;    SYC(&quot;Seychelles&quot;, &quot;SYC&quot;, &quot;SC&quot;),</b>
+<b class="nc">&nbsp;    SYR(&quot;Syria&quot;, &quot;SYR&quot;, &quot;SY&quot;),</b>
+<b class="nc">&nbsp;    TCA(&quot;Turks and Caicos Islands&quot;, &quot;TCA&quot;, &quot;TC&quot;),</b>
+<b class="nc">&nbsp;    TCD(&quot;Chad&quot;, &quot;TCD&quot;, &quot;TD&quot;),</b>
+<b class="nc">&nbsp;    TGO(&quot;Togo&quot;, &quot;TGO&quot;, &quot;TG&quot;),</b>
+<b class="nc">&nbsp;    THA(&quot;Thailand&quot;, &quot;THA&quot;, &quot;TH&quot;),</b>
+<b class="nc">&nbsp;    TJK(&quot;Tajikistan&quot;, &quot;TJK&quot;, &quot;TJ&quot;),</b>
+<b class="nc">&nbsp;    TKL(&quot;Tokelau&quot;, &quot;TKL&quot;, &quot;TK&quot;),</b>
+<b class="nc">&nbsp;    TKM(&quot;Turkmenistan&quot;, &quot;TKM&quot;, &quot;TM&quot;),</b>
+<b class="nc">&nbsp;    TLS(&quot;East Timor&quot;, &quot;TLS&quot;, &quot;TL&quot;),</b>
+<b class="nc">&nbsp;    TON(&quot;Tonga&quot;, &quot;TON&quot;, &quot;TO&quot;),</b>
+<b class="nc">&nbsp;    TTO(&quot;Trinidad and Tobago&quot;, &quot;TTO&quot;, &quot;TT&quot;),</b>
+<b class="nc">&nbsp;    TUN(&quot;Tunisia&quot;, &quot;TUN&quot;, &quot;TN&quot;),</b>
+<b class="nc">&nbsp;    TUR(&quot;Turkey&quot;, &quot;TUR&quot;, &quot;TR&quot;),</b>
+<b class="nc">&nbsp;    TUV(&quot;Tuvalu&quot;, &quot;TUV&quot;, &quot;TV&quot;),</b>
+<b class="nc">&nbsp;    TWN(&quot;Taiwan&quot;, &quot;TWN&quot;, &quot;TW&quot;),</b>
+<b class="nc">&nbsp;    TZA(&quot;Tanzania&quot;, &quot;TZA&quot;, &quot;TZ&quot;),</b>
+<b class="nc">&nbsp;    UGA(&quot;Uganda&quot;, &quot;UGA&quot;, &quot;UG&quot;),</b>
+<b class="nc">&nbsp;    UKR(&quot;Ukraine&quot;, &quot;UKR&quot;, &quot;UA&quot;),</b>
+<b class="nc">&nbsp;    URY(&quot;Uruguay&quot;, &quot;URY&quot;, &quot;UY&quot;),</b>
+<b class="nc">&nbsp;    USA(&quot;United States&quot;, &quot;USA&quot;, &quot;US&quot;,</b>
+&nbsp;            US_AL, US_AK, US_AZ, US_AR, US_CA, US_CO, US_CT, US_DE, US_DC, US_FL,
+&nbsp;            US_GA, US_HI, US_ID, US_IL, US_IN, US_IA, US_KS, US_KY, US_LA, US_ME,
+&nbsp;            US_MD, US_MA, US_MI, US_MN, US_MS, US_MO, US_MT, US_NE, US_NV, US_NH,
+&nbsp;            US_NJ, US_NM, US_NY, US_NC, US_ND, US_OH, US_OK, US_OR, US_PA, US_RI,
+&nbsp;            US_SC, US_SD, US_TN, US_TX, US_UT, US_VT, US_VA, US_WA, US_WV, US_WI, US_WY),
+<b class="nc">&nbsp;    UZB(&quot;Uzbekistan&quot;, &quot;UZB&quot;, &quot;UZ&quot;),</b>
+<b class="nc">&nbsp;    VAT(&quot;Vatican City&quot;, &quot;VAT&quot;, &quot;VA&quot;),</b>
+<b class="nc">&nbsp;    VCT(&quot;Saint Vincent and the Grenadines&quot;, &quot;VCT&quot;, &quot;VC&quot;),</b>
+<b class="nc">&nbsp;    VEN(&quot;Venezuela&quot;, &quot;VEN&quot;, &quot;VE&quot;),</b>
+<b class="nc">&nbsp;    VGB(&quot;British Virgin Islands&quot;, &quot;VGB&quot;, &quot;VG&quot;),</b>
+<b class="nc">&nbsp;    VNM(&quot;Vietnam&quot;, &quot;VNM&quot;, &quot;VN&quot;),</b>
+<b class="nc">&nbsp;    VUT(&quot;Vanuatu&quot;, &quot;VUT&quot;, &quot;VU&quot;),</b>
+<b class="nc">&nbsp;    WSM(&quot;Samoa&quot;, &quot;WSM&quot;, &quot;WS&quot;),</b>
+<b class="nc">&nbsp;    XKX(&quot;Kosovo&quot;, &quot;XKX&quot;, &quot;XK&quot;),</b>
+<b class="nc">&nbsp;    YEM(&quot;Yemen&quot;, &quot;YEM&quot;, &quot;YE&quot;),</b>
+<b class="nc">&nbsp;    ZAF(&quot;South Africa&quot;, &quot;ZAF&quot;, &quot;ZA&quot;),</b>
+<b class="nc">&nbsp;    ZMB(&quot;Zambia&quot;, &quot;ZMB&quot;, &quot;ZM&quot;),</b>
+<b class="nc">&nbsp;    ZWE(&quot;Zimbabwe&quot;, &quot;ZWE&quot;, &quot;ZW&quot;);</b>
+&nbsp;
+&nbsp;    public static final String KEY = &quot;country&quot;;
+&nbsp;
+<b class="nc">&nbsp;    private static final Map&lt;String, Country&gt; ALPHA2_MAP = new HashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;    static {
+<b class="nc">&nbsp;        for (Country country : values()) {</b>
+<b class="nc">&nbsp;            if (country == MISSING)</b>
+<b class="nc">&nbsp;                continue;</b>
+&nbsp;
+<b class="nc">&nbsp;            ALPHA2_MAP.put(country.alpha2, country);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private final String countryName;
+&nbsp;    private final String alpha2;
+&nbsp;    // ISO 3166-1 alpha3
+&nbsp;    private final String alpha3;
+&nbsp;    private final List&lt;State&gt; states;
+&nbsp;
+<b class="nc">&nbsp;    Country(String countryName, String alpha3, String alpha2, State... states) {</b>
+<b class="nc">&nbsp;        this.countryName = countryName;</b>
+<b class="nc">&nbsp;        this.alpha2 = alpha2;</b>
+<b class="nc">&nbsp;        this.alpha3 = alpha3;</b>
+<b class="nc">&nbsp;        this.states = Arrays.asList(states);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the name of this country. Avoids clash with name() method of this enum.
+&nbsp;     */
+&nbsp;    public String getCountryName() {
+<b class="nc">&nbsp;        return countryName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the ISO 3166-1:alpha2 code of this country
+&nbsp;     */
+&nbsp;    public String getAlpha2() {
+<b class="nc">&nbsp;        return alpha2;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getAlpha3() {
+<b class="nc">&nbsp;        return alpha3;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;State&gt; getStates() {
+<b class="nc">&nbsp;        return states;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static EnumEncodedValue&lt;Country&gt; create() {
+<b class="nc">&nbsp;        return new EnumEncodedValue&lt;&gt;(Country.KEY, Country.class);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param iso should be ISO 3166-1 alpha-2
+&nbsp;     */
+&nbsp;    public static Country find(String iso) {
+<b class="nc">&nbsp;        return ALPHA2_MAP.get(iso);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return alpha3; // for background compatibility</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

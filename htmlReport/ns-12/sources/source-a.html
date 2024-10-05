@@ -1,0 +1,254 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > DecimalEncodedValueImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.routing.ev</a>
+</div>
+
+<h1>Coverage Summary for Class: DecimalEncodedValueImpl (com.graphhopper.routing.ev)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DecimalEncodedValueImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.routing.ev;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonCreator;
+&nbsp;import com.fasterxml.jackson.annotation.JsonProperty;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class holds a signed decimal value and stores it as an integer value via a conversion factor and a certain
+&nbsp; * number of bits that determine the maximum value.
+&nbsp; */
+&nbsp;public final class DecimalEncodedValueImpl extends IntEncodedValueImpl implements DecimalEncodedValue {
+&nbsp;    private final double factor;
+&nbsp;    private final boolean useMaximumAsInfinity;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @see #DecimalEncodedValueImpl(String, int, double, double, boolean, boolean, boolean)
+&nbsp;     */
+&nbsp;    public DecimalEncodedValueImpl(String name, int bits, double factor, boolean storeTwoDirections) {
+<b class="nc">&nbsp;        this(name, bits, 0, factor, false, storeTwoDirections, false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param name                   the key to identify this EncodedValue
+&nbsp;     * @param bits                   the bits that should be reserved for storing the integer value. This determines the
+&nbsp;     *                               maximum value.
+&nbsp;     * @param minStorableValue       the minimum storable value. Use e.g. 0 if no negative values are needed.
+&nbsp;     * @param factor                 the precision factor, i.e. store = (int) Math.round(value / factor)
+&nbsp;     * @param negateReverseDirection true if the reverse direction should be always negative of the forward direction.
+&nbsp;     *                               This is used to reduce space and store the value only once.
+&nbsp;     * @param storeTwoDirections     true if forward and backward direction of the edge should get two independent values.
+&nbsp;     * @param useMaximumAsInfinity   true if the maximum value should be treated as Double.Infinity
+&nbsp;     */
+&nbsp;    public DecimalEncodedValueImpl(String name, int bits, double minStorableValue, double factor,
+&nbsp;                                   boolean negateReverseDirection, boolean storeTwoDirections, boolean useMaximumAsInfinity) {
+<b class="nc">&nbsp;        super(name, bits, (int) Math.round(minStorableValue / factor), negateReverseDirection, storeTwoDirections);</b>
+<b class="nc">&nbsp;        if (!negateReverseDirection &amp;&amp; super.minStorableValue * factor != minStorableValue)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;minStorableValue &quot; + minStorableValue + &quot; is not a multiple of the specified factor &quot;</b>
+&nbsp;                    + factor + &quot; (&quot; + super.minStorableValue * factor + &quot;)&quot;);
+<b class="nc">&nbsp;        this.factor = factor;</b>
+<b class="nc">&nbsp;        this.useMaximumAsInfinity = useMaximumAsInfinity;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+&nbsp;    DecimalEncodedValueImpl(@JsonProperty(&quot;name&quot;) String name,
+&nbsp;                            @JsonProperty(&quot;bits&quot;) int bits,
+&nbsp;                            @JsonProperty(&quot;min_storable_value&quot;) int minStorableValue,
+&nbsp;                            @JsonProperty(&quot;max_storable_value&quot;) int maxStorableValue,
+&nbsp;                            @JsonProperty(&quot;max_value&quot;) int maxValue,
+&nbsp;                            @JsonProperty(&quot;negate_reverse_direction&quot;) boolean negateReverseDirection,
+&nbsp;                            @JsonProperty(&quot;store_two_directions&quot;) boolean storeTwoDirections,
+&nbsp;                            @JsonProperty(&quot;fwd_data_index&quot;) int fwdDataIndex,
+&nbsp;                            @JsonProperty(&quot;bwd_data_index&quot;) int bwdDataIndex,
+&nbsp;                            @JsonProperty(&quot;fwd_shift&quot;) int fwdShift,
+&nbsp;                            @JsonProperty(&quot;bwd_shift&quot;) int bwdShift,
+&nbsp;                            @JsonProperty(&quot;fwd_mask&quot;) int fwdMask,
+&nbsp;                            @JsonProperty(&quot;bwd_mask&quot;) int bwdMask,
+&nbsp;                            @JsonProperty(&quot;factor&quot;) double factor,
+&nbsp;                            @JsonProperty(&quot;use_maximum_as_infinity&quot;) boolean useMaximumAsInfinity) {
+&nbsp;        // we need this constructor for Jackson
+<b class="nc">&nbsp;        super(name, bits, minStorableValue, maxStorableValue, maxValue, negateReverseDirection, storeTwoDirections, fwdDataIndex, bwdDataIndex, fwdShift, bwdShift, fwdMask, bwdMask);</b>
+<b class="nc">&nbsp;        this.factor = factor;</b>
+<b class="nc">&nbsp;        this.useMaximumAsInfinity = useMaximumAsInfinity;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setDecimal(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess, double value) {
+<b class="nc">&nbsp;        if (!isInitialized())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Call init before using EncodedValue &quot; + getName());</b>
+<b class="nc">&nbsp;        if (useMaximumAsInfinity) {</b>
+<b class="nc">&nbsp;            if (Double.isInfinite(value)) {</b>
+<b class="nc">&nbsp;                super.setInt(reverse, edgeId, edgeIntAccess, maxStorableValue);</b>
+&nbsp;                return;
+<b class="nc">&nbsp;            } else if (value &gt;= maxStorableValue * factor) { // equality is important as maxStorableValue is reserved for infinity</b>
+<b class="nc">&nbsp;                super.uncheckedSet(reverse, edgeId, edgeIntAccess, maxStorableValue - 1);</b>
+&nbsp;                return;
+&nbsp;            }
+<b class="nc">&nbsp;        } else if (Double.isInfinite(value))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Value cannot be infinite if useMaximumAsInfinity is false&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (Double.isNaN(value))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;NaN value for &quot; + getName() + &quot; not allowed!&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        value /= factor;</b>
+<b class="nc">&nbsp;        if (value &gt; maxStorableValue)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(getName() + &quot; value too large for encoding: &quot; + value + &quot;, maxValue:&quot; + maxStorableValue + &quot;, factor: &quot; + factor);</b>
+<b class="nc">&nbsp;        if (value &lt; minStorableValue)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(getName() + &quot; value too small for encoding &quot; + value + &quot;, minValue:&quot; + minStorableValue + &quot;, factor: &quot; + factor);</b>
+&nbsp;
+<b class="nc">&nbsp;        super.uncheckedSet(reverse, edgeId, edgeIntAccess, (int) Math.round(value));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getDecimal(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess) {
+<b class="nc">&nbsp;        int value = getInt(reverse, edgeId, edgeIntAccess);</b>
+<b class="nc">&nbsp;        if (useMaximumAsInfinity &amp;&amp; value == maxStorableValue)</b>
+<b class="nc">&nbsp;            return Double.POSITIVE_INFINITY;</b>
+<b class="nc">&nbsp;        return value * factor;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getNextStorableValue(double value) {
+<b class="nc">&nbsp;        if (!useMaximumAsInfinity &amp;&amp; value &gt; getMaxStorableDecimal())</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(getName() + &quot;: There is no next storable value for &quot; + value + &quot;. max:&quot; + getMaxStorableDecimal());</b>
+<b class="nc">&nbsp;        else if (useMaximumAsInfinity &amp;&amp; value &gt; (maxStorableValue - 1) * factor)</b>
+<b class="nc">&nbsp;            return Double.POSITIVE_INFINITY;</b>
+&nbsp;        else
+<b class="nc">&nbsp;            return (factor * (int) Math.ceil(value / factor));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getSmallestNonZeroValue() {
+<b class="nc">&nbsp;        if (minStorableValue != 0 || negateReverseDirection)</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;getting the smallest non-zero value is not possible if minValue!=0 or negateReverseDirection&quot;);</b>
+<b class="nc">&nbsp;        return factor;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getMaxStorableDecimal() {
+<b class="nc">&nbsp;        if (useMaximumAsInfinity) return Double.POSITIVE_INFINITY;</b>
+<b class="nc">&nbsp;        return maxStorableValue * factor;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getMinStorableDecimal() {
+<b class="nc">&nbsp;        return minStorableValue * factor;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public double getMaxOrMaxStorableDecimal() {
+<b class="nc">&nbsp;        int maxOrMaxStorable = getMaxOrMaxStorableInt();</b>
+<b class="nc">&nbsp;        if (useMaximumAsInfinity &amp;&amp; maxOrMaxStorable == maxStorableValue) return Double.POSITIVE_INFINITY;</b>
+<b class="nc">&nbsp;        return maxOrMaxStorable * factor;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

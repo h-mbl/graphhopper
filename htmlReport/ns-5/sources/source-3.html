@@ -1,0 +1,254 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > Profile</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.config</a>
+</div>
+
+<h1>Coverage Summary for Class: Profile (com.graphhopper.config)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Profile</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.config;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonAnySetter;
+&nbsp;import com.fasterxml.jackson.annotation.JsonIgnore;
+&nbsp;import com.fasterxml.jackson.annotation.JsonProperty;
+&nbsp;import com.graphhopper.util.CustomModel;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.PMap;
+&nbsp;import com.graphhopper.util.TurnCostsConfig;
+&nbsp;
+&nbsp;/**
+&nbsp; * Corresponds to an entry of the `profiles` section in `config.yml` and specifies the properties of a routing profile.
+&nbsp; * The name used here needs to be used when setting up CH/LM preparations. See also the documentation in
+&nbsp; * `config-example.yml&#39;
+&nbsp; *
+&nbsp; * @see CHProfile
+&nbsp; * @see LMProfile
+&nbsp; */
+&nbsp;public class Profile {
+&nbsp;    private String name;
+&nbsp;    private TurnCostsConfig turnCostsConfig;
+<b class="nc">&nbsp;    private String weighting = &quot;custom&quot;;</b>
+<b class="nc">&nbsp;    private PMap hints = new PMap();</b>
+&nbsp;
+&nbsp;    public static void validateProfileName(String profileName) {
+<b class="nc">&nbsp;        if (!profileName.matches(&quot;^[a-z0-9_\\-]+$&quot;)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Profile names may only contain lower case letters, numbers and underscores, given: &quot; + profileName);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private Profile() {</b>
+&nbsp;        // default constructor needed for jackson
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public Profile(String name) {</b>
+<b class="nc">&nbsp;        setName(name);</b>
+<b class="nc">&nbsp;        setCustomModel(new CustomModel());</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    public Profile(Profile p) {</b>
+<b class="nc">&nbsp;        setName(p.getName());</b>
+<b class="nc">&nbsp;        setTurnCostsConfig(p.getTurnCostsConfig());</b>
+<b class="nc">&nbsp;        setWeighting(p.getWeighting());</b>
+<b class="nc">&nbsp;        hints = new PMap(p.getHints());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getName() {
+<b class="nc">&nbsp;        return name;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Profile setName(String name) {
+<b class="nc">&nbsp;        validateProfileName(name);</b>
+<b class="nc">&nbsp;        this.name = name;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Profile setTurnCostsConfig(TurnCostsConfig turnCostsConfig) {
+<b class="nc">&nbsp;        this.turnCostsConfig = turnCostsConfig;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonProperty(&quot;turn_costs&quot;)
+&nbsp;    public TurnCostsConfig getTurnCostsConfig() {
+<b class="nc">&nbsp;        return turnCostsConfig;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getWeighting() {
+<b class="nc">&nbsp;        return weighting;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Profile setWeighting(String weighting) {
+<b class="nc">&nbsp;        this.weighting = weighting;</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Profile setCustomModel(CustomModel customModel) {
+<b class="nc">&nbsp;        if (customModel != null)</b>
+<b class="nc">&nbsp;            customModel.internal();</b>
+<b class="nc">&nbsp;        getHints().putObject(CustomModel.KEY, customModel);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public CustomModel getCustomModel() {
+<b class="nc">&nbsp;        return getHints().getObject(CustomModel.KEY, null);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean hasTurnCosts() {
+<b class="nc">&nbsp;        return turnCostsConfig != null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonIgnore
+&nbsp;    public PMap getHints() {
+<b class="nc">&nbsp;        return hints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @JsonAnySetter
+&nbsp;    public Profile putHint(String key, Object value) {
+<b class="nc">&nbsp;        if (key.equals(&quot;u_turn_costs&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;u_turn_costs no longer accepted in profile. Use the turn costs configuration instead, see docs/migration/config-migration-08-09.md&quot;);</b>
+<b class="nc">&nbsp;        if (key.equals(&quot;vehicle&quot;))</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;vehicle no longer accepted in profile, see docs/migration/config-migration-08-09.md&quot;);</b>
+<b class="nc">&nbsp;        this.hints.putObject(key, value);</b>
+<b class="nc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return createContentString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object o) {
+<b class="nc">&nbsp;        if (this == o) return true;</b>
+<b class="nc">&nbsp;        if (o == null || getClass() != o.getClass()) return false;</b>
+<b class="nc">&nbsp;        Profile profile = (Profile) o;</b>
+<b class="nc">&nbsp;        return name.equals(profile.name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String createContentString() {
+&nbsp;        // used to check against stored custom models, see #2026
+<b class="nc">&nbsp;        return &quot;name=&quot; + name + &quot;|turn_costs={&quot; + turnCostsConfig + &quot;}|weighting=&quot; + weighting + &quot;|hints=&quot; + hints;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public int hashCode() {
+<b class="nc">&nbsp;        return name.hashCode();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getVersion() {
+<b class="nc">&nbsp;        return Helper.staticHashCode(createContentString());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,264 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > AngleCalc</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: AngleCalc (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AngleCalc</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/58)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util;
+&nbsp;
+&nbsp;import static java.lang.Math.cos;
+&nbsp;import static java.lang.Math.toRadians;
+&nbsp;
+&nbsp;/**
+&nbsp; * Calculates the angle of a turn, defined by three points. The fast atan2 method is from Jim Shima,
+&nbsp; * 1999, http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization
+&nbsp; * and stands under public domain.
+&nbsp; *
+&nbsp; * @author Johannes Pelzer
+&nbsp; * @author Peter Karich
+&nbsp; */
+<b class="nc">&nbsp;public class AngleCalc {</b>
+<b class="nc">&nbsp;    public static final AngleCalc ANGLE_CALC = new AngleCalc();</b>
+&nbsp;    private final static double PI_4 = Math.PI / 4.0;
+&nbsp;    private final static double PI_2 = Math.PI / 2.0;
+&nbsp;    private final static double PI3_4 = 3.0 * Math.PI / 4.0;
+&nbsp;
+&nbsp;    static double atan2(double y, double x) {
+&nbsp;        // kludge to prevent 0/0 condition
+<b class="nc">&nbsp;        double absY = Math.abs(y) + 1e-10;</b>
+&nbsp;        double r, angle;
+<b class="nc">&nbsp;        if (x &lt; 0.0) {</b>
+<b class="nc">&nbsp;            r = (x + absY) / (absY - x);</b>
+<b class="nc">&nbsp;            angle = PI3_4;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            r = (x - absY) / (x + absY);</b>
+<b class="nc">&nbsp;            angle = PI_4;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        angle += (0.1963 * r * r - 0.9817) * r;</b>
+<b class="nc">&nbsp;        if (y &lt; 0.0)</b>
+&nbsp;            // negate if in quad III or IV
+<b class="nc">&nbsp;            return -angle;</b>
+<b class="nc">&nbsp;        return angle;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public double calcOrientation(double lat1, double lon1, double lat2, double lon2) {
+<b class="nc">&nbsp;        return calcOrientation(lat1, lon1, lat2, lon2, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Return orientation of line relative to east.
+&nbsp;     *
+&nbsp;     * @param exact If false the atan gets calculated faster, but it might contain small errors
+&nbsp;     * @return Orientation in interval -pi to +pi where 0 is east and the &quot;bottom&quot; arc is negative
+&nbsp;     */
+&nbsp;    public double calcOrientation(double lat1, double lon1, double lat2, double lon2, boolean exact) {
+<b class="nc">&nbsp;        double shrinkFactor = cos(toRadians((lat1 + lat2) / 2));</b>
+<b class="nc">&nbsp;        if (exact)</b>
+<b class="nc">&nbsp;            return Math.atan2(lat2 - lat1, shrinkFactor * (lon2 - lon1));</b>
+&nbsp;        else
+<b class="nc">&nbsp;            return atan2(lat2 - lat1, shrinkFactor * (lon2 - lon1));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * convert north based clockwise azimuth (0, 360) into x-axis/east based angle (-Pi, Pi)
+&nbsp;     */
+&nbsp;    public double convertAzimuth2xaxisAngle(double azimuth) {
+<b class="nc">&nbsp;        if (Double.compare(azimuth, 360) &gt; 0 || Double.compare(azimuth, 0) &lt; 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Azimuth &quot; + azimuth + &quot; must be in (0, 360)&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        double angleXY = PI_2 - azimuth / 180. * Math.PI;</b>
+<b class="nc">&nbsp;        if (angleXY &lt; -Math.PI)</b>
+<b class="nc">&nbsp;            angleXY += 2 * Math.PI;</b>
+<b class="nc">&nbsp;        if (angleXY &gt; Math.PI)</b>
+<b class="nc">&nbsp;            angleXY -= 2 * Math.PI;</b>
+<b class="nc">&nbsp;        return angleXY;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Change the representation of an orientation, so the difference to the given baseOrientation
+&nbsp;     * will be smaller or equal to PI (180 degree). This is achieved by adding or subtracting a
+&nbsp;     * 2*PI, so the direction of the orientation will not be changed
+&nbsp;     */
+&nbsp;    public double alignOrientation(double baseOrientation, double orientation) {
+&nbsp;        double resultOrientation;
+<b class="nc">&nbsp;        if (baseOrientation &gt;= 0) {</b>
+<b class="nc">&nbsp;            if (orientation &lt; -Math.PI + baseOrientation)</b>
+<b class="nc">&nbsp;                resultOrientation = orientation + 2 * Math.PI;</b>
+&nbsp;            else
+<b class="nc">&nbsp;                resultOrientation = orientation;</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (orientation &gt; +Math.PI + baseOrientation)</b>
+<b class="nc">&nbsp;            resultOrientation = orientation - 2 * Math.PI;</b>
+&nbsp;        else
+<b class="nc">&nbsp;            resultOrientation = orientation;</b>
+<b class="nc">&nbsp;        return resultOrientation;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculate the azimuth in degree for a line given by two coordinates. Direction in &#39;degree&#39;
+&nbsp;     * where 0 is north, 90 is east, 180 is south and 270 is west.
+&nbsp;     */
+&nbsp;    public double calcAzimuth(double lat1, double lon1, double lat2, double lon2) {
+<b class="nc">&nbsp;        double orientation = Math.PI / 2 - calcOrientation(lat1, lon1, lat2, lon2);</b>
+<b class="nc">&nbsp;        if (orientation &lt; 0)</b>
+<b class="nc">&nbsp;            orientation += 2 * Math.PI;</b>
+&nbsp;
+<b class="nc">&nbsp;        return Math.toDegrees(Helper.round4(orientation)) % 360;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String azimuth2compassPoint(double azimuth) {
+&nbsp;
+&nbsp;        String cp;
+<b class="nc">&nbsp;        double slice = 360.0 / 16;</b>
+<b class="nc">&nbsp;        if (azimuth &lt; slice) {</b>
+<b class="nc">&nbsp;            cp = &quot;N&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 3) {</b>
+<b class="nc">&nbsp;            cp = &quot;NE&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 5) {</b>
+<b class="nc">&nbsp;            cp = &quot;E&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 7) {</b>
+<b class="nc">&nbsp;            cp = &quot;SE&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 9) {</b>
+<b class="nc">&nbsp;            cp = &quot;S&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 11) {</b>
+<b class="nc">&nbsp;            cp = &quot;SW&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 13) {</b>
+<b class="nc">&nbsp;            cp = &quot;W&quot;;</b>
+<b class="nc">&nbsp;        } else if (azimuth &lt; slice * 15) {</b>
+<b class="nc">&nbsp;            cp = &quot;NW&quot;;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            cp = &quot;N&quot;;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return cp;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return true if the given vectors follow a clockwise order abc, bca or cab,
+&nbsp;     * false if the order is counter-clockwise cba, acb or bac, e.g. this returns true:
+&nbsp;     * a   b
+&nbsp;     * | /
+&nbsp;     * 0 - c
+&nbsp;     */
+&nbsp;    public boolean isClockwise(double aX, double aY, double bX, double bY, double cX, double cY) {
+&nbsp;        // simply compare angles between a,b and b,c
+<b class="nc">&nbsp;        final double angleDiff = (cX - aX) * (bY - aY) - (cY - aY) * (bX - aX);</b>
+<b class="nc">&nbsp;        return angleDiff &lt; 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

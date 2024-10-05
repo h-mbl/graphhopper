@@ -1,0 +1,190 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > Instructions</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util</a>
+</div>
+
+<h1>Coverage Summary for Class: Instructions (com.graphhopper.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Instructions</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/34)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;
+&nbsp;package com.graphhopper.util;
+&nbsp;
+<b class="nc">&nbsp;public class Instructions {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This method is useful for navigation devices to find the next instruction for the specified
+&nbsp;     * coordinate (e.g. the current position).
+&nbsp;     * &lt;p&gt;
+&nbsp;     *
+&nbsp;     * @param instructions the instructions to query
+&nbsp;     * @param maxDistance the maximum acceptable distance to the instruction (in meter)
+&nbsp;     * @return the next Instruction or null if too far away.
+&nbsp;     */
+&nbsp;    public static Instruction find(InstructionList instructions, double lat, double lon, double maxDistance) {
+&nbsp;        // handle special cases
+<b class="nc">&nbsp;        if (instructions.size() == 0) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        PointList points = instructions.get(0).getPoints();</b>
+<b class="nc">&nbsp;        double prevLat = points.getLat(0);</b>
+<b class="nc">&nbsp;        double prevLon = points.getLon(0);</b>
+<b class="nc">&nbsp;        DistanceCalc distCalc = DistanceCalcEarth.DIST_EARTH;</b>
+<b class="nc">&nbsp;        double foundMinDistance = distCalc.calcNormalizedDist(lat, lon, prevLat, prevLon);</b>
+<b class="nc">&nbsp;        int foundInstruction = 0;</b>
+&nbsp;
+&nbsp;        // Search the closest edge to the query point
+<b class="nc">&nbsp;        if (instructions.size() &gt; 1) {</b>
+<b class="nc">&nbsp;            for (int instructionIndex = 0; instructionIndex &lt; instructions.size(); instructionIndex++) {</b>
+<b class="nc">&nbsp;                points = instructions.get(instructionIndex).getPoints();</b>
+<b class="nc">&nbsp;                for (int pointIndex = 0; pointIndex &lt; points.size(); pointIndex++) {</b>
+<b class="nc">&nbsp;                    double currLat = points.getLat(pointIndex);</b>
+<b class="nc">&nbsp;                    double currLon = points.getLon(pointIndex);</b>
+&nbsp;
+<b class="nc">&nbsp;                    if (!(instructionIndex == 0 &amp;&amp; pointIndex == 0)) {</b>
+&nbsp;                        // calculate the distance from the point to the edge
+&nbsp;                        double distance;
+<b class="nc">&nbsp;                        int index = instructionIndex;</b>
+<b class="nc">&nbsp;                        if (distCalc.validEdgeDistance(lat, lon, currLat, currLon, prevLat, prevLon)) {</b>
+<b class="nc">&nbsp;                            distance = distCalc.calcNormalizedEdgeDistance(lat, lon, currLat, currLon, prevLat, prevLon);</b>
+<b class="nc">&nbsp;                            if (pointIndex &gt; 0)</b>
+<b class="nc">&nbsp;                                index++;</b>
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            distance = distCalc.calcNormalizedDist(lat, lon, currLat, currLon);</b>
+<b class="nc">&nbsp;                            if (pointIndex &gt; 0)</b>
+<b class="nc">&nbsp;                                index++;</b>
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        if (distance &lt; foundMinDistance) {</b>
+<b class="nc">&nbsp;                            foundMinDistance = distance;</b>
+<b class="nc">&nbsp;                            foundInstruction = index;</b>
+&nbsp;                        }
+&nbsp;                    }
+<b class="nc">&nbsp;                    prevLat = currLat;</b>
+<b class="nc">&nbsp;                    prevLon = currLon;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (distCalc.calcDenormalizedDist(foundMinDistance) &gt; maxDistance)</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;
+&nbsp;        // special case finish condition
+<b class="nc">&nbsp;        if (foundInstruction == instructions.size())</b>
+<b class="nc">&nbsp;            foundInstruction--;</b>
+&nbsp;
+<b class="nc">&nbsp;        return instructions.get(foundInstruction);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,214 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > PathDetailsBuilderFactory</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.util.details</a>
+</div>
+
+<h1>Coverage Summary for Class: PathDetailsBuilderFactory (com.graphhopper.util.details)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PathDetailsBuilderFactory</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/57)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; *  Licensed to GraphHopper GmbH under one or more contributor
+&nbsp; *  license agreements. See the NOTICE file distributed with this work for
+&nbsp; *  additional information regarding copyright ownership.
+&nbsp; *
+&nbsp; *  GraphHopper GmbH licenses this file to you under the Apache License,
+&nbsp; *  Version 2.0 (the &quot;License&quot;); you may not use this file except in
+&nbsp; *  compliance with the License. You may obtain a copy of the License at
+&nbsp; *
+&nbsp; *       http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; *  Unless required by applicable law or agreed to in writing, software
+&nbsp; *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; *  See the License for the specific language governing permissions and
+&nbsp; *  limitations under the License.
+&nbsp; */
+&nbsp;package com.graphhopper.util.details;
+&nbsp;
+&nbsp;import com.graphhopper.routing.Path;
+&nbsp;import com.graphhopper.routing.ev.*;
+&nbsp;import com.graphhopper.routing.weighting.Weighting;
+&nbsp;import com.graphhopper.storage.Graph;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import static com.graphhopper.util.Parameters.Details.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * Generates a list of PathDetailsBuilder from a List of PathDetail names
+&nbsp; *
+&nbsp; * @author Robin Boldt
+&nbsp; */
+<b class="nc">&nbsp;public class PathDetailsBuilderFactory {</b>
+&nbsp;
+&nbsp;    public List&lt;PathDetailsBuilder&gt; createPathDetailsBuilders(List&lt;String&gt; requestedPathDetails, Path path, EncodedValueLookup evl, Weighting weighting, Graph graph) {
+<b class="nc">&nbsp;        List&lt;PathDetailsBuilder&gt; builders = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(LEG_TIME))</b>
+<b class="nc">&nbsp;            builders.add(new ConstantDetailsBuilder(LEG_TIME, path.getTime()));</b>
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(LEG_DISTANCE))</b>
+<b class="nc">&nbsp;            builders.add(new ConstantDetailsBuilder(LEG_DISTANCE, path.getDistance()));</b>
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(LEG_WEIGHT))</b>
+<b class="nc">&nbsp;            builders.add(new ConstantDetailsBuilder(LEG_WEIGHT, path.getWeight()));</b>
+&nbsp;
+<b class="nc">&nbsp;        for (String key : requestedPathDetails) {</b>
+<b class="nc">&nbsp;            if (key.endsWith(&quot;_conditional&quot;))</b>
+<b class="nc">&nbsp;                builders.add(new KVStringDetails(key));</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(MOTORWAY_JUNCTION))</b>
+<b class="nc">&nbsp;            builders.add(new KVStringDetails(MOTORWAY_JUNCTION));</b>
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(STREET_NAME))</b>
+<b class="nc">&nbsp;            builders.add(new KVStringDetails(STREET_NAME));</b>
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(STREET_REF))</b>
+<b class="nc">&nbsp;            builders.add(new KVStringDetails(STREET_REF));</b>
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(STREET_DESTINATION))</b>
+<b class="nc">&nbsp;            builders.add(new KVStringDetails(STREET_DESTINATION));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(AVERAGE_SPEED))</b>
+<b class="nc">&nbsp;            builders.add(new AverageSpeedDetails(weighting));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(EDGE_ID))</b>
+<b class="nc">&nbsp;            builders.add(new EdgeIdDetails());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(EDGE_KEY))</b>
+<b class="nc">&nbsp;            builders.add(new EdgeKeyDetails());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(TIME))</b>
+<b class="nc">&nbsp;            builders.add(new TimeDetails(weighting));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(WEIGHT))</b>
+<b class="nc">&nbsp;            builders.add(new WeightDetails(weighting));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(DISTANCE))</b>
+<b class="nc">&nbsp;            builders.add(new DistanceDetails());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.contains(INTERSECTION))</b>
+<b class="nc">&nbsp;            builders.add(new IntersectionDetails(graph, weighting));</b>
+&nbsp;
+<b class="nc">&nbsp;        for (String pathDetail : requestedPathDetails) {</b>
+<b class="nc">&nbsp;            if (!evl.hasEncodedValue(pathDetail))</b>
+<b class="nc">&nbsp;                continue; // path details like &quot;time&quot; won&#39;t be found</b>
+&nbsp;
+<b class="nc">&nbsp;            EncodedValue ev = evl.getEncodedValue(pathDetail, EncodedValue.class);</b>
+<b class="nc">&nbsp;            if (ev instanceof DecimalEncodedValue)</b>
+<b class="nc">&nbsp;                builders.add(new DecimalDetails(pathDetail, (DecimalEncodedValue) ev));</b>
+<b class="nc">&nbsp;            else if (ev instanceof BooleanEncodedValue)</b>
+<b class="nc">&nbsp;                builders.add(new BooleanDetails(pathDetail, (BooleanEncodedValue) ev));</b>
+<b class="nc">&nbsp;            else if (ev instanceof EnumEncodedValue)</b>
+<b class="nc">&nbsp;                builders.add(new EnumDetails&lt;&gt;(pathDetail, (EnumEncodedValue) ev));</b>
+<b class="nc">&nbsp;            else if (ev instanceof StringEncodedValue)</b>
+<b class="nc">&nbsp;                builders.add(new StringDetails(pathDetail, (StringEncodedValue) ev));</b>
+<b class="nc">&nbsp;            else if (ev instanceof IntEncodedValue)</b>
+<b class="nc">&nbsp;                builders.add(new IntDetails(pathDetail, (IntEncodedValue) ev));</b>
+&nbsp;            else
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;unknown EncodedValue class &quot; + ev.getClass().getName());</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        if (requestedPathDetails.size() &gt; builders.size()) {</b>
+<b class="nc">&nbsp;            ArrayList&lt;String&gt; clonedArr = new ArrayList&lt;&gt;(requestedPathDetails); // avoid changing request parameter</b>
+<b class="nc">&nbsp;            for (PathDetailsBuilder pdb : builders) clonedArr.remove(pdb.getName());</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot find the path details: &quot; + clonedArr);</b>
+<b class="nc">&nbsp;        } else if (requestedPathDetails.size() &lt; builders.size())</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;It should not happen that there are more path details added &quot; + builders + &quot; than requested &quot; + requestedPathDetails);</b>
+&nbsp;
+<b class="nc">&nbsp;        return builders;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>

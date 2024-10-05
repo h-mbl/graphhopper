@@ -1,0 +1,151 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > CustomModelAreasDeserializer</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.graphhopper.jackson</a>
+</div>
+
+<h1>Coverage Summary for Class: CustomModelAreasDeserializer (com.graphhopper.jackson)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CustomModelAreasDeserializer</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    57,1%
+  </span>
+  <span class="absValue">
+    (12/21)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.graphhopper.jackson;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.core.JsonParser;
+&nbsp;import com.fasterxml.jackson.databind.DeserializationContext;
+&nbsp;import com.fasterxml.jackson.databind.JsonDeserializer;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.graphhopper.util.CustomModel;
+&nbsp;import com.graphhopper.util.Helper;
+&nbsp;import com.graphhopper.util.JsonFeature;
+&nbsp;import com.graphhopper.util.JsonFeatureCollection;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.Map;
+&nbsp;
+<b class="fc">&nbsp;public class CustomModelAreasDeserializer extends JsonDeserializer&lt;JsonFeatureCollection&gt; {</b>
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public JsonFeatureCollection deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+<b class="fc">&nbsp;        JsonNode treeNode = jp.readValueAsTree();</b>
+<b class="fc">&nbsp;        JsonFeatureCollection collection = new JsonFeatureCollection();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (treeNode.has(&quot;type&quot;) &amp;&amp; &quot;FeatureCollection&quot;.equals(treeNode.get(&quot;type&quot;).asText())) {</b>
+&nbsp;            // Unfortunately the simpler code ala &quot;jp.getCodec().treeToValue(treeNode, JsonFeatureCollection.class)&quot; results in a StackErrorException
+<b class="fc">&nbsp;            for (JsonNode node : treeNode.get(&quot;features&quot;)) {</b>
+<b class="nc">&nbsp;                JsonFeature feature = jp.getCodec().treeToValue(node, JsonFeature.class);</b>
+<b class="nc">&nbsp;                if (Helper.isEmpty(feature.getId()))</b>
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;The JsonFeature for the CustomModel area must contain \&quot;id\&quot;&quot;);</b>
+<b class="nc">&nbsp;                collection.getFeatures().add(feature);</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields = treeNode.fields();</b>
+<b class="fc">&nbsp;            while (fields.hasNext()) {</b>
+<b class="fc">&nbsp;                Map.Entry&lt;String, JsonNode&gt; field = fields.next();</b>
+<b class="fc">&nbsp;                JsonFeature feature = jp.getCodec().treeToValue(field.getValue(), JsonFeature.class);</b>
+<b class="nc">&nbsp;                feature.setId(field.getKey());</b>
+<b class="nc">&nbsp;                collection.getFeatures().add(feature);</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // duplicate &quot;id&quot; check
+<b class="fc">&nbsp;        Map&lt;String, JsonFeature&gt; index = CustomModel.getAreasAsMap(collection);</b>
+<b class="fc">&nbsp;        if (index.size() != collection.getFeatures().size()) // redundant but cannot hurt</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;JsonFeatureCollection contains duplicate area&quot;);</b>
+<b class="fc">&nbsp;        return collection;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-05 17:25</div>
+</div>
+</body>
+</html>
