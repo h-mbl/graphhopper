@@ -28,6 +28,8 @@ public class CustomModelAreasDeserializerTest {
         faker = new Faker();
     }
 
+    // Intention : Tests whether a valid FeatureCollection is correctly deserialized
+    // (i.e. not null and that type = FeatureCollection).
     @Test
     public void testValidFeatureCollection() throws Exception {
         // Arrange
@@ -43,6 +45,8 @@ public class CustomModelAreasDeserializerTest {
         assertEquals("FeatureCollection", validNode.get("type").asText());
     }
 
+    // Intention : Tests that the deserializer will fail and throw an exception when passed a
+    // JsonNode with an invalid type.
     @Test
     public void testInvalidType() {
         // Arrange
@@ -57,9 +61,12 @@ public class CustomModelAreasDeserializerTest {
         assertTrue(errorMessage.contains("Cannot construct instance of") ||
                         errorMessage.contains("no String-argument constructor/factory method") ||
                         errorMessage.contains("type") && errorMessage.contains("FeatureCollection"),
-                "Exception message does not contain expected content. Actual message: " + errorMessage);
+                "Exception message does not contain expected content. Actual message: "
+                        + errorMessage);
     }
 
+    // Intention : Tests that the deserializer will fail and throw an exception when passed a
+    // JsonNode missing the type field.
     @Test
     public void testMissingType() {
         // Arrange
@@ -71,12 +78,17 @@ public class CustomModelAreasDeserializerTest {
 
         assertTrue(exception instanceof IllegalArgumentException ||
                         exception instanceof MismatchedInputException,
-                "Expected either IllegalArgumentException or MismatchedInputException, but got: " + exception.getClass().getName());
+                "Expected either IllegalArgumentException or MismatchedInputException, " +
+                        "but got: " + exception.getClass().getName());
 
         String errorMessage = exception.getMessage();
         assertTrue(errorMessage.contains("type") || errorMessage.contains("missing"),
-                "Exception message should mention 'type' or 'missing'. Actual message: " + errorMessage);
+                "Exception message should mention 'type' or 'missing'. Actual message: "
+                        + errorMessage);
     }
+
+    // Intention : Tests that the deserializer will fail and throw an exception if passed a null
+    //             JsonNode.
     @Test
     public void testNullNode() {
         // Arrange
@@ -88,14 +100,17 @@ public class CustomModelAreasDeserializerTest {
         // Assert (continued)
         assertTrue(exception instanceof NullPointerException ||
                         exception instanceof IllegalArgumentException,
-                "Expected either NullPointerException or IllegalArgumentException, but got: " + exception.getClass().getName());
+                "Expected either NullPointerException or IllegalArgumentException, " +
+                        "but got: " + exception.getClass().getName());
 
         String errorMessage = exception.getMessage();
         assertNotNull(errorMessage, "Exception message should not be null");
         assertFalse(errorMessage.isEmpty(), "Exception message should not be empty");
     }
 
-
+    // Intention : This test is passed an empty JsonNode, deserializes it and tests whether an
+    // exception is thrown. If an exception is not thrown, this test checks that the JsonNode is not
+    // empty.
     @Test
     public void testEmptyNode() {
         // Arrange
@@ -119,15 +134,20 @@ public class CustomModelAreasDeserializerTest {
                     errorMessage.contains("missing") ||
                             errorMessage.contains("empty") ||
                             errorMessage.contains("invalid") ||
-                            (errorMessage.contains("type") && errorMessage.contains("FeatureCollection")),
-                    "Exception message does not contain expected content. Actual message: " + errorMessage
+                            (errorMessage.contains("type") &&
+                                    errorMessage.contains("FeatureCollection")),
+                    "Exception message does not contain expected content. Actual message: "
+                            + errorMessage
             );
         } else {
             assertNotNull(result, "Expected a non-null result for empty node");
-            assertTrue(result.getFeatures().isEmpty(), "Expected an empty feature collection for empty node");
+            assertTrue(result.getFeatures().isEmpty(), "Expected an empty feature " +
+                    "collection for empty node");
         }
     }
 
+    // Intention : Tests that the deserializer will fail and throw an exception if passed a JsonNode
+    // without an "id" field.
     @Test
     public void testFeatureWithoutId() {
         // Arrange
@@ -142,13 +162,17 @@ public class CustomModelAreasDeserializerTest {
 
         assertTrue(exception instanceof IllegalArgumentException ||
                         exception instanceof InvalidDefinitionException,
-                "Expected either IllegalArgumentException or InvalidDefinitionException, but got: " + exception.getClass().getName());
+                "Expected either IllegalArgumentException or InvalidDefinitionException," +
+                        " but got: " + exception.getClass().getName());
 
         String errorMessage = exception.getMessage();
         assertTrue(errorMessage.contains("id") || errorMessage.contains("JsonFeature"),
-                "Exception message should mention 'id' or 'JsonFeature'. Actual message: " + errorMessage);
+                "Exception message should mention 'id' or 'JsonFeature'. Actual message:" +
+                        " " + errorMessage);
     }
 
+    // Intention : Tests that the deserializer will fail and throw an exception if passed a GeoJSON
+    // object with duplicate IDs.
     @Test
     public void testDuplicateFeatureIds() throws Exception {
         // Arrange
@@ -166,11 +190,13 @@ public class CustomModelAreasDeserializerTest {
 
         assertTrue(exception instanceof IllegalArgumentException ||
                         exception instanceof InvalidDefinitionException,
-                "Expected either IllegalArgumentException or InvalidDefinitionException, but got: " + exception.getClass().getName());
+                "Expected either IllegalArgumentException or InvalidDefinitionException," +
+                        " but got: " + exception.getClass().getName());
 
         String errorMessage = exception.getMessage();
         assertTrue(errorMessage.contains("id") || errorMessage.contains("JsonFeature"),
-                "Exception message should mention 'id' or 'JsonFeature'. Actual message: " + errorMessage);
+                "Exception message should mention 'id' or 'JsonFeature'. Actual message:" +
+                        " " + errorMessage);
     }
 
 
