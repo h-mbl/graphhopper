@@ -26,6 +26,9 @@ import java.util.Iterator;
 import static com.graphhopper.json.Statement.*;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.github.javafaker.Faker;
 
 public class CustomModelTest {
 
@@ -70,5 +73,30 @@ public class CustomModelTest {
         iter = CustomModel.merge(car, emptyCar).getPriority().iterator();
         assertEquals("0.5", iter.next().value());
         assertEquals("0.8", iter.next().value());
+    }
+
+
+    @Test
+
+    void testAddAreasWithInvalidId() {
+
+        Faker faker = new Faker();
+        CustomModel customModel = new CustomModel();
+        JsonFeatureCollection externalAreas = new JsonFeatureCollection();
+
+        String invalidId = faker.lorem().words(3).stream().reduce((a, b) -> a + " " + b).orElse("invalid id");
+        JsonFeature invalidFeature = new JsonFeature();
+        invalidFeature.setId(invalidId);
+        externalAreas.getFeatures().add(invalidFeature);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            customModel.addAreas(externalAreas);
+        });
+
+        String expectedMessage = "The area '" + invalidId + "' has an invalid id. Only letters, numbers and underscore are allowed.";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage),
+                "Expected message to contain: " + expectedMessage + ", but was: " + actualMessage);
     }
 }
