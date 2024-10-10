@@ -14,9 +14,16 @@ import java.util.Map;
 
 class ResponsePathTest {
 
-
+    /*
+    Intentions: To ensure that the calcBBox2D() method correctly calculates the 2D bounding box for a given set of points.
+    It tests the following cases:
+        * The bounding box is not null.
+        * The minimum coordinates are less than or equal to the maximum coordinates (which is logical for a bounding box).
+        * All added points are effectively contained within the calculated bounding box.
+    */
     @Test
     void testCalcBBox2D() {
+        // Arrange
         Faker faker = new Faker();
         ResponsePath responsePath = new ResponsePath();
         PointList pointList = new PointList();
@@ -28,11 +35,12 @@ class ResponsePathTest {
             pointList.add(lat, lon);
         }
 
+        // Act
         responsePath.setPoints(pointList);
 
         Envelope bbox = responsePath.calcBBox2D();
 
-        // Assertions
+        // Asserts
         assertNotNull(bbox);
         assertTrue(bbox.getMinX() <= bbox.getMaxX());
         assertTrue(bbox.getMinY() <= bbox.getMaxY());
@@ -43,40 +51,50 @@ class ResponsePathTest {
         }
     }
 
+    /*
+    Intention: To verify that the addPathDetails() method  adds path details to a ResponsePath object
+    This test ensures:
+        1. Path details are correctly added to an empty ResponsePath.
+        2. The size of added details matches the size of the original map.
+        3. An exception is thrown when trying to add details of a different size.
+   */
     @Test
     void testAddPathDetails() {
+
+        //Arrange
         ResponsePath responsePath = new ResponsePath();
 
-        // Création de détails aléatoires pour pathDetails
         Map<String, List<PathDetail>> details1 = new HashMap<>();
         for (int i = 0; i < 3; i++) {
-            String key = "key" + i; // Utilisation d'une clé simple
+            String key = "key" + i;
             List<PathDetail> pathDetails = new ArrayList<>();
             for (int j = 0; j < 5; j++) {
-                // Ajout d'un PathDetail avec une valeur aléatoire
-                Object value = Math.random() * 100; // Utilisation de Math.random() pour une valeur aléatoire
+                Object value = Math.random() * 100;
                 pathDetails.add(new PathDetail(value));
             }
             details1.put(key, pathDetails);
         }
 
-        // Ajout des détails à une responsePath vide
+        // Act
         responsePath.addPathDetails(details1);
-        assertEquals(details1.size(), responsePath.getPathDetails().size(), "Le nombre de détails ajoutés ne correspond pas.");
 
-        // Ajout de détails de taille différente (devrait lever une exception)
+        //Assert
+        assertEquals(details1.size(), responsePath.getPathDetails().size());
+
+
+        // Arrange (for exception test)
         Map<String, List<PathDetail>> details3 = new HashMap<>();
         for (int i = 0; i < 2; i++) {
             String key = "key" + (i + 3); // Utilisation de nouvelles clés
             List<PathDetail> pathDetails = new ArrayList<>();
             for (int j = 0; j < 5; j++) {
-                Object value = Math.random() * 100; // Utilisation de Math.random() pour une valeur aléatoire
+                Object value = Math.random() * 100;
                 pathDetails.add(new PathDetail(value));
             }
             details3.put(key, pathDetails);
         }
 
-        // Vérification que l'exception est levée
+        // Act & Assert (for exception test)
         assertThrows(IllegalStateException.class, () -> responsePath.addPathDetails(details3));
     }
 

@@ -76,9 +76,16 @@ public class CustomModelTest {
     }
 
 
+    /*
+    Intention: To verify that the addAreas() method of CustomModel correctly rejects areas with invalid IDs.
+    This test ensures that:
+        1. An IllegalArgumentException is thrown when trying to add an area with an invalid ID.
+        2. The exception message contains the expected error description, including the invalid ID.
+   */
     @Test
-
     void testAddAreasWithInvalidId() {
+
+        // Arrange
 
         Faker faker = new Faker();
         CustomModel customModel = new CustomModel();
@@ -89,13 +96,16 @@ public class CustomModelTest {
         invalidFeature.setId(invalidId);
         externalAreas.getFeatures().add(invalidFeature);
 
+        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             customModel.addAreas(externalAreas);
         });
 
+
         String expectedMessage = "The area '" + invalidId + "' has an invalid id. Only letters, numbers and underscore are allowed.";
         String actualMessage = exception.getMessage();
 
+        // Assert (continued)
         assertTrue(actualMessage.contains(expectedMessage),
                 "Expected message to contain: " + expectedMessage + ", but was: " + actualMessage);
     }
