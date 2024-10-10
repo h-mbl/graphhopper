@@ -14,7 +14,6 @@ import java.util.Map;
 
 class ResponsePathTest {
 
-
     @Test
     void testCalcBBox2D() {
         Faker faker = new Faker();
