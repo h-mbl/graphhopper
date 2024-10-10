@@ -77,7 +77,6 @@ public class HelperTest {
         assertEquals("test_case_t_b_d", Helper.camelCaseToUnderScore("testCaseTBD"));
         assertEquals("_test_case", Helper.camelCaseToUnderScore("TestCase"));
         assertEquals("_test_case", Helper.camelCaseToUnderScore("_test_case"));
-        assertEquals("", Helper.camelCaseToUnderScore(""));
     }
 
     // Intention: Tests that when the method camelCaseToUnderScore is called on an empty string,
