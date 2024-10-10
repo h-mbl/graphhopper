@@ -14,13 +14,14 @@ import java.util.Map;
 
 class ResponsePathTest {
 
+
     @Test
     void testCalcBBox2D() {
         Faker faker = new Faker();
         ResponsePath responsePath = new ResponsePath();
         PointList pointList = new PointList();
 
-        // Add random points to the pointList
+        // Ajout de points aléatoires au pointList
         for (int i = 0; i < 10; i++) {
             double lat = faker.number().randomDouble(6, -90, 90);
             double lon = faker.number().randomDouble(6, -180, 180);
@@ -31,40 +32,52 @@ class ResponsePathTest {
 
         Envelope bbox = responsePath.calcBBox2D();
 
+        // Assertions
         assertNotNull(bbox);
         assertTrue(bbox.getMinX() <= bbox.getMaxX());
         assertTrue(bbox.getMinY() <= bbox.getMaxY());
 
-        // Check if all points are within the bounding box
+        // Vérifier que tous les points sont dans la boîte englobante
         for (int i = 0; i < pointList.size(); i++) {
             assertTrue(bbox.contains(pointList.getLon(i), pointList.getLat(i)));
         }
     }
+
     @Test
     void testAddPathDetails() {
         ResponsePath responsePath = new ResponsePath();
 
-        //  Adding details to an empty pathDetails
-        Map<String, List<PathDetail>> details1 = createRandomPathDetails(3, 5);
-        responsePath.addPathDetails(details1);
-        assertEquals(details1.size(), responsePath.getPathDetails().size());
-
-        // Adding details with different size (should throw exception)
-        Map<String, List<PathDetail>> details3 = createRandomPathDetails(2, 5);
-        assertThrows(IllegalStateException.class, () -> responsePath.addPathDetails(details3));
-    }
-        private Map<String, List<PathDetail>> createRandomPathDetails(int numKeys, int numDetailsPerKey) {
-        Faker faker = new Faker();
-        Map<String, List<PathDetail>> details = new HashMap<>();
-        for (int i = 0; i < numKeys; i++) {
-            String key = faker.lorem().word();
+        // Création de détails aléatoires pour pathDetails
+        Map<String, List<PathDetail>> details1 = new HashMap<>();
+        for (int i = 0; i < 3; i++) {
+            String key = "key" + i; // Utilisation d'une clé simple
             List<PathDetail> pathDetails = new ArrayList<>();
-            for (int j = 0; j < numDetailsPerKey; j++) {
-                Object value = faker.number().randomDouble(2, 0, 100);
+            for (int j = 0; j < 5; j++) {
+                // Ajout d'un PathDetail avec une valeur aléatoire
+                Object value = Math.random() * 100; // Utilisation de Math.random() pour une valeur aléatoire
                 pathDetails.add(new PathDetail(value));
             }
-            details.put(key, pathDetails);
+            details1.put(key, pathDetails);
         }
-        return details;
+
+        // Ajout des détails à une responsePath vide
+        responsePath.addPathDetails(details1);
+        assertEquals(details1.size(), responsePath.getPathDetails().size(), "Le nombre de détails ajoutés ne correspond pas.");
+
+        // Ajout de détails de taille différente (devrait lever une exception)
+        Map<String, List<PathDetail>> details3 = new HashMap<>();
+        for (int i = 0; i < 2; i++) {
+            String key = "key" + (i + 3); // Utilisation de nouvelles clés
+            List<PathDetail> pathDetails = new ArrayList<>();
+            for (int j = 0; j < 5; j++) {
+                Object value = Math.random() * 100; // Utilisation de Math.random() pour une valeur aléatoire
+                pathDetails.add(new PathDetail(value));
+            }
+            details3.put(key, pathDetails);
+        }
+
+        // Vérification que l'exception est levée
+        assertThrows(IllegalStateException.class, () -> responsePath.addPathDetails(details3));
     }
+
 }
