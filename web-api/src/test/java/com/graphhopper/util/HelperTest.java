@@ -77,8 +77,22 @@ public class HelperTest {
         assertEquals("test_case_t_b_d", Helper.camelCaseToUnderScore("testCaseTBD"));
         assertEquals("_test_case", Helper.camelCaseToUnderScore("TestCase"));
         assertEquals("_test_case", Helper.camelCaseToUnderScore("_test_case"));
-
         assertEquals("", Helper.camelCaseToUnderScore(""));
+    }
+
+    // Intention: Tests that when the method camelCaseToUnderScore is called on an empty string,
+    // an empty string will be returned
+    @Test
+    public void testEmptyCamelCaseToEmptyUnderscore() {
+        // Arrange
+        String input = "";
+        String expected = "";
+
+        // Act
+        String result = Helper.camelCaseToUnderScore(input);
+
+        // Assert
+        assertEquals(expected, result);
     }
 
     @Test
@@ -86,8 +100,21 @@ public class HelperTest {
         assertEquals("testCase", Helper.underScoreToCamelCase("test_case"));
         assertEquals("testCaseTBD", Helper.underScoreToCamelCase("test_case_t_b_d"));
         assertEquals("TestCase_", Helper.underScoreToCamelCase("_test_case_"));
+    }
 
-        assertEquals("", Helper.underScoreToCamelCase(""));
+    // Intention: Tests that when the method underScoreToCamelCase is called on an empty string,
+    // an empty string will be returned
+    @Test
+    public void testEmptyUnderscoreToEmptyCamelCase() {
+        // Arrange
+        String input = "";
+        String expected = "";
+
+        // Act
+        String result = Helper.underScoreToCamelCase(input);
+
+        // Assert
+        assertEquals(expected, result);
     }
 
     @Test
