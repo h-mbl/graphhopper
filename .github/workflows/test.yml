@@ -37,7 +37,11 @@ jobs:
           restore-keys: |
             ${{ runner.os}}-node_modules-
       - name: Build ${{ matrix.java-version }}
-        run: mvn -B clean verify
+        #run: mvn -B clean verify
+        run: |
+          export MAVEN_OPTS="-XX:+PrintFlagsFinal" 
+          xvfb-run mvn -B verify -Djavafx.platform=linux jacoco:report -Pcoverage
+          unset MAVEN_OPTS
 
       - name: Get JaCoCo Coverage
         id: COVERAGE
