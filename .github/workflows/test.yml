@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload Performance Report
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: performance-report-${{ matrix.jvm-config.name }}
           path: performance_report.md
