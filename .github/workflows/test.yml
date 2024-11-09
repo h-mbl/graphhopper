@@ -64,20 +64,50 @@ jobs:
         #          unset MAVEN_OPTS
         run: |
           echo "============================================="
-          echo "🔧 Starting Build Configuration"
+          echo "🚀 Starting JVM Configuration: ${{ matrix.jvm-config.name }}"
           echo "============================================="
-          echo "Configuration Name: ${{ matrix.jvm-config.name }}"
-          echo "Description: ${{ matrix.jvm-config.desc }}"
-          echo "JVM Flags: ${{ matrix.jvm-config.opts }}"
+          echo "🎯 Mission Description: ${{ matrix.jvm-config.desc }}"
+          echo "⚙️ JVM Powers Activated: ${{ matrix.jvm-config.opts }}"
           echo "---------------------------------------------"
-          echo "🚀 Starting Build Process"
+          
+          echo "📊 Initializing Performance Metrics..."
+          start_time=$(date +%s)
+          mem_before=$(free -m | awk '/Mem:/ {print $3}')
+          
+          echo "🔥 Launching Build Sequence..."
           export MAVEN_OPTS="${{ matrix.jvm-config.opts }}"
           xvfb-run mvn -B clean verify -Djavafx.platform=linux jacoco:report -Pcoverage
+          build_status=$?
+          
+          echo "📈 Calculating Performance Metrics..."
+          end_time=$(date +%s)
+          mem_after=$(free -m | awk '/Mem:/ {print $3}')
+          build_time=$((end_time-start_time))
+          memory_used=$((mem_after-mem_before))
+          
+          echo "BUILD_TIME=$build_time" >> $GITHUB_ENV
+          echo "MEMORY_USED=$memory_used" >> $GITHUB_ENV
+          
           unset MAVEN_OPTS
-          echo "✅ Build Process Completed"
-          echo "📊 Preparing Coverage Analysis"
-          echo "May the garbage collector be ever in your favor! 🎯"
+          
           echo "============================================="
+          echo "🎮 Performance Stats"
+          echo "============================================="
+          echo "⏱️ Build Time: $build_time seconds"
+          echo "💾 Memory Used: $memory_used MB"
+          echo "---------------------------------------------"
+          
+          echo "🎯 Build Status: $([ $build_status -eq 0 ] && echo '✅ SUCCESS' || echo '❌ FAILED')"
+          echo "May the garbage collector be ever in your favor! 🎯"
+          echo "=============================================\n"
+          
+          if [ $build_status -eq 0 ]; then
+            echo "🌟 Achievement Unlocked: Successful Build with ${{ matrix.jvm-config.name }}!"
+          else
+            echo "💔 Mission Failed: We'll get them next time!"
+          fi
+          
+          exit $build_status
 
       - name: Get JaCoCo Coverage
         id: COVERAGE
