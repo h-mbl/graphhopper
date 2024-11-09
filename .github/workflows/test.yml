@@ -128,6 +128,8 @@ jobs:
       - name: Generate Performance Report
         if: always()
         run: |
+            mkdir -p reports_performance
+            echo "=============================================" > reports/performance_report.md
             echo "=============================================" > performance_report.md
             echo "🎯 Performance Report - ${{ matrix.jvm-config.name }}" >> performance_report.md
             echo "=============================================" >> performance_report.md
@@ -152,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: performance-report-${{ matrix.jvm-config.name }}
-          path: performance_report.md
+          path: reports_performance/performance_report.md
 
       - name: Fail if coverage has not improved.
         run: |
