@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quality-checks>
+    <!-- Flags globaux -->
+    <global-flags>
+        <flag name="enforceCodeStyle" enabled="true"/>
+        <flag name="enforceDocumentation" enabled="true"/>
+        <flag name="enforceTestCoverage" enabled="true"/>
+    </global-flags>
+
+    <!-- Flags spécifiques aux modules -->
+    <module-flags>
+        <module name="jackson">
+            <flag name="nullChecks" enabled="true"/>
+            <flag name="serializationValidation" enabled="true"/>
+            <flag name="secureDeserialization" enabled="true"/>
+        </module>
+    </module-flags>
+
+    <!-- Seuils de qualité -->
+    <thresholds>
+        <threshold name="testCoverage" value="80"/>
+        <threshold name="duplicatedLines" value="5"/>
+        <threshold name="complexity" value="10"/>
+    </thresholds>
+</quality-checks>

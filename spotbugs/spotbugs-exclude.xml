@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Flags pour les sérialiseurs Jackson -->
+    <Match>
+        <Class name="com.graphhopper.jackson.*Serializer"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <!-- Flags pour les tests -->
+    <Match>
+        <Class name="~.*Test$"/>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
+    </Match>
+</FindBugsFilter>
