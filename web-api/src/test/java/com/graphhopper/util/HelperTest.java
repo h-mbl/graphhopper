@@ -105,6 +105,7 @@ public class HelperTest {
     // an empty string will be returned
     @Test
     public void testEmptyUnderscoreToEmptyCamelCase() {
+
         // Arrange
         String input = "";
         String expected = "";
