@@ -18,12 +18,14 @@ jobs:
           distribution: 'temurin'
       - name: test flag 1
       # `|` sequentially runs commands on multiple lines
+      # `unset MAVEN_OPTS` removes previous flags
       # `echo` prints
       # `export` makes `MAVEN_OPTS` available to `clean` & `verify`
       # `MAVEN_OPTS = JVM flag` sets the flag for each job
       # `clean` removes previously compiled files
       # `verify` checks build is correct
-        run: |                         
+        run: |
+          unset MAVEN_OPTS
           echo 'JVM Flag 1: -XX:+UseCompressedOops'
           echo 'Randomly choosen from the server side article'
           export MAVEN_OPTS='-XX:+UseCompressedOops'
@@ -38,7 +40,8 @@ jobs:
           java-version: '22'
           distribution: 'temurin'
       - name: test flag 2
-        run: |                         
+        run: |    
+          unset MAVEN_OPTS
           echo 'JVM Flag 2: -XX:+UseZGC'
           echo 'Randomly choosen from the server side article'
           export MAVEN_OPTS='-XX:+UseZGC'
@@ -53,7 +56,8 @@ jobs:
           java-version: '22'
           distribution: 'temurin'
       - name: test flag 3
-        run: |                         
+        run: | 
+          unset MAVEN_OPTS
           echo 'JVM Flag 3: -Xmx2048'
           echo 'Randomly choosen from the server side article'
           export MAVEN_OPTS='-Xmx2048'
@@ -68,7 +72,8 @@ jobs:
           java-version: '22'
           distribution: 'temurin'
       - name: test flag 4
-        run: |                         
+        run: |       
+          unset MAVEN_OPTS
           echo 'JVM Flag 4: -XX:+UseParNewGC'
           echo 'Randomly choosen from the server side article'
           export MAVEN_OPTS='-XX:+UseParNewGC'
@@ -83,7 +88,8 @@ jobs:
           java-version: '22'
           distribution: 'temurin'
       - name: test flag 5
-        run: |                         
+        run: |       
+          unset MAVEN_OPTS
           echo 'JVM Flag 5: -XX:MaxPermSize=128m'
           echo 'Randomly choosen from the server side article'
           export MAVEN_OPTS='-XX:MaxPermSize=128m'
