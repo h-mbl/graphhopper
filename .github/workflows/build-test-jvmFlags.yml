@@ -11,10 +11,19 @@ jobs:
         java-version: [ 22 ]
         flags:
           - flag: -XX:CompilerThreshold=1000
-            description: insert desc. here
+            description: "Optimizes frequently used methods by lowering the compilation threshold, improving performance of core routing operations"
 
           - flag: -XX:+UseCompressedOops
-            description: insert short description here
+            description: "enables compressed ordinary object pointers"
+
+          - flag: -XX:+OptimizeFill
+            description: "Enhances array operations performance, crucial for graph algorithms and route calculations"
+
+          - flag: -XX:+UseZGC
+            description: "enables the Z Garbage Collector"
+
+          - flag: -XX:MaxInlineLevel=<value>
+            description: "sets the maximum depth for method inlining by the JIT compiler."
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
