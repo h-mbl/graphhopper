@@ -28,7 +28,7 @@ jobs:
         run: |                         
           echo 'JVM Flag 1: -XX:+UseCompressedOops'
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS = '-XX:+UseCompressedOops'
+          export MAVEN_OPTS='-XX:+UseCompressedOops'
           mvn clean verify
           
   flag_2:
@@ -43,7 +43,7 @@ jobs:
         run: |                         
           echo 'JVM Flag 2: -XX:+UseZGC'
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS = '-XX:+UseZGC'
+          export MAVEN_OPTS='-XX:+UseZGC'
           mvn clean verify
     
   flag_3:
@@ -58,7 +58,7 @@ jobs:
         run: |                         
           echo 'JVM Flag 3: -Xmx2048'
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS = '-Xmx2048'
+          export MAVEN_OPTS='-Xmx2048'
           mvn clean verify
     
   flag_4:
@@ -73,7 +73,7 @@ jobs:
         run: |                         
           echo 'JVM Flag 4: -XX:+UseParNewGC'
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS = '-XX:+UseParNewGC'
+          export MAVEN_OPTS='-XX:+UseParNewGC'
           mvn clean verify
     
   flag_5:
@@ -88,5 +88,5 @@ jobs:
         run: |                         
           echo 'JVM Flag 5: -XX:MaxPermSize=128m'
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS = '-XX:MaxPermSize=128m'
+          export MAVEN_OPTS='-XX:MaxPermSize=128m'
           mvn clean verify
