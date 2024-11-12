@@ -10,19 +10,24 @@ jobs:
       matrix:
         java-version: [ 22 ]
         flags:
-          - flag: -XX:CompilerThreshold=1000
+          - category: "Insert Here"
+            flag: -XX:CompilerThreshold=1000
             description: "Optimizes frequently used methods by lowering the compilation threshold, improving performance of core routing operations"
 
-          - flag: -XX:+UseCompressedOops
+          - category: "Insert Here"
+            flag: -XX:+UseCompressedOops
             description: "enables compressed ordinary object pointers"
 
-          - flag: -XX:+OptimizeFill
+          - category: "Insert Here"
+            flag: -XX:+OptimizeFill
             description: "Enhances array operations performance, crucial for graph algorithms and route calculations"
 
-          - flag: -XX:+UseZGC
+          - category: "Insert Here"
+            flag: -XX:+UseZGC
             description: "enables the Z Garbage Collector"
 
-          - flag: -XX:MaxInlineLevel=<value>
+          - category: "Insert Here"
+            flag: -XX:MaxInlineLevel=<value>
             description: "sets the maximum depth for method inlining by the JIT compiler."
     steps:
       - uses: actions/checkout@v3
@@ -54,8 +59,9 @@ jobs:
       - name: Running JVM Flag ${{matrix.flags.flag}}
         run: |
           unset MAVEN_OPTS
+          echo "Category: ${{matrix.flags.category}}"
           echo "JVM Flag: ${{matrix.flags.flag}}"
-          echo "${{matrix.flags.description}}"
+          echo "Description: ${{matrix.flags.description}}"
           export MAVEN_OPTS="${{matrix.flags.flag}}"
 
       - name: Build ${{ matrix.java-version }}
