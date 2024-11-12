@@ -12,7 +12,7 @@ jobs:
       # clones the repo at job start
       - uses: actions/checkout@v3    
       # set-up Java 22 for build
-      - uses: actions/setup-java@v3    
+      - uses: actions/setup-java@v3
         with:
           java-version: '22'
           distribution: 'temurin'
@@ -58,9 +58,9 @@ jobs:
       - name: test flag 3
         run: | 
           unset MAVEN_OPTS
-          echo 'JVM Flag 3: -XX:+UseStringCache'
+          echo 'JVM Flag 3: '
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS='-XX:+UseStringCache'
+          export MAVEN_OPTS=''
           mvn clean verify
     
   flag_4:
@@ -74,9 +74,9 @@ jobs:
       - name: test flag 4
         run: |       
           unset MAVEN_OPTS
-          echo 'JVM Flag 4: -XX:+UseParNewGC'
+          echo 'JVM Flag 4: '
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS='-XX:+UseParNewGC'
+          export MAVEN_OPTS=''
           mvn clean verify
     
   flag_5:
@@ -90,7 +90,7 @@ jobs:
       - name: test flag 5
         run: |       
           unset MAVEN_OPTS
-          echo 'JVM Flag 5: -XX:MaxPermSize=128m'
+          echo 'JVM Flag 5: '
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS='-XX:MaxPermSize=128m'
+          export MAVEN_OPTS=''
           mvn clean verify
