@@ -58,9 +58,9 @@ jobs:
       - name: test flag 3
         run: | 
           unset MAVEN_OPTS
-          echo 'JVM Flag 3: -Xmx2048'
+          echo 'JVM Flag 3: -XX:+UseStringCache'
           echo 'Randomly choosen from the server side article'
-          export MAVEN_OPTS='-Xmx2048'
+          export MAVEN_OPTS='-XX:+UseStringCache'
           mvn clean verify
     
   flag_4:
