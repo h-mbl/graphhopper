@@ -2,8 +2,6 @@ name: JVM Flags
 
 on: 
   push:
-    branches:
-      - Brittany
   pull_request:
 
 jobs:
