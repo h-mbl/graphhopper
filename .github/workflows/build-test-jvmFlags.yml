@@ -42,7 +42,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/pom.xml', '**/package.json') }}
           restore-keys: |
             ${{ runner.os}}-node_modules-
-      - name: Running ${{matrix.flags}}
+      - name: Running JVM Flag ${{matrix.flags.flag}}
         run: |
           unset MAVEN_OPTS
           echo "JVM Flag: ${{matrix.flags.flag}}"
