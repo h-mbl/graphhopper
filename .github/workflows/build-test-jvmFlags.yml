@@ -18,9 +18,9 @@ jobs:
             flag: -XX:+UseCompressedOops
             description: "enables compressed ordinary object pointers"
 
-          - category: "Insert Here"
+          - category: "Optimisation du mémoire et performance"
             flag: -XX:+OptimizeFill
-            description: "Enhances array operations performance, crucial for graph algorithms and route calculations"
+            description: "Optimise le remplissage de la mémoire inutilisée dans les objets."
 
           - category: "Insert Here"
             flag: -XX:+UseZGC
