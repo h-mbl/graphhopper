@@ -57,6 +57,47 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/pom.xml', '**/package.json') }}
           restore-keys: |
             ${{ runner.os}}-node_modules-
+      - name: Display JVM Flags Documentation
+        run: |
+          echo "============================================="
+          echo "🚀 Starting JVM Configuration: ${{ matrix.jvm-config.name }}"
+          echo "============================================="
+          echo "🎯 Mission Description: ${{ matrix.jvm-config.desc }}"
+          echo "⚙️ JVM Powers Activated: ${{ matrix.jvm-config.opts }}"
+          echo "---------------------------------------------"
+
+          echo "📊 Initializing Performance Metrics..."
+          start_time=$(date +%s)
+          mem_before=$(free -m | awk '/Mem:/ {print $3}')
+          echo "📈 Calculating Performance Metrics..."
+           end_time=$(date +%s)
+           mem_after=$(free -m | awk '/Mem:/ {print $3}')
+           build_time=$((end_time-start_time))
+           memory_used=$((mem_after-mem_before))
+
+           echo "BUILD_TIME=$build_time" >> $GITHUB_ENV
+           echo "MEMORY_USED=$memory_used" >> $GITHUB_ENV
+
+           unset MAVEN_OPTS
+
+           echo "============================================="
+           echo "🎮 Performance Stats"
+           echo "============================================="
+           echo "⏱️ Build Time: $build_time seconds"
+           echo "💾 Memory Used: $memory_used MB"
+           echo "---------------------------------------------"
+
+           echo "🎯 Build Status: $([ $build_status -eq 0 ] && echo '✅ SUCCESS' || echo '❌ FAILED')"
+           echo "May the garbage collector be ever in your favor! 🎯"
+           echo "=============================================\n"
+
+           if [ $build_status -eq 0 ]; then
+             echo "🌟 Achievement Unlocked: Successful Build with ${{ matrix.jvm-config.name }}!"
+           else
+             echo "💔 Mission Failed: We'll get them next time!"
+           fi
+
+           exit $build_status
       - name: Build ${{ matrix.java-version }}
         #run: mvn -B clean verify
         #export MAVEN_OPTS="-XX:+PrintFlagsFinal"
