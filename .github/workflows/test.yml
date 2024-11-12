@@ -125,37 +125,7 @@ jobs:
           coverage6=$(python3 config/coverage.py client-hc/target/site/jacoco/jacoco.csv) 
           echo "COVERAGE6=$coverage6" >> $GITHUB_ENV
 
-      - name: Generate Performance Report
-        if: always()
-        run: |
-            mkdir -p report_performance
-            echo "=============================================" > reports/performance_report.md
-            echo "=============================================" > performance_report.md
-            echo "🎯 Performance Report - ${{ matrix.jvm-config.name }}" >> performance_report.md
-            echo "=============================================" >> performance_report.md
-            echo "" >> performance_report.md
-            
-            echo "🚀 Build Configuration" >> performance_report.md
-            echo "--------------------" >> performance_report.md
-            echo "⚙️ **JVM Flags**: \`${{ matrix.jvm-config.opts }}\`" >> performance_report.md
-            echo "📝 **Description**: ${{ matrix.jvm-config.desc }}" >> performance_report.md
-            echo "" >> performance_report.md
-            
-            echo "📊 Performance Metrics" >> performance_report.md
-            echo "-------------------" >> performance_report.md
-            echo "⏱️ **Build Time**: $BUILD_TIME seconds" >> performance_report.md
-            echo "💾 **Memory Used**: $MEMORY_USED MB" >> performance_report.md
-          
-            echo "Generated on: $(date)" >> performance_report.md
-            echo "=============================================" >> performance_report.md
-
-      - name: Upload Performance Report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: performance-report-${{ matrix.jvm-config.name }}
-          path: report_performance/performance_report.md
-
+     
       - name: Fail if coverage has not improved.
         run: |
           threshold1=83.75
