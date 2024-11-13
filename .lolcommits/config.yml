@@ -1,0 +1,3 @@
+Capture:capture:
+  delay: 2
+  device: "FaceTime HD Camera"
